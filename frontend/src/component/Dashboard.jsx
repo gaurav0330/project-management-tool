@@ -20,7 +20,7 @@ function Dashboard() {
     <div className="min-h-screen bg-gray-100 p-6">
       {/* Dashboard Header */}
       <header className="bg-white shadow-md p-4 rounded-lg">
-        <h1 className="text-2xl font-bold text-gray-700">Project Management Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-700">Management Dashboard</h1>
       </header>
 
       {/* Main Dashboard Content */}
