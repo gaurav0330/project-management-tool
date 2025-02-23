@@ -10,10 +10,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.1.6",
+    "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.0.8",
     "axios": "^1.7.9",
+    "clsx": "^2.1.1",
+    "flowbite-react": "^0.10.2",
+    "framer-motion": "^12.4.7",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.2.0",
+    "recharts": "^2.15.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
@@ -27,10 +35,14 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
 <<<<<<< HEAD
+<<<<<<< HEAD
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
 =======
 >>>>>>> origin/master
+=======
+    "tailwindcss": "^3.4.17",
+>>>>>>> b22c77d7b76efcaef56e8f216ad3597238e59c66
     "vite": "^6.1.0"
   }
 }
