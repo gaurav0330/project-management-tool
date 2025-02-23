@@ -1,6 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
 import landingImage from "../../assets/landing.png";
+import taskImg from "../../assets/task.jpg";
+import colImg from "../../assets/shakehand.jpg"
+import intImg from "../../assets/int.jpg"
+
 import { FaQuoteLeft } from "react-icons/fa";
 import { FaTasks, FaUsers, FaPlug } from "react-icons/fa";
 
@@ -71,7 +75,7 @@ export function FeaturesSection() {
         whileHover={{ scale: 1.05 }}
       >
         <img
-          src="https://images.unsplash.com/photo-1581091870621-1a1d1cbbf6c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fHRhc2slMjBtYW5hZ2VtZW50fGVufDB8fHx8MTY5MDY2NzY0NQ&ixlib=rb-1.2.1&q=80&w=400"
+          src={taskImg}
           alt="Task Management"
           className="w-full h-32 object-cover rounded-md mb-4"
         />
@@ -84,7 +88,7 @@ export function FeaturesSection() {
         whileHover={{ scale: 1.05 }}
       >
         <img
-          src="https://images.unsplash.com/photo-1581091870621-1a1d1cbbf6c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNjkwNjY3NjQ1&ixlib=rb-1.2.1&q=80&w=400"
+          src={colImg}
           alt="Collaboration"
           className="w-full h-32 object-cover rounded-md mb-4"
         />
@@ -97,7 +101,7 @@ export function FeaturesSection() {
         whileHover={{ scale: 1.05 }}
       >
         <img
-          src="https://images.unsplash.com/photo-1581091870621-1a1d1cbbf6c5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwzNjUyOXwwfDF8c2VhcmNofDF8fGludGVncmF0aW9uc3xlbnwwfHx8fDE2OTA2Njc2NDU&ixlib=rb-1.2.1&q=80&w=400"
+          src={intImg}
           alt="Integrations"
           className="w-full h-32 object-cover rounded-md mb-4"
         />
