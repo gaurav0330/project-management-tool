@@ -6,24 +6,15 @@ import Loader from './components/Other/Loader';
 import Navbar from './components/Other/NavBar';
 import Dashboard from './pages/Home/Dashboard';
 import AdminDashboard from './pages/Admin/AdminDashboard';
-
+import Navbar from './components/Other/NavBar';
+import Project from './components/Other/card';
 
 function App() {
   return (
-<<<<<<< HEAD
-    <>
-<<<<<<< HEAD
-    {/* <Navbar />
-      <SideBar /> {/* Capitalized component usage */}
-      {/* <Card title="Card Title" content="Card Content" />
-      <Loader /> */} 
       <Dashboard />
-=======
       <Card title="Card Title" content="Card Content" />
->>>>>>> origin/master
-    </>
-=======
     <Router>
+      <Navbar />
       <div className="main-content">
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -31,8 +22,6 @@ function App() {
         </Routes>
       </div>
     </Router>
- 
->>>>>>> b22c77d7b76efcaef56e8f216ad3597238e59c66
   );
 }
 
