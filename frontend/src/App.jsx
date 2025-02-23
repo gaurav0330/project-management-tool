@@ -6,15 +6,13 @@ import './index.css';
 import Loader from './components/Other/Loader';
 import Navbar from './components/Other/NavBar';
 import Dashboard from './pages/Dashboard/Dashboard';
+import AdminDashboard from './pages/Admin/AdminDashboard';
 
 function App() {
   return (
     <>
-    {/* <Navbar />
-      <SideBar /> {/* Capitalized component usage */}
-      {/* <Card title="Card Title" content="Card Content" />
-      <Loader /> */} 
-      <Dashboard />
+      {/* <Dashboard /> */}
+      <AdminDashboard />
     </>
   );
 }
