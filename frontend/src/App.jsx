@@ -10,6 +10,19 @@ import AssignMembers from './pages/ProjectManager/AssignMembers';
 
 function App() {
   return (
+<<<<<<< HEAD
+    <>
+<<<<<<< HEAD
+    {/* <Navbar />
+      <SideBar /> {/* Capitalized component usage */}
+      {/* <Card title="Card Title" content="Card Content" />
+      <Loader /> */} 
+      <Dashboard />
+=======
+      <Card title="Card Title" content="Card Content" />
+>>>>>>> origin/master
+    </>
+=======
     <Router>
       <div className="main-content">
         <Routes>
@@ -21,6 +34,7 @@ function App() {
       </div>
     </Router>
  
+>>>>>>> b22c77d7b76efcaef56e8f216ad3597238e59c66
   );
 }
 
