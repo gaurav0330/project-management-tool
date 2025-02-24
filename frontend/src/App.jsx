@@ -2,10 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import './index.css';
-import Loader from './components/Other/Loader';
-import Navbar from './components/Other/NavBar';
 import Dashboard from './pages/Home/Dashboard';
-import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminDashboard from './pages/ProjectManager/AdminDashboard';
+import ProjectDashboard from './pages/ProjectManager/ProjectDashboard';
+import AssignMembers from './pages/ProjectManager/AssignMembers';
 
 
 function App() {
@@ -28,6 +28,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/projectDashboard" element={<ProjectDashboard />} />
+          <Route path="/assignLeads" element={<AssignMembers />} />
         </Routes>
       </div>
     </Router>

@@ -1,6 +1,6 @@
 import React from 'react'
 import Navbar from '../../components/Other/NavBar'
-import TrelloSection,{ FeaturesSection, TestimonialsSection} from '../../components/dashboard/AdminPanel'
+import TrelloSection,{ FeaturesSection, TestimonialsSection} from '../../components/dashboard/LandingPage'
 
 import Footer from "../../components/Other/Footer"; 
 const Dashboard = () => {

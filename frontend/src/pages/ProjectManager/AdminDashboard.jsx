@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Navbar from '../../components/Other/Navbar';
+import Navbar from '../../components/Other/Navbar.jsx';
 import Sidebar from '../../components/Other/sideBar';
 import { HiMenu, HiPlus } from 'react-icons/hi';
 import CreateProject from '../../components/forms/CreateProject';
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
           <Sidebar />
         </div>
 
-        {/* Main Content */}
+
         <div className="flex-1 lg:ml-64">
           {/* Mobile Menu Button */}
           <button
@@ -101,7 +101,8 @@ const AdminDashboard = () => {
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
-      </div>
+      </div> 
+      
     </div>
   );
 };
