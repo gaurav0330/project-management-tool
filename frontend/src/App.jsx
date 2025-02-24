@@ -5,6 +5,7 @@ import './index.css';
 import Dashboard from './pages/Home/Dashboard';
 import AdminDashboard from './pages/ProjectManager/AdminDashboard';
 import ProjectDashboard from './pages/ProjectManager/ProjectDashboard';
+import AssignMembers from './pages/ProjectManager/AssignMembers';
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/projectDashboard" element={<ProjectDashboard />} />
+          <Route path="/assignLeads" element={<AssignMembers />} />
         </Routes>
       </div>
     </Router>
