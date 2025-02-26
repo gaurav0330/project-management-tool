@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {useNavigate } from "react-router-dom";
 
 const AssignTasks = () => {
   const [taskTitle, setTaskTitle] = useState("");
@@ -14,6 +15,7 @@ const AssignTasks = () => {
     { id: 3, name: "Task 3", progress: 30 },
   ];
 
+  const Navigate = useNavigate();
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -87,7 +89,11 @@ const AssignTasks = () => {
               </select>
             </div>
 
-            <button className="px-4 py-2 text-white transition bg-blue-600 rounded hover:bg-blue-700">
+            <button className="px-4 py-2 text-white transition bg-blue-600 rounded hover:bg-blue-700"
+            onClick={()=>{
+              Navigate('/projectDashboard')
+            }}
+            >
               Create Task
             </button>
           </div>

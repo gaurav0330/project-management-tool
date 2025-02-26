@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function AssignTeamLead() {
   const [assignments, setAssignments] = useState({
@@ -29,6 +30,8 @@ function AssignTeamLead() {
     }
   ];
 
+
+
   const handleAssignLead = (subsection, lead) => {
     setAssignments(prev => ({
       ...prev,
@@ -43,6 +46,7 @@ function AssignTeamLead() {
     }));
   };
 
+  const navigate= useNavigate();
   return (
     <div className="min-h-screen p-8 bg-gray-50">
       <div className="max-w-4xl p-6 mx-auto bg-white shadow-sm rounded-xl">
@@ -158,7 +162,11 @@ function AssignTeamLead() {
               <button className="px-4 py-2 text-gray-700 hover:text-gray-900">
                 Reset All
               </button>
-              <button className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700">
+              <button className="px-4 py-2 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700"
+              onClick={()=>{
+                navigate('/assigntask')
+              }}
+              >
                 Confirm Assignments
               </button>
             </div>

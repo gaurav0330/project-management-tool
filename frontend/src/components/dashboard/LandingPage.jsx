@@ -4,10 +4,8 @@ import landingImage from "../../assets/landing.png";
 import taskImg from "../../assets/task.jpg";
 import colImg from "../../assets/shakehand.jpg"
 import intImg from "../../assets/int.jpg"
-
 import { FaQuoteLeft } from "react-icons/fa";
 import { FaTasks, FaUsers, FaPlug } from "react-icons/fa";
-
 
 export default function TrelloSection() {
   return (
@@ -18,7 +16,7 @@ export default function TrelloSection() {
           className="mb-8 md:w-1/2 md:mb-0"
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 1.5 }}
         >
           <h1 className="mb-4 text-4xl font-bold md:text-5xl">
             Trello brings all your tasks, teammates, and tools together
@@ -46,7 +44,7 @@ export default function TrelloSection() {
           className="md:w-1/2"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 1.5 }}
         >
           <img
             src={landingImage}

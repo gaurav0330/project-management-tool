@@ -1,6 +1,8 @@
 
 import { useState } from "react";
-import {
+
+import React from "react";
+import { 
   MdDashboard,
   MdAssignment,
   MdPeople,
@@ -20,6 +22,8 @@ const Sidebar = ({ setActiveComponent }) => {
     {
       category: "Overview",
       items: [
+        { name: "Add Project", icon: MdDashboard, component: "addproject" },
+        { name: "Task Approval", icon: MdDashboard, component: "taskapproval" },
         { name: "Dashboard", icon: MdDashboard, component: "overview" },
         { name: "Analytics", icon: MdInsights },
         { name: "Reports", icon: MdBarChart },
@@ -37,7 +41,9 @@ const Sidebar = ({ setActiveComponent }) => {
     {
       category: "Team & Communication",
       items: [
-        { name: "Team Members", icon: MdPeople, component: "members" }, // ✅ Set "Team Members" component
+        { name: "Members", icon: MdPeople, component: "members" }, // ✅ Set "Team Members" component
+        { name: "Team Members", icon: MdPeople, component: "teammember" }, // ✅ Set "Team Members" component
+        { name: "Team Lead", icon: MdPeople, component: "teamlead" }, // ✅ Set "Team Members" component
       ],
     },
   ];
@@ -102,8 +108,6 @@ const Sidebar = ({ setActiveComponent }) => {
       )}
     </>
   );
-
-};
+}
 
 export default Sidebar;
-

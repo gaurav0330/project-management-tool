@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Navbar from '../../components/Other/Navbar.jsx';
+import Navbar from '../../components/Other/NavBar';
 import Sidebar from '../../components/Other/sideBar';
 import { HiMenu, HiPlus } from 'react-icons/hi';
 import CreateProject from '../../components/forms/CreateProject';

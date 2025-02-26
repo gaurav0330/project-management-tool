@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function CreateProject() {
   const [projectName, setProjectName] = useState('');
@@ -7,6 +8,7 @@ function CreateProject() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+   const navigate = useNavigate();
 
   const teamMembers = [
     {
@@ -176,6 +178,9 @@ function CreateProject() {
 
               <button
                 className="w-full px-4 py-2 mt-6 text-white transition-colors bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => {
+                  navigate('/assignLead');
+                }}
               >
                 Create Project
               </button>
