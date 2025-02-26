@@ -38,14 +38,14 @@ const Navbar = () => {
             </button>
 
             {/* Help */}
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"  onClick={() => navigate('/')}>
               <MdHelp className="w-6 h-6" />
             </button>
 
             {/* Profile */}
             <button
               className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-lg"
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/login')}
             >
               <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                 <span className="text-primary-600 font-medium text-sm">JD</span>
