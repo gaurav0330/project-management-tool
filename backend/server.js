@@ -1,27 +1,24 @@
-// backend/server.js
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const { ApolloServer } = require("apollo-server-express");
+const cors = require("cors");
+const connectDB = require("./config/db");
+const typeDefs = require("./graphql/typeDefs");
+const resolvers = require("./graphql/resolvers");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
 
-const projects = [
-  { id: 1, name: "Project 1", status: "In Progress" },
-  { id: 2, name: "Project 2", status: "Completed" },
-];
+async function startServer() {
+  const server = new ApolloServer({ typeDefs, resolvers });
+  await server.start();
+  server.applyMiddleware({ app });
 
-const tasks = [
-  { id: 1, title: "Task 1", status: "To Do" },
-  { id: 2, title: "Task 2", status: "In Progress" },
-];
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}/graphql`);
+  });
+}
 
-// Routes
-app.get("/projects", (req, res) => res.json(projects));
-app.get("/tasks", (req, res) => res.json(tasks));
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+connectDB();
+startServer();
