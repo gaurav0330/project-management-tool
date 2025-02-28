@@ -50,7 +50,7 @@ export default function TeamMemberDashboardPage() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-1/5 min-h-screen p-6 bg-white shadow-md">
+       <div className="w-64 h-full min-h-screen bg-white shadow-lg">
         <Sidebar setActiveComponent={setActiveComponent} />
       </div>
 

@@ -50,37 +50,36 @@ const TeamLeadDashboard = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-1/5 min-h-screen p-6 bg-white shadow-md">
-        <Sidebar setActiveComponent={setActiveComponent} />
+  {/* Sidebar */}
+  <div className="w-64 h-full min-h-screen bg-white shadow-lg">
+    <Sidebar setActiveComponent={setActiveComponent} />
+  </div>
+
+  {/* Main Content */}
+  <div className="flex-1 min-h-screen h-full p-6 overflow-auto bg-gray-100">
+    {activeComponent === "taskManagement" && <TaskManagementPage />}
+    {activeComponent === "displayTeamTask" && <DisplayTeamTaskPage />}
+    {activeComponent === "taskDistribution" && <TaskDistributionPage />}
+
+    {activeComponent === "projects" && (
+      <div>
+        <h2 className="text-2xl font-semibold">Projects Overview</h2>
+        <Filters
+          search={search}
+          setSearch={setSearch}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+        />
+        <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProjects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
       </div>
+    )}
+  </div>
+</div>
 
-      {/* Main Content */}
-      <div className="flex-1 p-6 overflow-auto">
-        {activeComponent === "taskManagement" && <TaskManagementPage />}
-        {activeComponent === "displayTeamTask" && <DisplayTeamTaskPage />}
-        {activeComponent === "taskDistribution" && <TaskDistributionPage />}
-
-        {activeComponent === "projects" && (
-          <div>
-            <h2 className="text-2xl font-semibold">Projects Overview</h2>
-            <Filters
-              search={search}
-              setSearch={setSearch}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-            />
-
-            {/* Project List */}
-            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
   );
 };
 
