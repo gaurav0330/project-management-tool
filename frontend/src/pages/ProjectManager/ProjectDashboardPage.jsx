@@ -5,7 +5,7 @@ import AssignTeamLead from "../../components/tasks/AssignTeamLead";
 import AssignTasks from "../../components/tasks/AssignTasks";
 import CreateProjectPage from '../../pages/ProjectManager/CreateProjectPage';
 import TaskApprovalPage from "./TaskApprovalPage";
-import TeamMemberDashboardPage from "../TeamMember/teamMemberDashboardPage";
+import TeamMemberDashboardPage from "../TeamMember/TeamMemberDashboardPage";
 import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
 
 const ProjectDashboard = () => {
