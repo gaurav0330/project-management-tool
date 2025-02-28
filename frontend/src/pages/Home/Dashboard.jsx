@@ -12,8 +12,6 @@ const Dashboard = () => {
     <FeaturesSection/>
     {/* Testimonials Section */}
     <TestimonialsSection/>
-    {/* Footer Section */}
-    <Footer />
     </>
     
   )
