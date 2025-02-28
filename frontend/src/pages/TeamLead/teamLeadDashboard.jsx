@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Header from "../../components/TeamLeadComponent/Header";
 import Filters from "../../components/TeamLeadComponent/Filters";
 import Sidebar from "../../components/Other/sideBar";
-import ProjectCard from "../../components/Other/card"; // Correct import
+import ProjectCard from "../../components/Other/ProjectCard"; // Correct import
 import TaskManagementPage from "./TaskManagementPage";
 import DisplayTeamTaskPage from "./DisplayTeamTaskPage";
 import TaskDistributionPage from "./TaskDistributionPage";

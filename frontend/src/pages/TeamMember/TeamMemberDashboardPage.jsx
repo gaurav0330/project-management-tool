@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
-import ProjectCard from "../../components/Other/card"; // Import the ProjectCard component
+import ProjectCard from "../../components/Other/ProjectCard"; // Import the ProjectCard component
 import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionPage";
 
