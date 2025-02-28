@@ -5,8 +5,8 @@ const ProjectCard = ({ project }) => {
 const Navigate = useNavigate();
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md">
-      <div className="flex justify-between items-center">
+    <div className="p-4 bg-white rounded-lg shadow-md">
+      <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">{project.title}</h3>
         <span
           className={`px-2 py-1 text-sm font-medium rounded ${
@@ -18,16 +18,16 @@ const Navigate = useNavigate();
           {project.status}
         </span>
       </div>
-      <p className="text-gray-600 mt-2">{project.description}</p>
+      <p className="mt-2 text-gray-600">{project.description}</p>
       <div className="flex items-center mt-3">
         {project.team.map((member, index) => (
-          <img key={index} src={member} alt="Team Member" className="w-8 h-8 rounded-full border mx-1" />
+          <img key={index} src={member} alt="Team Member" className="w-8 h-8 mx-1 border rounded-full" />
         ))}
       </div>
-      <div className="mt-3 text-gray-500 text-sm">
+      <div className="mt-3 text-sm text-gray-500">
         📅 {project.dates}
       </div>
-      <button className="w-full border border-blue-500 text-blue-500 px-4 py-2 rounded mt-3 hover:bg-blue-100"
+      <button className="w-full px-4 py-2 mt-3 text-blue-500 border border-blue-500 rounded hover:bg-blue-100"
       onClick={()=>{
         Navigate('/teamleadteamtask');
       }}

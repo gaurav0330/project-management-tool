@@ -1,24 +1,40 @@
-// src/components/Card.js
-import React from 'react';
+import React from "react";
 
-function Card({ title, content }) {
+const ProjectCard = ({ project }) => {
   return (
-<<<<<<< HEAD
-    <div className="bg-white shadow-md rounded-lg p-6 max-w-sm mx-auto">
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-red-700">{content}</p>
-=======
-
-    <div className="bg-gradient-to-r from-blue-500 to-purple-500 shadow-xl rounded-2xl p-6 border border-gray-300 text-white transform transition duration-300 hover:scale-105">
-    <div className="bg-red-500 text-white p-4">Hello, Tailwind!</div>
-      <h3 className="text-2xl font-bold mb-3 drop-shadow-lg">{title}</h3>
-      <p className="text-lg opacity-90">{content}</p>
-      <div className="mt-4 flex justify-end">
-        <button className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium shadow-md hover:bg-blue-100">Learn More</button>
+    <div className="p-6 transition-shadow duration-300 bg-white rounded-lg shadow-md hover:shadow-lg">
+      {/* Title & Status */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">{project.title}</h3>
+        <span
+          className={`px-3 py-1 text-sm font-medium rounded-full ${
+            project.status === "Active" ? "bg-green-100 text-green-700" :
+            project.status === "On Hold" ? "bg-yellow-100 text-yellow-700" :
+            "bg-gray-200 text-gray-700"
+          }`}
+        >
+          {project.status}
+        </span>
       </div>
->>>>>>> origin/master
+
+      {/* Description */}
+      <p className="mt-2 text-gray-600">{project.description}</p>
+
+      {/* Team Members */}
+      <div className="flex items-center mt-4">
+        {project.members.map((member, index) => (
+          <div key={index} className="flex items-center justify-center w-8 h-8 -ml-2 text-sm font-semibold text-white bg-blue-500 border-2 border-white rounded-full first:ml-0">
+            {member[0]}
+          </div>
+        ))}
+      </div>
+
+      {/* Start & End Dates */}
+      <div className="mt-3 text-sm text-gray-500">
+        📅 {project.startDate} - {project.endDate}
+      </div>
     </div>
   );
-}
+};
 
-export default Card;
+export default ProjectCard;

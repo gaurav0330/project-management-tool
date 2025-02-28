@@ -1,7 +1,9 @@
 import { useState } from "react";
 import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
-import ProjectList from "../../components/TeamMember/ProjectList";
+import ProjectCard from "../../components/Other/card"; // Import the ProjectCard component
+import MyTasksPage from "./MyTasksPage";
+import TaskSubmissionPage from "./TaskSubmissionPage";
 
 const initialProjects = [
   {
@@ -37,24 +39,45 @@ export default function TeamMemberDashboardPage() {
   const [projects, setProjects] = useState(initialProjects);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [activeComponent, setActiveComponent] = useState("overview"); // State for active section
 
-  const filteredProjects = projects.filter((project) =>
-    project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (statusFilter === "All" || project.status === statusFilter)
+  const filteredProjects = projects.filter(
+    (project) =>
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      (statusFilter === "All" || project.status === statusFilter)
   );
 
   return (
-    <div className="flex h-screen">
-      {/* Main Content */}
-      <div className="flex-1 p-6 bg-gray-100">
-        <h2 className="text-2xl font-semibold">Projects Overview</h2>
-        <FilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
-        <ProjectList projects={filteredProjects} />
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <div className="w-1/5 min-h-screen p-6 bg-white shadow-md">
+        <Sidebar setActiveComponent={setActiveComponent} />
+      </div>
+
+      {/* Main Content Area */}
+      <div className="w-4/5 p-8 overflow-auto">
+        {activeComponent === "tasks" ? (
+          <MyTasksPage />
+        ) : activeComponent === "taskSubmission" ? (
+          <TaskSubmissionPage />
+        ) : (
+          <>
+            <h2 className="text-2xl font-semibold">Projects Overview</h2>
+            <FilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+            />
+
+            {/* Project List using ProjectCard */}
+            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
