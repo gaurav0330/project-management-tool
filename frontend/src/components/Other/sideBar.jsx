@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { MdDashboard, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
+import { MdDashboard,MdGroup,MdAssignmentTurnedIn , MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,8 +56,13 @@ const Sidebar = ({ setActiveComponent }) => {
       {
         category: "Project Management",
         items: [
-          { name: "Projects", icon: MdFolderOpen, component: "projects" },
-          { name: "Tasks", icon: MdAssignment, component: "tasks" },
+          { name: "Dashboard", icon: MdDashboard, component: "dashboard" },  
+          { name: "Projects", icon: MdFolderOpen, component: "projects" },  
+          { name: "Tasks", icon: MdAssignment, component: "tasks" },  
+          { name: "Manage Task", icon: MdAssignment, component: "taskManagement" },  
+          { name: "Team Tasks", icon: MdGroup, component: "displayTeamTask" },  
+          { name: "Team Distribution", icon: MdGroup, component: "taskDistribution" },  
+          { name: "Timeline", icon: MdTimeline, component: "timeline" },  
         ],
       },
     ],
@@ -71,6 +76,7 @@ const Sidebar = ({ setActiveComponent }) => {
         items: [
           { name: "My Tasks", icon: MdAssignment, component: "tasks" },
           { name: "Timeline", icon: MdTimeline, component: "timeline" },
+          { name: "Task Submission", icon: MdAssignmentTurnedIn, component: "taskSubmission" }
         ],
       },
     ],

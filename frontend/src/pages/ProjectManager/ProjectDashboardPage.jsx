@@ -6,7 +6,7 @@ import AssignTasks from "../../components/tasks/AssignTasks";
 import CreateProjectPage from '../../pages/ProjectManager/CreateProjectPage';
 import TaskApprovalPage from "./TaskApprovalPage";
 import TeamMemberDashboardPage from "../TeamMember/teamMemberDashboardPage";
-import TeamLeadDashboard from "../../pages/TeamLead/TeamLeadDashboard";
+import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
 
 const ProjectDashboard = () => {
   // State to track the active component
@@ -18,7 +18,7 @@ const ProjectDashboard = () => {
       <div className="flex-shrink-0 w-64">
         <Sidebar setActiveComponent={setActiveComponent} />
       </div>
-
+ 
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-auto">
         {activeComponent === "addproject" && <CreateProjectPage/>}
