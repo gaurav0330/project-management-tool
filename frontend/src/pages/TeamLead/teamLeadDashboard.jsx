@@ -52,6 +52,7 @@ const TeamLeadDashboard = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <Header />
+      
       <Filters search={search} setSearch={setSearch} statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
       <ProjectList projects={filteredProjects} />
     </div>

@@ -42,8 +42,6 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
           {/* <Route path="/" element={< />} /> */}
-
-          {/* 🔴 Protected Routes */}
           
           {/* Project Manager Only */}
           <Route path="/projectDashboard" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><ProjectDashboard /></ProtectedRoute>} />
