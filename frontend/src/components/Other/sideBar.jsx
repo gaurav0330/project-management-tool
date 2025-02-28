@@ -1,27 +1,17 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { 
-  MdDashboard,
-  MdAssignment,
-  MdPeople,
-  MdInsights,
-  MdBarChart,
-  MdFolderOpen,
-  MdDescription,
-  MdTimeline,
-  MdMenu,
-  MdClose,
-} from "react-icons/md";
+import { MdDashboard, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState("");
+  const [userRole, setUserRole] = useState(null); // Start with null to ensure proper fetching
 
   useEffect(() => {
-    // Fetch role from localStorage or API
-    const role = localStorage.getItem("userRole") || "Team_Member"; // Default role
-    setUserRole(role);
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    console.log("Stored Role:", storedUser?.role); // Debugging
+    if (storedUser?.role) {
+      setUserRole(storedUser.role);
+    }
   }, []);
 
   // Role-Based Sidebar Items
@@ -33,17 +23,17 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Add Project", icon: MdDashboard, component: "addproject" },
           { name: "Task Approval", icon: MdAssignment, component: "taskapproval" },
           { name: "Dashboard", icon: MdDashboard, component: "overview" },
-          { name: "Analytics", icon: MdInsights },
-          { name: "Reports", icon: MdBarChart },
+          { name: "Analytics", icon: MdInsights, component: "analytics" },
+          { name: "Reports", icon: MdBarChart, component: "reports" },
         ],
       },
       {
         category: "Project Management",
         items: [
-          { name: "Projects", icon: MdFolderOpen },
+          { name: "Projects", icon: MdFolderOpen, component: "projects" },
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
-          { name: "Timeline", icon: MdTimeline },
-          { name: "Documents", icon: MdDescription },
+          { name: "Timeline", icon: MdTimeline, component: "timeline" },
+          { name: "Documents", icon: MdDescription, component: "documents" },
         ],
       },
       {
@@ -60,13 +50,13 @@ const Sidebar = ({ setActiveComponent }) => {
         category: "Overview",
         items: [
           { name: "Dashboard", icon: MdDashboard, component: "overview" },
-          { name: "Analytics", icon: MdInsights },
+          { name: "Analytics", icon: MdInsights, component: "analytics" },
         ],
       },
       {
         category: "Project Management",
         items: [
-          { name: "Projects", icon: MdFolderOpen },
+          { name: "Projects", icon: MdFolderOpen, component: "projects" },
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
         ],
       },
@@ -74,23 +64,24 @@ const Sidebar = ({ setActiveComponent }) => {
     Team_Member: [
       {
         category: "Overview",
-        items: [
-          { name: "Dashboard", icon: MdDashboard, component: "overview" },
-        ],
+        items: [{ name: "Dashboard", icon: MdDashboard, component: "overview" }],
       },
       {
         category: "Tasks",
         items: [
           { name: "My Tasks", icon: MdAssignment, component: "tasks" },
-          { name: "Timeline", icon: MdTimeline },
+          { name: "Timeline", icon: MdTimeline, component: "timeline" },
         ],
       },
     ],
   };
 
+  // Ensure the user role is valid
+  const sidebarMenu = roleBasedMenu[userRole] || [];
+
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed z-50 p-2 text-white rounded-md top-4 left-4 bg-primary-600 lg:hidden hover:bg-primary-700"
@@ -112,28 +103,32 @@ const Sidebar = ({ setActiveComponent }) => {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto">
           <nav className="px-4 py-4">
-            {roleBasedMenu[userRole]?.map((category, categoryIndex) => (
-              <div key={categoryIndex} className="mb-6">
-                <h2 className="px-4 mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  {category.category}
-                </h2>
-                <div className="space-y-1">
-                  {category.items.map((item, itemIndex) => (
-                    <button
-                      key={itemIndex}
-                      onClick={() => {
-                        if (item.component) setActiveComponent(item.component);
-                        setIsOpen(false); // Close sidebar on mobile
-                      }}
-                      className="flex items-center w-full px-4 py-2.5 text-sm text-gray-600 transition-colors duration-200 rounded-lg hover:bg-primary-50 hover:text-primary-600 group"
-                    >
-                      <item.icon className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{item.name}</span>
-                    </button>
-                  ))}
+            {sidebarMenu.length > 0 ? (
+              sidebarMenu.map((category, categoryIndex) => (
+                <div key={categoryIndex} className="mb-6">
+                  <h2 className="px-4 mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
+                    {category.category}
+                  </h2>
+                  <div className="space-y-1">
+                    {category.items.map((item, itemIndex) => (
+                      <button
+                        key={itemIndex}
+                        onClick={() => {
+                          if (item.component) setActiveComponent(item.component);
+                          setIsOpen(false); // Close sidebar on mobile
+                        }}
+                        className="flex items-center w-full px-4 py-2.5 text-sm text-gray-600 transition-colors duration-200 rounded-lg hover:bg-primary-50 hover:text-primary-600 group"
+                      >
+                        {React.createElement(item.icon, { className: "w-5 h-5 mr-3" })}
+                        <span className="font-medium">{item.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="px-4 py-2 text-gray-500">Loading menu...</p>
+            )}
           </nav>
         </div>
       </div>

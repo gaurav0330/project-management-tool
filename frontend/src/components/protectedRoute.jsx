@@ -9,10 +9,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   // Redirect if not logged in
   if (!token) return <Navigate to="/login" />;
 
-  // Redirect if user role is not allowed
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" />;  // ✅ Redirect unauthorized users
-  }
+  // // Redirect if user role is not allowed
+  // if (allowedRoles && !allowedRoles.includes(userRole)) {
+  //   return <Navigate to="/unauthorized" />;  // ✅ Redirect unauthorized users
+  // }
 
   return children;
 };
