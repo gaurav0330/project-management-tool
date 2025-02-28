@@ -1,14 +1,35 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MdSearch, MdNotifications, MdMessage, MdHelp } from 'react-icons/md';
+import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { MdSearch, MdNotifications, MdMessage, MdHelp } from "react-icons/md";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token"); // Check if user is authenticated
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
       <div className="px-4 mx-auto">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex items-center justify-between h-16">
           {/* Search Bar */}
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -17,44 +38,77 @@ const Navbar = () => {
               </div>
               <input
                 type="search"
-                className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full py-2 pl-10 pr-3 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="Search projects, tasks, or team members..."
               />
             </div>
           </div>
 
-          {/* Right side icons */}
+          {/* Right side icons - Show different items based on authentication */}
           <div className="flex items-center space-x-4">
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-              <MdNotifications className="w-6 h-6" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            {token ? (
+              <>
+                {/* Notifications */}
+                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                  <MdNotifications className="w-6 h-6" />
+                  <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
+                </button>
 
-            {/* Messages */}
-            <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
-              <MdMessage className="w-6 h-6" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+                {/* Messages */}
+                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                  <MdMessage className="w-6 h-6" />
+                  <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
+                </button>
 
-            {/* Help */}
-            <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"  onClick={() => navigate('/')}>
-              <MdHelp className="w-6 h-6" />
-            </button>
+                {/* Help */}
+                <button className="p-2 text-gray-600 rounded-lg hover:bg-gray-100" onClick={() => navigate("/")}>
+                  <MdHelp className="w-6 h-6" />
+                </button>
 
-            {/* Profile */}
-            <button
-              className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-lg"
-              onClick={() => navigate('/login')}
-            >
-              <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-primary-600 font-medium text-sm">JD</span>
-              </div>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-700">John Doe</p>
-                <p className="text-xs text-gray-500">Admin</p>
-              </div>
-            </button>
+                {/* Profile Dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    className="flex items-center p-2 space-x-3 rounded-lg hover:bg-gray-100"
+                    onClick={() => setIsDropdownOpen((prev) => !prev)}
+                  >
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100">
+                      <span className="text-sm font-medium text-primary-600">JD</span>
+                    </div>
+                    <div className="hidden text-left md:block">
+                      <p className="text-sm font-medium text-gray-700">John Doe</p>
+                      <p className="text-xs text-gray-500">Admin</p>
+                    </div>
+                  </button>
+
+                  {/* Logout Dropdown */}
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 w-40 p-2 mt-2 bg-white rounded-lg shadow-lg">
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-2 text-sm text-left text-red-600 rounded-lg hover:bg-gray-100"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-100"
+                  onClick={() => navigate("/login")}
+                >
+                  Login
+                </button>
+                <button
+                  className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                  onClick={() => navigate("/signup")}
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
