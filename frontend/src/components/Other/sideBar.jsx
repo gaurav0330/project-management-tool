@@ -1,7 +1,6 @@
-
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   MdDashboard,
   MdAssignment,
@@ -17,37 +16,77 @@ import {
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [userRole, setUserRole] = useState("");
 
-  const menuItems = [
-    {
-      category: "Overview",
-      items: [
-        { name: "Add Project", icon: MdDashboard, component: "addproject" },
-        { name: "Task Approval", icon: MdDashboard, component: "taskapproval" },
-        { name: "Dashboard", icon: MdDashboard, component: "overview" },
-        { name: "Analytics", icon: MdInsights },
-        { name: "Reports", icon: MdBarChart },
-      ],
-    },
-    {
-      category: "Project Management",
-      items: [
-        { name: "Projects", icon: MdFolderOpen },
-        { name: "Tasks", icon: MdAssignment, component: "tasks" }, // ✅ Set "Tasks" component
-        { name: "Timeline", icon: MdTimeline },
-        { name: "Documents", icon: MdDescription },
-      ],
-    },
-    {
-      category: "Team & Communication",
-      items: [
-        { name: "Members", icon: MdPeople, component: "members" }, // ✅ Set "Team Members" component
-        { name: "Team Members", icon: MdPeople, component: "teammember" }, // ✅ Set "Team Members" component
-        { name: "Team Lead", icon: MdPeople, component: "teamlead" }, // ✅ Set "Team Members" component
-      ],
-    },
-  ];
+  useEffect(() => {
+    // Fetch role from localStorage or API
+    const role = localStorage.getItem("userRole") || "Team_Member"; // Default role
+    setUserRole(role);
+  }, []);
 
+  // Role-Based Sidebar Items
+  const roleBasedMenu = {
+    Project_Manager: [
+      {
+        category: "Overview",
+        items: [
+          { name: "Add Project", icon: MdDashboard, component: "addproject" },
+          { name: "Task Approval", icon: MdAssignment, component: "taskapproval" },
+          { name: "Dashboard", icon: MdDashboard, component: "overview" },
+          { name: "Analytics", icon: MdInsights },
+          { name: "Reports", icon: MdBarChart },
+        ],
+      },
+      {
+        category: "Project Management",
+        items: [
+          { name: "Projects", icon: MdFolderOpen },
+          { name: "Tasks", icon: MdAssignment, component: "tasks" },
+          { name: "Timeline", icon: MdTimeline },
+          { name: "Documents", icon: MdDescription },
+        ],
+      },
+      {
+        category: "Team & Communication",
+        items: [
+          { name: "Members", icon: MdPeople, component: "members" },
+          { name: "Team Members", icon: MdPeople, component: "teammember" },
+          { name: "Team Lead", icon: MdPeople, component: "teamlead" },
+        ],
+      },
+    ],
+    Team_Lead: [
+      {
+        category: "Overview",
+        items: [
+          { name: "Dashboard", icon: MdDashboard, component: "overview" },
+          { name: "Analytics", icon: MdInsights },
+        ],
+      },
+      {
+        category: "Project Management",
+        items: [
+          { name: "Projects", icon: MdFolderOpen },
+          { name: "Tasks", icon: MdAssignment, component: "tasks" },
+        ],
+      },
+    ],
+    Team_Member: [
+      {
+        category: "Overview",
+        items: [
+          { name: "Dashboard", icon: MdDashboard, component: "overview" },
+        ],
+      },
+      {
+        category: "Tasks",
+        items: [
+          { name: "My Tasks", icon: MdAssignment, component: "tasks" },
+          { name: "Timeline", icon: MdTimeline },
+        ],
+      },
+    ],
+  };
 
   return (
     <>
@@ -73,7 +112,7 @@ const Sidebar = ({ setActiveComponent }) => {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto">
           <nav className="px-4 py-4">
-            {menuItems.map((category, categoryIndex) => (
+            {roleBasedMenu[userRole]?.map((category, categoryIndex) => (
               <div key={categoryIndex} className="mb-6">
                 <h2 className="px-4 mb-3 text-xs font-semibold tracking-wider text-gray-400 uppercase">
                   {category.category}
@@ -108,6 +147,6 @@ const Sidebar = ({ setActiveComponent }) => {
       )}
     </>
   );
-}
+};
 
 export default Sidebar;
