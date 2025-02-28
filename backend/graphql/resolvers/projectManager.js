@@ -1,16 +1,28 @@
-const projects = [];
+const { ApolloError } = require("apollo-server-express");
+const projectController = require("../../controllers/projectController");
 
-const projectManagerResolvers = {
+const projectResolvers = {
   Query: {
-    getProjects: () => projects,
+    getAllProjects: async (_, __, { user }) => {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+      return await projectController.getAllProjects(user);
+    },
+    getProjectById: async (_, { id }, { user }) => {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+      return await projectController.getProjectById(id, user);
+    },
   },
   Mutation: {
-    createProject: (_, { name, description }) => {
-      const newProject = { id: projects.length + 1, name, description, teamLeads: [] };
-      projects.push(newProject);
-      return newProject;
+    createProject: async (_, { title, description, startDate, endDate }, { user }) => {
+      console.log("User in resolver:", user); // Debugging
+
+      if (!user || user.role !== "Project_Manager") {
+        throw new ApolloError("Unauthorized! Only Project Managers can create projects.", "FORBIDDEN");
+      }
+
+      return await projectController.createProject(title, description, startDate, endDate, user);
     },
   },
 };
 
-module.exports = projectManagerResolvers;
+module.exports = projectResolvers;
