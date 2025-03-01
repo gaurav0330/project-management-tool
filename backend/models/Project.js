@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
 
-const projectSchema = new mongoose.Schema({
+const ProjectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String },
-  manager: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // References User (Project Manager)
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  status: { type: String, enum: ["Planned", "In Progress", "Completed"], default: "Planned" },
-  createdAt: { type: Date, default: Date.now }
+  category: { type: String },
+  projectManager: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // ✅ Must be ObjectId
+  teamLead: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  teamMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  status: { type: String, required: true, default: "Planned" }
 });
 
-module.exports = mongoose.model("Project", projectSchema);
+module.exports = mongoose.model("Project", ProjectSchema);
