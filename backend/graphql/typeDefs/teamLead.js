@@ -15,26 +15,33 @@ const leadTypeDefs = gql`
   }
 
   type TeamLead {
-  teamLeadId: User!
-  leadRole: String!
+    teamLeadId: User!
+    leadRole: String!
+  }
+  
+  type TaskHistory {
+  updatedBy: ID!
+  updatedAt: String!
+  oldStatus: String
+  newStatus: String
  }
 
-
- type Task {
-  id: ID! 
-  title: String!
-  description: String
-  project: ID!
-  createdBy: ID!
-  assignedTo: ID! 
-  status: String!
-  priority: String!
-  dueDate: String
-  createdAt: String
-}
+  type Task {
+    id: ID!
+    title: String!
+    description: String
+    project: ID!
+    createdBy: ID!
+    assignedTo: ID!
+    status: String!
+    priority: String!
+    dueDate: String
+    createdAt: String
+    history: [TaskHistory]
+  }
 
   type TeamMember {
-    teamMemberId: User!  
+    teamMemberId: User!
     memberRole: String!
   }
 
@@ -48,31 +55,35 @@ const leadTypeDefs = gql`
     message: String!
     project: Project
   }
-  
+
   type TaskResponse {
     success: Boolean!
     message: String!
     task: Task
   }
-    
 
   type Query {
     getProjectsByLeadId(leadId: ID!): [Project]
   }
 
   type Mutation {
-    addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
+  addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
 
-     assignTaskMember(
-      projectId: ID!
-      title: String!
-      description: String
-      assignedTo: ID! 
-      priority: String
-      dueDate: String
-    ): TaskResponse!
+  assignTaskMember(
+    projectId: ID!
+    title: String!
+    description: String
+    assignedTo: ID!
+    priority: String
+    dueDate: String
+  ): TaskResponse!
 
-  }
+  approveTaskCompletion(taskId: ID!, approved: Boolean!, remarks: String): TaskResponse!
+
+  rejectTask(taskId: ID!, reason: String!): TaskResponse!
+
+  requestTaskModifications(taskId: ID!, feedback: String!): TaskResponse!
+}
 `;
 
 module.exports = leadTypeDefs;
