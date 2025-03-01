@@ -10,17 +10,38 @@ const leadTypeDefs = gql`
     category: String
     status: String!
     projectManager: User!
-    teamLead: [User]
-    teamMembers: [User!]
+    teamLeads: [TeamLead!]!
+    teamMembers: [TeamMember!]!
+  }
+
+  type TeamLead {
+  teamLeadId: User!
+  leadRole: String!
+ }
+
+  type TeamMember {
+    teamMemberId: User!  
+    memberRole: String!
+  }
+
+  input TeamMemberInput {
+    teamMemberId: ID!
+    memberRole: String!
+  }
+
+  type AssignTeamMemberResponse {
+    success: Boolean!
+    message: String!
+    project: Project
   }
 
   type Query {
-    getAllProjects: [Project]
-    getProjectById(id: ID!): Project
     getProjectsByLeadId(leadId: ID!): [Project]
   }
 
+  type Mutation {
+    addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
+  }
 `;
-
 
 module.exports = leadTypeDefs;
