@@ -13,6 +13,7 @@ export const CREATE_PROJECT_MUTATION = gql`
       endDate: $endDate
       description: $description
     ) {
+      id
       description
       endDate
       startDate

@@ -46,7 +46,15 @@ function App() {
           {/* Project Manager Only */}
           <Route path="/projectDashboard" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><ProjectDashboard /></ProtectedRoute>} />
           <Route path="/createproject" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><CreateProjectPage /></ProtectedRoute>} />
-          <Route path="/assignLead" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><AssignLeadPage /></ProtectedRoute>} />
+          <Route 
+  path="/assignLead/:projectId" 
+  element={
+    <ProtectedRoute allowedRoles={["Project_Manager"]}>
+      <AssignLeadPage />
+    </ProtectedRoute>
+  } 
+/>
+
           <Route path="/assigntask" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><AssignTaskPage /></ProtectedRoute>} />
           <Route path="/taskapproval" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><TaskApprovalPage /></ProtectedRoute>} />
           
