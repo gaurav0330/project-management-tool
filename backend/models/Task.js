@@ -4,54 +4,49 @@ const taskSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
     description: { type: String },
-
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
-      required: true
-    }, // References Project
-
+      required: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
-    }, // User who created the task
-
+      required: true,
+    },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }, // User assigned to task (Single Assignee)
-
-    // 🔹 Allow multiple assignees (Optional Feature)
-    // assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Use this for multiple assignees
-
+      ref: "User",
+    },
     status: {
       type: String,
-      enum: ["To Do", "In Progress", "Completed"],
-      default: "To Do"
-    }, // Task Status
-
+      enum: ["To Do", "In Progress", "Completed", "Pending Approval", "Under Review", "Rejected", "Needs Revision"],
+      default: "To Do",
+    },
     priority: {
       type: String,
       enum: ["Low", "Medium", "High"],
-      default: "Medium"
-    }, // Priority Level
+      default: "Medium",
+    },
+    dueDate: { type: Date },
 
-    dueDate: { type: Date }, // Deadline
-
-    attachments: [{ type: String }], // (Optional) File URLs
+    attachments: [{ type: String }], // File URLs
 
     history: [
       {
-        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Who made the change
-        updatedAt: { type: Date, default: Date.now }, // When the change was made
-        oldStatus: { type: String }, // Previous status
-        newStatus: { type: String }, // Updated status
+        updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        updatedAt: { type: Date, default: Date.now },
+        oldStatus: { type: String },
+        newStatus: { type: String },
       },
-    ], // Task History for tracking updates
+    ],
+
+    // 🔹 **Fix: Add remarks field**
+    remarks: { type: String }, // Stores feedback, rejection reasons, etc.
 
   },
-  { timestamps: true } // 🔹 Auto-adds createdAt & updatedAt
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Task", taskSchema);
+
