@@ -10,8 +10,13 @@ const projectTypeDefs = gql`
     category: String
     status: String!
     projectManager: User!
-    teamLead: [User]
-    teamMembers: [User!]
+    teamLeads: [TeamLead] 
+    teamMembers: [User!]!
+  }
+
+  type TeamLead {
+    teamLeadId: User!  
+    leadRole: String!
   }
 
   type Query {
@@ -26,9 +31,20 @@ const projectTypeDefs = gql`
       description: String
       startDate: String!
       endDate: String!
-    ): Project
+    ): Project!
 
-    assignTeamLead(projectId: ID!, teamLeadId: [ID!]!): Project!
+    assignTeamLead(projectId: ID!, teamLeads: [TeamLeadInput!]!): AssignTeamLeadResponse! 
+  }
+
+  input TeamLeadInput {
+    teamLeadId: ID!
+    leadRole: String!
+  }
+
+  type AssignTeamLeadResponse {
+    success: Boolean!
+    message: String!
+    project: Project
   }
 `;
 

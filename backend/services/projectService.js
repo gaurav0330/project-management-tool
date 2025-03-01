@@ -29,58 +29,50 @@ const projectService = {
     return await Project.find({ projectManager: managerId });
   },
 
- 
+  assignTeamLead: async (projectId, teamLeads, userId) => {
+    console.log("🔹 Received Team Lead IDs:", teamLeads);
 
+    const project = await Project.findById(projectId).populate("projectManager teamLeads.teamLeadId");
+    if (!project) throw new Error("❌ Project not found!");
 
-  assignTeamLead: async (projectId, teamLeadIds, userId) => {
-    const project = await Project.findById(projectId)
-      .populate("projectManager teamLead")
-      .exec();
-  
-    if (!project) throw new Error("Project not found!");
-  
     if (project.projectManager._id.toString() !== userId.toString()) {
-      throw new Error("Unauthorized! You can only assign Team Leads to your own projects.");
+      throw new Error("❌ Unauthorized! You can only assign Team Leads to your own projects.");
     }
-  
-    // ✅ Ensure teamLeadIds contains only valid ObjectIds
-    const validTeamLeadIds = await User.find(
-      { _id: { $in: teamLeadIds } }, 
-      '_id' // Fetch only _id field
-    ).lean();
-  
-    if (validTeamLeadIds.length === 0) {
-      throw new Error("Invalid team lead IDs provided.");
+
+    // ✅ Validate & Convert IDs
+    const validTeamLeads = teamLeads
+      .map(({ teamLeadId, leadRole }) => {
+        console.log("🔹 Checking Team Lead ID:", teamLeadId);
+        if (mongoose.isValidObjectId(teamLeadId) && leadRole) {
+          return { teamLeadId: new mongoose.Types.ObjectId(teamLeadId), leadRole };
+        } else {
+          console.warn(`⚠️ Invalid ObjectId or missing role: ${teamLeadId}, ${leadRole}`);
+          return null;
+        }
+      })
+      .filter(entry => entry !== null); // Remove invalid entries
+
+    if (validTeamLeads.length === 0) {
+      throw new Error("❌ No valid team leads provided.");
     }
-  
-    // ✅ Prevent duplicates before updating
-    const existingTeamLeads = new Set(project.teamLead.map(lead => lead._id.toString()));
-    validTeamLeadIds.forEach(lead => existingTeamLeads.add(lead._id.toString()));
-  
-    // Convert the Set back to an array of ObjectIds
-    project.teamLead = Array.from(existingTeamLeads).map(id => new mongoose.Types.ObjectId(id)); // Ensure ObjectId type
+
+    // ✅ Merge existing and new team leads without duplicates
+    const existingLeads = project.teamLeads.map(lead => lead.teamLeadId.toString());
+
+    validTeamLeads.forEach(newLead => {
+      if (!existingLeads.includes(newLead.teamLeadId.toString())) {
+        project.teamLeads.push(newLead);
+      }
+    });
+
     await project.save();
-  
-    // ✅ Populate updated team leads before returning
-    await project.populate("teamLead");
-  
-    return {
-      ...project._doc,
-      id: project._id.toString(),
-      projectManager: project.projectManager
-        ? { ...project.projectManager._doc, id: project.projectManager._id.toString() }
-        : null,
-      teamLead: project.teamLead.map(lead => ({
-        ...lead._doc,
-        id: lead._id.toString(),
-      })),
-    };
+    await project.populate("teamLeads.teamLeadId");
+
+    return project;
   },
   
-  
-  
-  
-  
+
+
 };
 
 module.exports = projectService;
