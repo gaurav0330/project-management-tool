@@ -5,11 +5,14 @@ const projectTypeDefs = gql`
     id: ID!
     title: String!
     description: String
-    manager: User!
     startDate: String!
     endDate: String!
+    category: String
     status: String!
     createdAt: String!
+    projectManager: User!
+    teamLead: [User]
+    teamMembers: [User!]
   }
 
   type Query {
@@ -19,6 +22,7 @@ const projectTypeDefs = gql`
 
   type Mutation {
     createProject(title: String!, description: String, startDate: String!, endDate: String!): Project
+    assignTeamLead(projectId: ID!, teamLeadId: [ID!]!): Project!
   }
 `;
 

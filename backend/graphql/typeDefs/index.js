@@ -1,7 +1,5 @@
 const { gql } = require("apollo-server-express");
 const projectManagerTypeDefs = require("./projectManager");
-const teamLeadTypeDefs = require("./teamLead");
-const teamMemberTypeDefs = require("./teamMember");
 const userTypeDefs = require("./user");
 
 const baseTypeDefs = gql`
@@ -18,8 +16,6 @@ const typeDefs = [
   userTypeDefs,
   baseTypeDefs,
   projectManagerTypeDefs,
-  teamLeadTypeDefs,
-  teamMemberTypeDefs,
 ];
 
 module.exports = typeDefs;
