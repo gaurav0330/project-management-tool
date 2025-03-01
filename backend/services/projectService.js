@@ -1,6 +1,8 @@
 const Project = require("../models/Project");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const Task = require("../models/Task");
+const { ApolloError } = require("apollo-server-express");
 
 const projectService = {
   createProject: async ({ title, description, startDate, endDate, managerId }) => {
@@ -29,46 +31,121 @@ const projectService = {
     return await Project.find({ projectManager: managerId });
   },
 
-  assignTeamLead: async (projectId, teamLeads, userId) => {
-    console.log("🔹 Received Team Lead IDs:", teamLeads);
+  assignTeamLeads : async (projectId, teamLeads, user) => {
+    try {
+        console.log("Received projectId:", projectId);
+        console.log("Received teamLeads:", teamLeads);
 
-    const project = await Project.findById(projectId).populate("projectManager teamLeads.teamLeadId");
-    if (!project) throw new Error("❌ Project not found!");
-
-    if (project.projectManager._id.toString() !== userId.toString()) {
-      throw new Error("❌ Unauthorized! You can only assign Team Leads to your own projects.");
-    }
-
-    // ✅ Validate & Convert IDs
-    const validTeamLeads = teamLeads
-      .map(({ teamLeadId, leadRole }) => {
-        console.log("🔹 Checking Team Lead ID:", teamLeadId);
-        if (mongoose.isValidObjectId(teamLeadId) && leadRole) {
-          return { teamLeadId: new mongoose.Types.ObjectId(teamLeadId), leadRole };
-        } else {
-          console.warn(`⚠️ Invalid ObjectId or missing role: ${teamLeadId}, ${leadRole}`);
-          return null;
+        if (!user) {
+            return { success: false, message: "Unauthorized: Please log in." };
         }
-      })
-      .filter(entry => entry !== null); // Remove invalid entries
 
-    if (validTeamLeads.length === 0) {
-      throw new Error("❌ No valid team leads provided.");
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            console.error("❌ Invalid project ID");
+            throw new Error("Invalid project ID");
+        }
+
+        const project = await Project.findById(projectId);
+        if (!project) {
+            console.error("❌ Project not found");
+            return { success: false, message: "Project not found", project: null };
+        }
+
+        if (project.projectManager.toString() !== user.id) {
+            return { success: false, message: "Access Denied: Only the Project Manager can assign team leads." };
+        }
+
+        const formattedTeamLeads = teamLeads.map(({ teamLeadId, leadRole }) => {
+            if (!mongoose.Types.ObjectId.isValid(teamLeadId)) {
+                console.error(`❌ Invalid teamLeadId: ${teamLeadId}`);
+                throw new Error(`Invalid teamLeadId: ${teamLeadId}`);
+            }
+            return {
+                teamLeadId: new mongoose.Types.ObjectId(teamLeadId),
+                leadRole,
+            };
+        });
+
+        console.log("✅ Formatted team leads:", formattedTeamLeads);
+
+        project.teamLeads.push(...formattedTeamLeads);
+        await project.save();
+
+        const updatedProject = await Project.findById(projectId).populate("teamLeads.teamLeadId");
+
+        console.log("✅ Successfully updated project:", updatedProject);
+
+        return {
+            success: true,
+            message: "Team leads assigned successfully",
+            project: updatedProject,
+        };
+
+    } catch (error) {
+        console.error("❌ Error assigning team leads:", error.message);
+        return {
+            success: false,
+            message: `Failed to assign team leads: ${error.message}`,
+            project: null,
+        };
     }
+},
 
-    // ✅ Merge existing and new team leads without duplicates
-    const existingLeads = project.teamLeads.map(lead => lead.teamLeadId.toString());
 
-    validTeamLeads.forEach(newLead => {
-      if (!existingLeads.includes(newLead.teamLeadId.toString())) {
-        project.teamLeads.push(newLead);
-      }
-    });
+  assignTaskService : async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
+    try {
+        if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
 
-    await project.save();
-    await project.populate("teamLeads.teamLeadId");
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            throw new ApolloError("Invalid project ID", "BAD_REQUEST");
+        }
 
-    return project;
+        if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+            throw new ApolloError("Invalid assignedTo ID", "BAD_REQUEST");
+        }
+
+        const project = await Project.findById(projectId);
+        if (!project) {
+            return { success: false, message: "Project not found", task: null };
+        }
+
+        if (project.projectManager.toString() !== user.id) {
+            return { success: false, message: "Access Denied: Only the Project Manager can assign tasks." };
+        }
+
+        const isTeamLead = project.teamLeads.some(lead => lead.teamLeadId.toString() === assignedTo);
+        if (!isTeamLead) {
+            return { success: false, message: "Assigned user is not a Team Lead of this project.", task: null };
+        }
+
+        // ✅ Convert assignedTo to ObjectId
+        const newTask = new Task({
+            title,
+            description,
+            project: projectId,
+            createdBy: user.id,
+            assignedTo: new mongoose.Types.ObjectId(assignedTo), // Ensure it's stored as ObjectId
+            status: "To Do",
+            priority: priority || "Medium",
+            dueDate,
+            createdAt: new Date(),
+        });
+
+        await newTask.save();
+
+        return {
+            success: true,
+            message: "Task assigned successfully",
+            task: newTask,
+        };
+    } catch (error) {
+        console.error("❌ Error in assignTaskService:", error.message);
+        return {
+            success: false,
+            message: `Failed to assign task: ${error.message}`,
+            task: null,
+        };
+    }
   },
   
 

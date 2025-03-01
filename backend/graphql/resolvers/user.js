@@ -11,6 +11,7 @@ const authResolvers = {
 
 const userResolvers = {
     Query: {
+
       // Get all users with role "Team_Lead"
       getAllLeads: async () => {
         try {
