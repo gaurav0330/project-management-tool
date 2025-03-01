@@ -19,6 +19,20 @@ const leadTypeDefs = gql`
   leadRole: String!
  }
 
+
+ type Task {
+  id: ID! 
+  title: String!
+  description: String
+  project: ID!
+  createdBy: ID!
+  assignedTo: ID! 
+  status: String!
+  priority: String!
+  dueDate: String
+  createdAt: String
+}
+
   type TeamMember {
     teamMemberId: User!  
     memberRole: String!
@@ -34,6 +48,13 @@ const leadTypeDefs = gql`
     message: String!
     project: Project
   }
+  
+  type TaskResponse {
+    success: Boolean!
+    message: String!
+    task: Task
+  }
+    
 
   type Query {
     getProjectsByLeadId(leadId: ID!): [Project]
@@ -41,6 +62,16 @@ const leadTypeDefs = gql`
 
   type Mutation {
     addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
+
+     assignTaskMember(
+      projectId: ID!
+      title: String!
+      description: String
+      assignedTo: ID! 
+      priority: String
+      dueDate: String
+    ): TaskResponse!
+
   }
 `;
 
