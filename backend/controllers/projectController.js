@@ -27,6 +27,8 @@ const projectController = {
     return await projectService.getProjectById(id);
   },
 
+
+
   assignLeadController: async (projectId, teamLeadId, user) => {
     console.log("User in assignLeadController:", user); // 🔍 Debugging
   
@@ -38,8 +40,6 @@ const projectController = {
     return await projectService.assignTeamLead(projectId, teamLeadId, user._id.toString());
   },
   
-
-
 };
 
 module.exports = projectController;
