@@ -1,6 +1,6 @@
 const { gql } = require("apollo-server-express");
 
-const projectTypeDefs = gql`
+const leadTypeDefs = gql`
   type Project {
     id: ID!
     title: String!
@@ -17,19 +17,10 @@ const projectTypeDefs = gql`
   type Query {
     getAllProjects: [Project]
     getProjectById(id: ID!): Project
-    getProjectsByManagerId(managerId: ID!): [Project]
+    getProjectsByLeadId(leadId: ID!): [Project]
   }
 
-  type Mutation {
-    createProject(
-      title: String!
-      description: String
-      startDate: String!
-      endDate: String!
-    ): Project
-
-    assignTeamLead(projectId: ID!, teamLeadId: [ID!]!): Project!
-  }
 `;
 
-module.exports = projectTypeDefs;
+
+module.exports = leadTypeDefs;

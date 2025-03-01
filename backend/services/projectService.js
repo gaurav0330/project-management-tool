@@ -25,6 +25,13 @@ const projectService = {
     return await Project.findById(id).populate("projectManager");
   },
 
+  getProjectsByManagerId: async (managerId) => {
+    return await Project.find({ projectManager: managerId });
+  },
+
+ 
+
+
   assignTeamLead: async (projectId, teamLeadIds, userId) => {
     const project = await Project.findById(projectId)
       .populate("projectManager teamLead")

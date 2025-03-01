@@ -1,5 +1,6 @@
 const { ApolloError } = require("apollo-server-express");
 const projectController = require("../../controllers/projectController");
+const projectService = require("../../services/projectService");
 
 const projectResolvers = {
   Query: {
@@ -11,7 +12,14 @@ const projectResolvers = {
       if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
       return await projectController.getProjectById(id, user);
     },
+    getProjectsByManagerId: async (_, args) => {
+      // console.log("Args received:", args); // Debugging
+      return await projectService.getProjectsByManagerId(args.managerId);
+    },
   },
+
+
+
   Mutation: {
     createProject: async (_, { title, description, startDate, endDate }, { user }) => {
       if (!user || user.role !== "Project_Manager") {
