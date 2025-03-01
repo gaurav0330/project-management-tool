@@ -13,7 +13,6 @@ export const CREATE_PROJECT_MUTATION = gql`
       endDate: $endDate
       description: $description
     ) {
-      createdAt
       description
       endDate
       startDate

@@ -1,38 +1,45 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { FaCalendarAlt, FaFolder, FaClock, FaArrowRight } from "react-icons/fa";
 
 const ProjectCard = ({ project }) => {
   return (
-    <div className="p-6 transition-shadow duration-300 bg-white rounded-lg shadow-md hover:shadow-lg">
-      {/* Title & Status */}
+    <div className="relative p-6 transition-transform duration-300 bg-white rounded-lg shadow-lg hover:shadow-xl hover:scale-105">
+      {/* Title & Category */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{project.title}</h3>
-        <span
-          className={`px-3 py-1 text-sm font-medium rounded-full ${
-            project.status === "Active" ? "bg-green-100 text-green-700" :
-            project.status === "On Hold" ? "bg-yellow-100 text-yellow-700" :
-            "bg-gray-200 text-gray-700"
-          }`}
-        >
-          {project.status}
-        </span>
+        <h3 className="text-lg font-bold text-gray-800">{project.title}</h3>
+        {project.category && (
+          <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full">
+            <FaFolder className="text-blue-600" />
+            {project.category}
+          </span>
+        )}
       </div>
 
-      {/* Description */}
-      <p className="mt-2 text-gray-600">{project.description}</p>
+      {/* Project Description */}
+      <p className="mt-3 text-sm text-gray-600 line-clamp-2">{project.description}</p>
 
-      {/* Team Members */}
-      <div className="flex items-center mt-4">
-        {project.members.map((member, index) => (
-          <div key={index} className="flex items-center justify-center w-8 h-8 -ml-2 text-sm font-semibold text-white bg-blue-500 border-2 border-white rounded-full first:ml-0">
-            {member[0]}
-          </div>
-        ))}
+      {/* Date Section */}
+      <div className="mt-4 space-y-2 text-sm text-gray-600">
+        <p className="flex items-center gap-2">
+          <FaCalendarAlt className="text-green-600" />
+          <span className="font-medium">Start Date:</span> {project.startDate}
+        </p>
+        <p className="flex items-center gap-2">
+          <FaClock className="text-red-600" />
+          <span className="font-medium">End Date:</span> {project.endDate}
+        </p>
       </div>
 
-      {/* Start & End Dates */}
-      <div className="mt-3 text-sm text-gray-500">
-        📅 {project.startDate} - {project.endDate}
-      </div>
+      {/* View Project Button */}
+      <Link to={`/projects/${project.id}`}>
+        <button className="flex items-center justify-center w-full px-4 py-2 mt-4 text-sm font-semibold text-white transition-colors duration-300 bg-blue-600 rounded-md hover:bg-blue-700">
+          View Project <FaArrowRight className="ml-2" />
+        </button>
+      </Link>
+
+      {/* Decorative Border at Bottom */}
+      <div className="absolute bottom-0 left-0 w-full h-1 rounded-b-lg bg-gradient-to-r from-blue-400 to-purple-500"></div>
     </div>
   );
 };
