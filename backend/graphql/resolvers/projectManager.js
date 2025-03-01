@@ -55,8 +55,7 @@ const projectResolvers = {
     assignTask: async (_, args, context) => {
       return await projectService.assignTaskService({ ...args, user: context.user });
   },
-
-
+  
   },
 };
 

@@ -109,9 +109,9 @@ const projectService = {
             return { success: false, message: "Project not found", task: null };
         }
 
-        if (project.projectManager.toString() !== user.id) {
-            return { success: false, message: "Access Denied: Only the Project Manager can assign tasks." };
-        }
+        // if (project.projectManager.toString() !== user.id) {
+        //     return { success: false, message: "Access Denied: Only the Project Manager can assign tasks." };
+        // }
 
         const isTeamLead = project.teamLeads.some(lead => lead.teamLeadId.toString() === assignedTo);
         if (!isTeamLead) {

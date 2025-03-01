@@ -2,6 +2,8 @@
 const Project = require("../models/Project");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const Task = require("../models/Task");
+const { ApolloError } = require("apollo-server-express");
 
 const leadService = {
 
@@ -80,6 +82,62 @@ getProjectsByLeadId: async (leadId) => {
       };
   }
 },
+
+assignTaskMemberService : async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
+    try {
+        if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
+
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            throw new ApolloError("Invalid project ID", "BAD_REQUEST");
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+            throw new ApolloError("Invalid assignedTo ID", "BAD_REQUEST");
+        }
+
+        const project = await Project.findById(projectId);
+        if (!project) {
+            return { success: false, message: "Project not found", task: null };
+        }
+
+        // if (project.projectManager.toString() !== user.id) {
+        //     return { success: false, message: "Access Denied: Only the Project Manager can assign tasks." };
+        // }
+
+        const isTeamMember = project.teamMembers.some(lead => lead.teamMemberId.toString() === assignedTo);
+        if (!isTeamMember) {
+            return { success: false, message: "Assigned user is not a Team Member of this project.", task: null };
+        }
+
+        // ✅ Convert assignedTo to ObjectId
+        const newTask = new Task({
+            title,
+            description,
+            project: projectId,
+            createdBy: user.id,
+            assignedTo: new mongoose.Types.ObjectId(assignedTo), // Ensure it's stored as ObjectId
+            status: "To Do",
+            priority: priority || "Medium",
+            dueDate,
+            createdAt: new Date(),
+        });
+
+        await newTask.save();
+
+        return {
+            success: true,
+            message: "Task assigned successfully",
+            task: newTask,
+        };
+    } catch (error) {
+        console.error("❌ Error in assignTaskService:", error.message);
+        return {
+            success: false,
+            message: `Failed to assign task: ${error.message}`,
+            task: null,
+        };
+    }
+  },
   
 };
 
