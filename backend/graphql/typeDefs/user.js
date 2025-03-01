@@ -17,6 +17,8 @@ const userTypeDefs = gql`
 
     type Query {
         me: User
+        getAllLeads: [User]  # ✅ Query to fetch all leads
+        getAllTeamMembers: [User]  # ✅ Query to fetch all leads
     }
 
     type Mutation {
