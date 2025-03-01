@@ -9,7 +9,6 @@ const projectTypeDefs = gql`
     endDate: String!
     category: String
     status: String!
-    createdAt: String!
     projectManager: User!
     teamLead: [User]
     teamMembers: [User!]
