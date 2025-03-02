@@ -33,6 +33,7 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Project Home", icon: MdDashboard, component: "projectHome" },
           { name: "Manage Lead", icon: MdSupervisorAccount, component: "managelead" },
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
+          { name: "Manage Task", icon: MdAssignment, component: "assignedTasks" },
           { name: "Timeline", icon: MdTimeline, component: "timeline" },
           { name: "Reports", icon: MdBarChart, component: "reports" },
           { name: "Analytics", icon: MdAnalytics , component: "analytics" },
@@ -49,13 +50,19 @@ const Sidebar = ({ setActiveComponent }) => {
         ],
       },
       {
-        category: "Project Management",
+        category: "My Tasks",
         items: [
-          { name: "Dashboard", icon: MdDashboard, component: "dashboard" },  
-          { name: "Projects", icon: MdFolderOpen, component: "projects" },  
-          { name: "Tasks", icon: MdAssignment, component: "tasks" },  
-          { name: "Manage Task", icon: MdAssignment, component: "taskManagement" },  
-          { name: "Team Tasks", icon: MdGroup, component: "displayTeamTask" },  
+          { name: "Dashboard", icon: MdDashboard, component: "dashboard" },   
+          { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" },   
+        ],
+      },
+      {
+        category: "Team Tasks",
+        items: [
+          { name: "My Teams", icon: MdFolderOpen, component: "teamtasks" },  
+          { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" }, 
+          { name: "Create Task", icon: MdAssignment, component: "CreateTask" },  
+          { name: "Team Tasks", icon: MdGroup, component: "teamtasks" },  
           { name: "Team Distribution", icon: MdGroup, component: "taskDistribution" },  
           { name: "Timeline", icon: MdTimeline, component: "timeline" },  
         ],

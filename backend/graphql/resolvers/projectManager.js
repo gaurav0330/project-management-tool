@@ -22,6 +22,7 @@ const projectResolvers = {
       if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
   
       try {
+          
           console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
   
           // Find the project and populate the team leads

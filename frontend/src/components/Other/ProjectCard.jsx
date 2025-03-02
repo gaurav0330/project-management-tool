@@ -1,8 +1,33 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaFolder, FaClock, FaArrowRight } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode"; // Ensure you installed it: npm install jwt-decode
 
 const ProjectCard = ({ project }) => {
+  const navigate = useNavigate(); // ✅ useNavigate Hook for navigation
+
+  // ✅ Extract role from token
+  let role = null;
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      role = decoded.role; // Ensure your backend sends 'role' in the JWT
+    } catch (error) {
+      console.error("❌ Error decoding token:", error);
+    }
+  }
+
+  // ✅ Handle navigation dynamically
+  const handleNavigation = () => {
+    if (role === "Team_Lead") {
+      navigate(`/teamLead/project/${project.id}`);
+    } else if (role === "Project_Manager") {
+      navigate(`/projectHome/${project.id}`);
+    }
+  };
+
   return (
     <div className="relative p-6 transition-transform duration-300 bg-white rounded-lg shadow-lg hover:shadow-xl hover:scale-105">
       {/* Title & Category */}
@@ -32,11 +57,12 @@ const ProjectCard = ({ project }) => {
       </div>
 
       {/* View Project Button */}
-      <Link to={`/projectHome/${project.id}`}>
-        <button className="flex items-center justify-center w-full px-4 py-2 mt-4 text-sm font-semibold text-white transition-colors duration-300 bg-blue-600 rounded-md hover:bg-blue-700">
-          View Project <FaArrowRight className="ml-2" />
-        </button>
-      </Link>
+      <button
+        onClick={handleNavigation}
+        className="flex items-center justify-center w-full px-4 py-2 mt-4 text-sm font-semibold text-white transition-colors duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
+      >
+        View Project <FaArrowRight className="ml-2" />
+      </button>
 
       {/* Decorative Border at Bottom */}
       <div className="absolute bottom-0 left-0 w-full h-1 rounded-b-lg bg-gradient-to-r from-blue-400 to-purple-500"></div>
