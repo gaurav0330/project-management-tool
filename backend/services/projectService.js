@@ -307,7 +307,42 @@ const projectService = {
     throw new Error("User is not part of this project");
   },
   
-};
+  deleteTaskService : async ({ taskId, user }) => {
+    try {
+        if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
 
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            throw new ApolloError("Invalid task ID", "BAD_REQUEST");
+        }
+
+        const task = await Task.findById(taskId);
+        if (!task) {
+            throw new ApolloError("Task not found", "NOT_FOUND");
+        }
+
+        if (!task.createdBy || !task.assignedTo) {
+            throw new ApolloError("Task data is incomplete. Cannot determine permissions.", "BAD_REQUEST");
+        }
+
+        const assignedBy = task.createdBy.toString();
+        const assignedTo = task.assignedTo.toString();
+        const userId = user.id;
+
+        // 🚀 **Permission Check**
+        if (assignedBy === userId || assignedTo === userId) {
+            await Task.findByIdAndDelete(taskId);
+            return true; // ✅ Fix: Return only Boolean
+        } else {
+            throw new ApolloError("You do not have permission to delete this task", "FORBIDDEN");
+        }
+    } catch (error) {
+        console.error("❌ Error in deleteTaskService:", error.message);
+        return false; // ✅ Fix: Return only Boolean
+    }
+
+  
+}
+
+};
 
 module.exports = projectService;

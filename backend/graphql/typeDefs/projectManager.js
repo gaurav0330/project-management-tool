@@ -28,7 +28,7 @@ const projectTypeDefs = gql`
 
   type TeamLead {
     teamLeadId: User!  
-    leadRole: String!
+    leadRole: String
   }
 
   type Query {
@@ -63,6 +63,8 @@ const projectTypeDefs = gql`
 
      deleteProject(projectId: ID!): Boolean!  # Only Project Managers
     leaveProject(projectId: ID!): Boolean!   # For Team Leads & Team Members
+
+    deleteTask(taskId: ID!): Boolean!
   }
 
   input TeamLeadInput {

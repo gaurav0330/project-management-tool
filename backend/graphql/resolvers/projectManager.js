@@ -22,7 +22,8 @@ const projectResolvers = {
       if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
   
       try {
-          console.log(`Fetching leads for project ID: ${projectId}`) // ✅ Debugging
+          
+          console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
   
           // Find the project and populate the team leads
           const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
@@ -43,7 +44,7 @@ const projectResolvers = {
           console.error("❌ Error fetching leads:", error);
           throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
       }
-    }
+    }  
     
   },
 
@@ -98,6 +99,11 @@ const projectResolvers = {
     leaveProject: async (_, { projectId }, { user }) => {
       return await projectService.leaveProject(user, projectId);
     },
+
+    async deleteTask(_, { taskId }, { user }) {
+      return await projectService.deleteTaskService({ taskId, user });
+     },
+
   },
 };
 
