@@ -103,7 +103,8 @@ function AssignTeamLead({ projectId }) {
 
       if (response.data.assignTeamLead.success) {
         alert("✅ Team leads assigned successfully!");
-        navigate("/projectDashboard"); // Redirect after success
+        navigate(`/ProjectHome/${projectId}`)
+        // Redirect after success
       } else {
         alert(`⚠️ ${response.data.assignTeamLead.message}`);
       }

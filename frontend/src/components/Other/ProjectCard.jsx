@@ -32,7 +32,7 @@ const ProjectCard = ({ project }) => {
       </div>
 
       {/* View Project Button */}
-      <Link to={`/projects/${project.id}`}>
+      <Link to={`/projectHome/${project.id}`}>
         <button className="flex items-center justify-center w-full px-4 py-2 mt-4 text-sm font-semibold text-white transition-colors duration-300 bg-blue-600 rounded-md hover:bg-blue-700">
           View Project <FaArrowRight className="ml-2" />
         </button>
