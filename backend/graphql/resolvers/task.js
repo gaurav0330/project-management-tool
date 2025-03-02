@@ -35,6 +35,31 @@ const taskResolvers = {
       }
       return await taskService.getTasksByManager(managerId, projectId);
     },
+    getTasksByTeamLead: async (_, { teamLeadId, memberId, projectId }) => {
+      if (!teamLeadId) {
+        throw new Error("Lead ID is required");
+      }
+      return await taskService.getTasksByTeamLead(teamLeadId, memberId, projectId);
+    },
+
+    getTasksForMember: async (_, { memberId, projectLeadId, projectId }) => {
+      try {
+          return await taskService.getTasksForMember(memberId, projectLeadId, projectId);
+      } catch (error) {
+          console.error("Error fetching tasks:", error);
+          throw new Error(`Error fetching tasks: ${error.message}`);
+      }
+  },
+
+  getTasksForLead: async (_, { teamLeadId, projectManagerId, projectId }) => {
+    try {
+        return await taskService.getTasksForMember(teamLeadId, projectManagerId, projectId);
+    } catch (error) {
+        console.error("Error fetching tasks:", error);
+        throw new Error(`Error fetching tasks: ${error.message}`);
+    }
+},
+
   },
 
 };
