@@ -5,11 +5,6 @@ const TeamLeadSchema = new mongoose.Schema({
   leadRole: { type: String, required: true }
 });
 
-const TeamMemberSchema = new mongoose.Schema({
-  teamMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  memberRole: { type: String, required: true }
-});
-
 const ProjectSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String },
@@ -17,8 +12,8 @@ const ProjectSchema = new mongoose.Schema({
   endDate: { type: Date, required: true },
   category: { type: String },
   projectManager: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, 
-  teamLeads: [TeamLeadSchema], // Stores both ID and role
-  teamMembers: [TeamMemberSchema],
+  teamLeads: [TeamLeadSchema], // Storing both ID and role
+  teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }], // References to Team documents
   status: { type: String, required: true, default: "Planned" }
 });
 

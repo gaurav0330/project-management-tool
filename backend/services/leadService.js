@@ -83,7 +83,7 @@ getProjectsByLeadId: async (leadId) => {
   }
 },
 
-assignTaskMemberService : async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
+assignTaskMemberService: async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
     try {
         if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
 
@@ -95,27 +95,49 @@ assignTaskMemberService : async ({ projectId, title, description, assignedTo, pr
             throw new ApolloError("Invalid assignedTo ID", "BAD_REQUEST");
         }
 
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return { success: false, message: "Project not found", task: null };
-        }
+        // ✅ Optimized query using aggregation
+        const project = await Project.aggregate([
+            { $match: { _id: new mongoose.Types.ObjectId(projectId) } },
+            { 
+                $lookup: {
+                    from: "teams",
+                    localField: "teams",
+                    foreignField: "_id",
+                    as: "teams"
+                }
+            },
+            { 
+                $unwind: "$teams"
+            },
+            { 
+                $lookup: {
+                    from: "users",
+                    localField: "teams.members.teamMemberId",
+                    foreignField: "_id",
+                    as: "teamMembers"
+                }
+            },
+            { 
+                $match: { "teamMembers._id": new mongoose.Types.ObjectId(assignedTo) }
+            },
+            {
+                $project: {
+                    _id: 1 // Only return project ID (or more if needed)
+                }
+            }
+        ]);
 
-        // if (project.projectManager.toString() !== user.id) {
-        //     return { success: false, message: "Access Denied: Only the Project Manager can assign tasks." };
-        // }
-
-        const isTeamMember = project.teamMembers.some(lead => lead.teamMemberId.toString() === assignedTo);
-        if (!isTeamMember) {
+        if (project.length === 0) {
             return { success: false, message: "Assigned user is not a Team Member of this project.", task: null };
         }
 
-        // ✅ Convert assignedTo to ObjectId
+        // ✅ Create the task
         const newTask = new Task({
             title,
             description,
             project: projectId,
             createdBy: user.id,
-            assignedTo: new mongoose.Types.ObjectId(assignedTo), // Ensure it's stored as ObjectId
+            assignedTo: new mongoose.Types.ObjectId(assignedTo),
             status: "To Do",
             priority: priority || "Medium",
             dueDate,
@@ -136,6 +158,164 @@ assignTaskMemberService : async ({ projectId, title, description, assignedTo, pr
             message: `Failed to assign task: ${error.message}`,
             task: null,
         };
+    }
+},
+
+approveTaskCompletionService: async ({ taskId, approved, remarks }, user) => {
+    try {
+        if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
+
+        if (!mongoose.Types.ObjectId.isValid(taskId)) {
+            throw new ApolloError("Invalid task ID", "BAD_REQUEST");
+        }
+
+        const task = await Task.findById(taskId).populate("project");
+        if (!task) return { success: false, message: "Task not found", task: null };
+
+        const project = await Project.findById(task.project).populate("teams");
+        if (!project) return { success: false, message: "Project not found", task: null };
+
+        const isTeamLead = project.teams.some(team => team.leadId.toString() === user.id);
+        if (!isTeamLead) {
+            throw new ApolloError("Only a Team Lead can approve tasks.", "FORBIDDEN");
+        }
+
+        task.status = approved ? "Completed" : "In Progress";
+        task.remarks = remarks || "";  // ✅ Add remarks when updating the task
+
+        task.history.push({
+            updatedBy: user.id,
+            updatedAt: new Date(),
+            oldStatus: task.status,
+            newStatus: approved ? "Completed" : "In Progress",
+        });
+
+        await task.save();
+
+        return {
+            success: true,
+            message: approved ? "Task approved successfully!" : "Task rejected, sent back to In Progress.",
+            task,
+        };
+    } catch (error) {
+        console.error("❌ Error in approveTaskCompletionService:", error.message);
+        return {
+            success: false,
+            message: `Failed to approve task: ${error.message}`,
+            task: null,
+        };
+    }
+},
+
+
+rejectTaskService: async (taskId, reason, user) => {
+    try {
+        if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+        const task = await Task.findById(taskId);
+        if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+        task.status = "Rejected";
+        task.remarks = reason; // ✅ Ensure this field is updated
+        await task.save(); // ✅ Save changes
+
+        return { success: true, message: "Task rejected successfully!", task };
+    } catch (error) {
+        return { success: false, message: `Failed to reject task: ${error.message}`, task: null };
+    }
+},
+
+
+  // ✅ Request Task Modifications
+  requestTaskModificationsService: async (taskId, feedback, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.status = "Needs Revision";
+      task.remarks = feedback;
+      await task.save();
+
+      return { success: true, message: "Requested task modifications!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to request modifications: ${error.message}`, task: null };
+    }
+  },
+  
+  updateTaskStatus: async (taskId, status, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      // Store status change history
+      task.history.push({
+        updatedBy: user.id,
+        updatedAt: new Date().toISOString(),
+        oldStatus: task.status,
+        newStatus: status
+      });
+
+      task.status = status;
+      await task.save();
+
+      return { success: true, message: "Task status updated!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to update task: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 2. Add Task Attachment
+  addTaskAttachment: async (taskId, attachment, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.attachments.push(attachment);
+      await task.save();
+
+      return { success: true, message: "Attachment added!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to add attachment: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 3. Send Task for Approval
+  sendTaskForApproval: async (taskId, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.status = "Pending Approval";
+      await task.save();
+
+      return { success: true, message: "Task sent for approval!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to send for approval: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 4. Request Task Review
+  requestTaskReview: async (taskId, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.status = "Needs Review";
+      await task.save();
+
+      return { success: true, message: "Task review requested!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to request review: ${error.message}`, task: null };
     }
   },
   
