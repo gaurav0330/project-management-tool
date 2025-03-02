@@ -60,6 +60,9 @@ const projectTypeDefs = gql`
     approveTaskCompletionByManager(taskId: ID!, approved: Boolean!, remarks: String): TaskResponse!
     rejectTaskByManager(taskId: ID!, reason: String!): TaskResponse!
     requestTaskModificationsByManager(taskId: ID!, feedback: String!): TaskResponse!
+
+     deleteProject(projectId: ID!): Boolean!  # Only Project Managers
+    leaveProject(projectId: ID!): Boolean!   # For Team Leads & Team Members
   }
 
   input TeamLeadInput {
