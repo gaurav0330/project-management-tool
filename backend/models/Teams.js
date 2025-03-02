@@ -8,7 +8,7 @@ const TeamMemberSchema = new mongoose.Schema({
 const TeamSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true },
   leadId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  members: [TeamMemberSchema] // Stores members added by this lead
+  members: [TeamMemberSchema]
 });
 
 module.exports = mongoose.model("Team", TeamSchema);
