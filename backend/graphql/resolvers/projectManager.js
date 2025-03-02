@@ -87,6 +87,14 @@ const projectResolvers = {
     requestTaskModificationsByManager: async (_, { taskId, feedback }, { user }) => {
       return projectService.requestTaskModifications(taskId, feedback, user);
     },
+
+    deleteProject: async (_, { projectId }, { user }) => {
+      return await projectService.deleteProject(user, projectId);
+    },
+
+    leaveProject: async (_, { projectId }, { user }) => {
+      return await projectService.leaveProject(user, projectId);
+    },
   },
 };
 

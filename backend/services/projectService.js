@@ -3,6 +3,8 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
+const { AuthenticationError } = require("apollo-server-express");
+const Team = require("../models/Teams");
 
 const projectService = {
   createProject: async ({ title, description, startDate, endDate, managerId }) => {
@@ -237,6 +239,72 @@ const projectService = {
       message: `Task requires modifications: ${feedback}`,
       task,
     };
+  },
+  async deleteProject(user, projectId) {
+    if (!user) throw new AuthenticationError("Not authenticated");
+
+    const project = await Project.findById(projectId);
+    if (!project) throw new Error("Project not found");
+
+    // 🚀 **Check if the user is the Project Manager**
+    if (project.projectManager.toString() !== user.id) {
+      throw new Error("Only the Project Manager can delete this project");
+    }
+
+    // Delete all related teams & tasks
+    await Team.deleteMany({ projectId });
+    await Task.deleteMany({ project: projectId });
+
+    // Finally, delete the project
+    await Project.findByIdAndDelete(projectId);
+
+    return true; // Success
+  },
+
+  async leaveProject(user, projectId) {
+    if (!user) throw new AuthenticationError("Not authenticated");
+
+    const project = await Project.findById(projectId);
+    if (!project) throw new Error("Project not found");
+
+    let modified = false;
+
+    // 🚀 **Check if user is a Team Lead and remove them**
+    const leadIndex = project.teamLeads.findIndex(
+      (lead) => lead.teamLeadId.toString() === user.id
+    );
+    if (leadIndex !== -1) {
+      project.teamLeads.splice(leadIndex, 1);
+      modified = true;
+    }
+
+    // 🚀 **Check if user is a Team Member and remove them**
+    const teams = await Team.find({ projectId });
+    for (let team of teams) {
+      const memberIndex = team.members.findIndex(
+        (member) => member.teamMemberId.toString() === user.id
+      );
+
+      if (memberIndex !== -1) {
+        team.members.splice(memberIndex, 1);
+        modified = true;
+
+        // If team is empty, delete the team
+        if (team.members.length === 0) {
+          await Team.findByIdAndDelete(team._id);
+        } else {
+          await team.save();
+        }
+      }
+    }
+
+    // Save changes if modified
+    if (modified) {
+      await project.save();
+      return true;
+    }
+
+    throw new Error("User is not part of this project");
   },
   
 };
