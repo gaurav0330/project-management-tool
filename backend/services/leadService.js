@@ -244,6 +244,81 @@ rejectTaskService: async (taskId, reason, user) => {
     }
   },
   
+  updateTaskStatus: async (taskId, status, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      // Store status change history
+      task.history.push({
+        updatedBy: user.id,
+        updatedAt: new Date().toISOString(),
+        oldStatus: task.status,
+        newStatus: status
+      });
+
+      task.status = status;
+      await task.save();
+
+      return { success: true, message: "Task status updated!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to update task: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 2. Add Task Attachment
+  addTaskAttachment: async (taskId, attachment, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.attachments.push(attachment);
+      await task.save();
+
+      return { success: true, message: "Attachment added!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to add attachment: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 3. Send Task for Approval
+  sendTaskForApproval: async (taskId, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.status = "Pending Approval";
+      await task.save();
+
+      return { success: true, message: "Task sent for approval!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to send for approval: ${error.message}`, task: null };
+    }
+  },
+
+  // ✅ 4. Request Task Review
+  requestTaskReview: async (taskId, user) => {
+    try {
+      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+
+      const task = await Task.findById(taskId);
+      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+
+      task.status = "Needs Review";
+      await task.save();
+
+      return { success: true, message: "Task review requested!", task };
+    } catch (error) {
+      return { success: false, message: `Failed to request review: ${error.message}`, task: null };
+    }
+  },
+  
 };
 
 module.exports = leadService;
