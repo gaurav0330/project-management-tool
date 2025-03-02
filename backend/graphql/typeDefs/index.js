@@ -4,6 +4,7 @@ const leadTypeDefs = require("./teamLead");
 const userTypeDefs = require("./user");
 const teamTypeDefs = require("./teams");
 const memberTypeDefs = require("./member");
+const taskTypeDefs = require("./task");
 
 const baseTypeDefs = gql`
   type Query {
@@ -22,6 +23,7 @@ const typeDefs = [
   teamTypeDefs,
   memberTypeDefs,
   projectManagerTypeDefs,
+  taskTypeDefs
 ];
 
 module.exports = typeDefs;

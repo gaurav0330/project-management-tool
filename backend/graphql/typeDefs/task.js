@@ -1,0 +1,45 @@
+const { gql } = require("apollo-server-express");
+
+const typeDefs = gql`
+  enum UserRole {
+    Project_Manager
+    Team_Lead
+    Team_Member
+  }
+
+  type User {
+    id: ID!
+    username: String!
+    email: String!
+    role: UserRole!
+  }
+
+  type TaskHistory {
+    updatedBy: ID!
+    updatedAt: String!
+    oldStatus: String!
+    newStatus: String!
+    user: User
+  }
+
+  type Task {
+    id: ID!
+    title: String!
+    description: String
+    project: ID!
+    createdBy: ID!
+    assignedTo: ID!
+    status: String!
+    priority: String!
+    dueDate: String
+    attachments: [String]
+    history: [TaskHistory]
+    remarks: String
+  }
+
+  type Query {
+    getTaskHistory(taskId: ID!): [TaskHistory]
+  }
+`;
+
+module.exports = typeDefs;

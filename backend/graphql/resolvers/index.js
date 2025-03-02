@@ -4,6 +4,7 @@ const userResolvers = require("./user");
 const authResolvers = require("./user");
 const teamResolvers = require("./teams");
 const memberResolvers = require("./member");
+const taskResolvers = require("./task");
 
 const resolvers = {
   Query: {
@@ -11,14 +12,16 @@ const resolvers = {
     ...teamResolvers.Query,
     ...leadResolvers.Query,
     ...userResolvers.Query,
-    ...memberResolvers.Query
+    ...memberResolvers.Query,
+    ...taskResolvers.Query
   },
   Mutation: {
     ...authResolvers.Mutation,
     ...teamResolvers.Mutation,
     ...projectManagerResolvers.Mutation,
     ...leadResolvers.Mutation,
-    ...memberResolvers.Mutation
+    ...memberResolvers.Mutation,
+    ...taskResolvers.Mutation
 
   },
 };
