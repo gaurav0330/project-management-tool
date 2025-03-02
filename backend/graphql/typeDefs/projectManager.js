@@ -35,7 +35,7 @@ const projectTypeDefs = gql`
     getAllProjects: [Project]
     getProjectById(id: ID!): Project
     getProjectsByManagerId(managerId: ID!): [Project]
-    getLeadsByProjectId(projectId: ID!): [User]
+    getLeadsByProjectId(projectId: ID!): [TeamLead]
   }
 
   type Mutation {

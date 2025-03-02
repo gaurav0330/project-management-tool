@@ -2,15 +2,11 @@ import { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Other/sideBar";
-import FilterBar from "../../components/TeamMember/FilterBar";
-import ProjectCard from "../../components/Other/ProjectCard";
-import AssignTeamLead from "../../components/tasks/AssignTeamLead";
-import AssignTasks from "../../components/tasks/AssignTasks";
-import CreateProjectPage from "../../pages/ProjectManager/CreateProjectPage";
-import TaskApprovalPage from "./TaskApprovalPage";
-import TeamMemberDashboardPage from "../TeamMember/TeamMemberDashboardPage";
-import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
+import AssignMembers from "../../components/TeamLeadComponent/AssignMembers";
 import AssignedTasks from "../../components/tasks/AssignedTasks";
+import TaskManagementPage from "./TaskManagementPage";
+import TaskDistributionPage from "./TaskDistributionPage";
+import DisplayTeamTaskPage from "./DisplayTeamTaskPage"
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -40,19 +36,27 @@ export default function ProjectDashboard() {
 
       {/* Main Content Area */}
       <div className="w-4/5 p-8 overflow-auto">
-        {activeComponent === "managelead" ? (
-          <AssignTeamLead {...{ projectId }} />
-        ) : activeComponent === "dashboard" ? (
-          navigate("/ProjectDashboard")
-        ) : activeComponent === "taskapproval" ? (
-          <TaskApprovalPage />
-        ) : activeComponent === "tasks" ? (
-          <AssignTasks />
+        {activeComponent === "manageTeams" ? (
+          <AssignMembers {...{ projectId }} />
+        // ) : activeComponent === "dashboard" ? (
+        //   navigate("/ProjectDashboard")
+        // ) 
+        ) 
+        : activeComponent === "CreateTask" ? (
+          <TaskManagementPage />
         ) :
         activeComponent === "assignedTasks" ? (
           <AssignedTasks />
         ):
-        activeComponent === "projectHome" ? (
+        activeComponent === "taskDistribution" ? (
+          <TaskDistributionPage />
+        ) : activeComponent === "tasks" ? (
+          <TaskManagementPage />
+        ) :
+        activeComponent === "teamtasks" ? (
+          <DisplayTeamTaskPage />
+        )
+       :activeComponent === "projectHome" ? (
             window.location.reload()
         ) 
         : (

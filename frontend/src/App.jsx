@@ -29,6 +29,7 @@ import TeamLeadDashboard from './pages/TeamLead/teamLeadDashboard';
 import TaskManagementPage from './pages/TeamLead/TaskManagementPage';
 import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
+import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
 
 function App() {
   const { userRole } = useAuth();  // ✅ Get user role
@@ -66,6 +67,16 @@ function App() {
 
           {/* Team Lead Only */}
           <Route path="/teamleaddashboard" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TeamLeadDashboard /></ProtectedRoute>} />
+          <Route
+            path="/teamLead/project/:projectId"
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <>
+                  <LeadProjectHome />
+                </>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/teamleadtaskm" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskManagementPage /></ProtectedRoute>} />
           <Route path="/teamleadteamtask" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><DisplayTeamTaskPage /></ProtectedRoute>} />
           <Route path="/teamleadtaskDis" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskDistributionPage /></ProtectedRoute>} />
