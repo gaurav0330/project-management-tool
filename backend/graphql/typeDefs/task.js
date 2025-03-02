@@ -39,6 +39,7 @@ const typeDefs = gql`
 
   type Query {
     getTaskHistory(taskId: ID!): [TaskHistory]
+    getTasksByManager(managerId: ID!, projectId: ID): [Task]
   }
 `;
 

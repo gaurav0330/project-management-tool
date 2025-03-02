@@ -20,27 +20,30 @@ const projectResolvers = {
     },
     getLeadsByProjectId: async (_, { projectId }, { user }) => {
       if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-    
+  
       try {
-        console.log(`Fetching leads for project ID: ${projectId}`); // Debugging
-    
-        // Find the project and extract team leads
-        const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
-    
-        if (!project) {
-          throw new ApolloError("Project not found", "NOT_FOUND");
-        }
-    
-        // Extract team lead users
-        const leadUsers = project.teamLeads.map(lead => lead.teamLeadId);
-    
-        console.log("Leads found:", leadUsers);
-        return leadUsers;
+          console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
+  
+          // Find the project and populate the team leads
+          const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
+  
+          if (!project) {
+              throw new ApolloError("Project not found", "NOT_FOUND");
+          }
+  
+          // Extract both teamLeadId (User) and leadRole
+          const teamLeads = project.teamLeads.map(lead => ({
+              teamLeadId: lead.teamLeadId, // ✅ This will be a User object
+              leadRole: lead.leadRole      // ✅ This is a String
+          }));
+  
+          console.log("✅ Leads found:", teamLeads);
+          return teamLeads;
       } catch (error) {
-        console.error("Error fetching leads:", error);
-        throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
+          console.error("❌ Error fetching leads:", error);
+          throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
       }
-    }
+    }  
     
   },
 
