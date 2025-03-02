@@ -46,9 +46,9 @@ export default function ProjectDashboard() {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 h-full min-h-screen bg-white shadow-lg">
+      {/* <div className="w-64 h-full min-h-screen bg-white shadow-lg">
         <Sidebar setActiveComponent={setActiveComponent} />
-      </div>
+      </div> */}
 
       {/* Main Content Area */}
       <div className="w-4/5 p-8 overflow-auto">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { MdDashboard,MdGroup,MdAssignmentTurnedIn , MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
+import { MdDashboard,MdSupervisorAccount,MdAnalytics,MdGroup,MdAssignmentTurnedIn , MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,30 +20,25 @@ const Sidebar = ({ setActiveComponent }) => {
       {
         category: "Overview",
         items: [
-          { name: "Add Project", icon: MdDashboard, component: "addproject" },
-          { name: "Task Approval", icon: MdAssignment, component: "taskapproval" },
-          { name: "Dashboard", icon: MdDashboard, component: "overview" },
-          { name: "Analytics", icon: MdInsights, component: "analytics" },
-          { name: "Reports", icon: MdBarChart, component: "reports" },
+          // { name: "Add Project", icon: MdDashboard, component: "addproject" },
+          // { name: "Task Approval", icon: MdAssignment, component: "taskapproval" },
+          // { name: "Dashboard", icon: MdDashboard, component: "overview" },
+          // { name: "Analytics", icon: MdInsights, component: "analytics" },
+          { name: "Home", icon: MdDashboard, component: "dashboard" },
         ],
       },
       {
         category: "Project Management",
         items: [
-          { name: "Projects", icon: MdFolderOpen, component: "projects" },
+          { name: "Project Home", icon: MdDashboard, component: "projectHome" },
+          { name: "Manage Lead", icon: MdSupervisorAccount, component: "managelead" },
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
           { name: "Timeline", icon: MdTimeline, component: "timeline" },
-          { name: "Documents", icon: MdDescription, component: "documents" },
+          { name: "Reports", icon: MdBarChart, component: "reports" },
+          { name: "Analytics", icon: MdAnalytics , component: "analytics" },
         ],
       },
-      {
-        category: "Team & Communication",
-        items: [
-          { name: "Members", icon: MdPeople, component: "members" },
-          { name: "Team Members", icon: MdPeople, component: "teammember" },
-          { name: "Team Lead", icon: MdPeople, component: "teamlead" },
-        ],
-      },
+      
     ],
     Team_Lead: [
       {
