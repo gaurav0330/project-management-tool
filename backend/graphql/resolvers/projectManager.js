@@ -95,6 +95,11 @@ const projectResolvers = {
     leaveProject: async (_, { projectId }, { user }) => {
       return await projectService.leaveProject(user, projectId);
     },
+
+    async deleteTask(_, { taskId }, { user }) {
+      return await projectService.deleteTaskService({ taskId, user });
+     },
+
   },
 };
 
