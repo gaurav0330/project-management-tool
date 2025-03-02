@@ -6,6 +6,7 @@ const teamTypeDefs = require("./teams");
 const memberTypeDefs = require("./member");
 const taskTypeDefs = require("./task");
 
+
 const baseTypeDefs = gql`
   type Query {
     _empty: String
