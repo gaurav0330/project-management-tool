@@ -13,7 +13,7 @@ const projectTypeDefs = gql`
     teamLeads: [TeamLead] 
   }
 
-    type Task {
+  type Task {
     id: ID! 
     title: String!
     description: String
@@ -47,7 +47,7 @@ const projectTypeDefs = gql`
 
     assignTeamLead(projectId: ID!, teamLeads: [TeamLeadInput!]!): AssignTeamLeadResponse! 
 
-     assignTask(
+    assignTask(
       projectId: ID!
       title: String!
       description: String
@@ -56,6 +56,9 @@ const projectTypeDefs = gql`
       dueDate: String
     ): TaskResponse!
 
+    approveTaskCompletionByManager(taskId: ID!, approved: Boolean!, remarks: String): TaskResponse!
+    rejectTaskByManager(taskId: ID!, reason: String!): TaskResponse!
+    requestTaskModificationsByManager(taskId: ID!, feedback: String!): TaskResponse!
   }
 
   input TeamLeadInput {

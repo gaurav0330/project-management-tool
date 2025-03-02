@@ -149,7 +149,97 @@ const projectService = {
   },
   
 
-
+ approveTaskCompletion : async (taskId, approved, remarks, user) => {
+    const task = await Task.findById(taskId);
+    if (!task) throw new Error("Task not found");
+  
+    // Check if the user is the project manager of the task's project
+    const project = await Project.findById(task.project);
+    if (!project || project.projectManager.toString() !== user.id) {
+      throw new Error("Unauthorized! Only the Project Manager can approve tasks.");
+    }
+  
+    if (!approved) {
+      return {
+        success: false,
+        message: "Task approval denied. Please provide modifications or rejection.",
+        task,
+      };
+    }
+  
+    task.status = approved ? "Completed" : "In Progress";
+    task.remarks = remarks || "";
+    task.history.push({
+      updatedBy: user.id,
+      updatedAt: new Date().toISOString(),
+      oldStatus: task.status,
+      newStatus: "Approved",
+    });
+  
+    await task.save();
+  
+    return {
+      success: true,
+      message: "Task approved successfully!",
+      task,
+    };
+  },
+  
+   rejectTask : async (taskId, reason, user) => {
+    const task = await Task.findById(taskId);
+    if (!task) throw new Error("Task not found");
+  
+    const project = await Project.findById(task.project);
+    if (!project || project.projectManager.toString() !== user.id) {
+      throw new Error("Unauthorized! Only the Project Manager can reject tasks.");
+    }
+  
+    task.status = "Rejected";
+    task.remarks = reason || "";
+    task.history.push({
+      updatedBy: user.id,
+      updatedAt: new Date().toISOString(),
+      oldStatus: task.status,
+      newStatus: "Rejected",
+    });
+  
+    await task.save();
+  
+    return {
+      success: true,
+      message: `Task rejected: ${reason}`,
+      task,
+    };
+  },
+  
+  requestTaskModifications : async (taskId, feedback, user) => {
+    const task = await Task.findById(taskId);
+    if (!task) throw new Error("Task not found");
+  
+    const project = await Project.findById(task.project);
+    if (!project || project.projectManager.toString() !== user.id) {
+      throw new Error("Unauthorized! Only the Project Manager can request modifications.");
+    }
+  
+    task.status = "Needs Revision";
+    task.remarks = feedback || "";
+    task.history.push({
+      updatedBy: user.id,
+      updatedAt: new Date().toISOString(),
+      oldStatus: task.status,
+      newStatus: "Needs Revision",
+    });
+  
+    await task.save();
+  
+    return {
+      success: true,
+      message: `Task requires modifications: ${feedback}`,
+      task,
+    };
+  },
+  
 };
+
 
 module.exports = projectService;

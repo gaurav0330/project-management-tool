@@ -54,7 +54,19 @@ const projectResolvers = {
 
     assignTask: async (_, args, context) => {
       return await projectService.assignTaskService({ ...args, user: context.user });
-  },
+     },
+
+     approveTaskCompletionByManager: async (_, { taskId, approved, remarks }, { user }) => {
+      return projectService.approveTaskCompletion(taskId, approved, remarks, user);
+    },
+
+    rejectTaskByManager: async (_, { taskId, reason }, { user }) => {
+      return projectService.rejectTask(taskId, reason, user);
+    },
+
+    requestTaskModificationsByManager: async (_, { taskId, feedback }, { user }) => {
+      return projectService.requestTaskModifications(taskId, feedback, user);
+    },
   
   },
 };

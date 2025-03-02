@@ -48,6 +48,25 @@ const leadResolvers = {
         throw new ApolloError(error.message, "REQUEST_TASK_MODIFICATION_FAILED");
       }
     },
+
+    updateTaskStatus: async (_, { taskId, status }, { user }) => {
+      return await leadService.updateTaskStatus(taskId, status, user);
+    },
+
+    // ✅ 2. Add Task Attachment
+    addTaskAttachment: async (_, { taskId, attachment }, { user }) => {
+      return await leadService.addTaskAttachment(taskId, attachment, user);
+    },
+
+    // ✅ 3. Send Task for Approval
+    sendTaskForApproval: async (_, { taskId }, { user }) => {
+      return await leadService.sendTaskForApproval(taskId, user);
+    },
+
+    // ✅ 4. Request Task Review
+    requestTaskReview: async (_, { taskId }, { user }) => {
+      return await leadService.requestTaskReview(taskId, user);
+    }
     
   },
 };

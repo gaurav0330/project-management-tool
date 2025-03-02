@@ -20,11 +20,11 @@ const leadTypeDefs = gql`
   }
   
   type TaskHistory {
-  updatedBy: ID!
-  updatedAt: String!
-  oldStatus: String
-  newStatus: String
- }
+    updatedBy: ID!
+    updatedAt: String!
+    oldStatus: String
+    newStatus: String
+  }
 
   type Task {
     id: ID!
@@ -37,6 +37,7 @@ const leadTypeDefs = gql`
     priority: String!
     dueDate: String
     createdAt: String
+    attachments: [String] # New field for attachments
     history: [TaskHistory]
   }
 
@@ -67,23 +68,28 @@ const leadTypeDefs = gql`
   }
 
   type Mutation {
-  addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
+    addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
 
-  assignTaskMember(
-    projectId: ID!
-    title: String!
-    description: String
-    assignedTo: ID!
-    priority: String
-    dueDate: String
-  ): TaskResponse!
+    assignTaskMember(
+      projectId: ID!
+      title: String!
+      description: String
+      assignedTo: ID!
+      priority: String
+      dueDate: String
+    ): TaskResponse!
 
-  approveTaskCompletion(taskId: ID!, approved: Boolean!, remarks: String): TaskResponse!
+    # ✅ Task Management Mutations for Team Leads
+    updateTaskStatus(taskId: ID!, status: String!): TaskResponse!
+    addTaskAttachment(taskId: ID!, attachment: String!): TaskResponse!
+    sendTaskForApproval(taskId: ID!): TaskResponse!
+    requestTaskReview(taskId: ID!): TaskResponse!
 
-  rejectTask(taskId: ID!, reason: String!): TaskResponse!
-
-  requestTaskModifications(taskId: ID!, feedback: String!): TaskResponse!
-}
+    # ✅ Manager Approval Mutations (Already Added)
+    approveTaskCompletion(taskId: ID!, approved: Boolean!, remarks: String): TaskResponse!
+    rejectTask(taskId: ID!, reason: String!): TaskResponse!
+    requestTaskModifications(taskId: ID!, feedback: String!): TaskResponse!
+  }
 `;
 
 module.exports = leadTypeDefs;
