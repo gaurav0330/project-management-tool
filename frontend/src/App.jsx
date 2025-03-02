@@ -19,7 +19,7 @@ import AssignTaskPage from './pages/ProjectManager/AssignTaskPage';
 import TaskApprovalPage from './pages/ProjectManager/TaskApprovalPage';
 
 // Team Member Pages
-import TeamMemberDashboardPage from './pages/TeamMember/teamMemberDashboardPage';
+import TeamMemberDashboardPage from './pages/TeamMember/TeamMemberDashboardPage';
 import MyTasksPage from './pages/TeamMember/MyTasksPage';
 import TaskSubmissionPage from './pages/TeamMember/TaskSubmissionPage';
 
