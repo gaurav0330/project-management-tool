@@ -1,32 +1,55 @@
 import React, { useState } from "react";
+import { useQuery } from "@apollo/client";
+import { useParams } from "react-router-dom";
 import { FaPlus, FaUserPlus, FaEllipsisH } from "react-icons/fa";
+import { gql } from "@apollo/client";
+import {jwtDecode} from "jwt-decode"; // ✅ Fix import
 
-const teams = [
-  {
-    name: "Design Team",
-    createdAt: "Jan 15, 2025",
-    description: "Our creative team responsible for UI/UX design and brand identity.",
-    members: ["https://i.pravatar.cc/40?img=1", "https://i.pravatar.cc/40?img=2"],
-    memberCount: 2,
-  },
-  {
-    name: "Development Team",
-    createdAt: "Jan 10, 2025",
-    description: "Frontend and backend development team for our main product.",
-    members: ["https://i.pravatar.cc/40?img=3", "https://i.pravatar.cc/40?img=4", "https://i.pravatar.cc/40?img=5"],
-    memberCount: 4,
-  },
-  {
-    name: "Marketing Team",
-    createdAt: "Jan 5, 2025",
-    description: "Digital marketing and growth team focused on user acquisition.",
-    members: ["https://i.pravatar.cc/40?img=6", "https://i.pravatar.cc/40?img=7"],
-    memberCount: 3,
-  },
-];
+// GraphQL Query
+const GET_TEAMS_BY_PROJECT_AND_LEAD = gql`
+  query GetTeamsByProjectAndLead($projectId: ID!, $leadId: ID!) {
+    getTeamsByProjectAndLead(projectId: $projectId, leadId: $leadId) {
+      id
+      teamName
+      description
+      createdAt
+    }
+  }
+`;
+
+// Function to decode JWT and get leadId
+export const getTokenLeadId = () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ Handle localStorage safely
+    if (!token) return null;
+    
+    const decoded = jwtDecode(token);
+    // console.log(decoded);
+    // console.log(decoded.id);
+    return decoded.id || null; // ✅ Use _id as leadId
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+};
+
+
 
 const MyTeams = () => {
+  const { projectId } = useParams(); // ✅ Get projectId from URL
+  const leadId = getTokenLeadId(); // ✅ Extract leadId from token
   const [search, setSearch] = useState("");
+
+  const { loading, error, data } = useQuery(GET_TEAMS_BY_PROJECT_AND_LEAD, {
+    variables: { projectId, leadId },
+    skip: !projectId || !leadId, // ✅ Prevent unnecessary API calls
+  });
+
+ 
+  if (loading) return <div className="text-center">Loading teams...</div>;
+  if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
+
+  const teams = data?.getTeamsByProjectAndLead || [];
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -61,25 +84,17 @@ const MyTeams = () => {
         {/* Teams Grid */}
         <div className="grid gap-6 md:grid-cols-3">
           {teams
-            .filter((team) => team.name.toLowerCase().includes(search.toLowerCase()))
-            .map((team, index) => (
-              <div key={index} className="p-4 bg-white rounded-lg shadow-md">
+            .filter((team) => team.teamName.toLowerCase().includes(search.toLowerCase()))
+            .map((team) => (
+              <div key={team.id} className="p-4 bg-white rounded-lg shadow-md">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{team.name}</h3>
+                  <h3 className="text-lg font-semibold">{team.teamName}</h3>
                   <FaEllipsisH className="text-gray-500 cursor-pointer" />
                 </div>
                 <p className="mb-2 text-sm text-gray-500">Created {team.createdAt}</p>
                 <p className="mb-3 text-gray-700">{team.description}</p>
                 <div className="flex items-center gap-2">
-                  {team.members.map((member, idx) => (
-                    <img
-                      key={idx}
-                      src={member}
-                      alt="member"
-                      className="w-8 h-8 -ml-2 border-2 border-white rounded-full first:ml-0"
-                    />
-                  ))}
-                  <span className="text-sm text-gray-500">+{team.memberCount}</span>
+                  <span className="text-sm text-gray-500">+ Members</span>
                   <button className="flex items-center gap-1 ml-auto text-blue-600">
                     <FaUserPlus /> Invite
                   </button>
