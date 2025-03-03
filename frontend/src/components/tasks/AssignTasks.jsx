@@ -6,15 +6,16 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 const GET_LEADS_BY_PROJECT_ID = gql`
   query GetLeadsByProjectId($projectId: ID!) {
     getLeadsByProjectId(projectId: $projectId) {
-      leadRole
-      teamLeadId {
-        id
-        username
-        email
-        role
-      }
-    }
-  }
+    teamLeads {
+            teamLeadId
+            leadRole
+            user {
+                id
+                username
+                email
+            }
+        }
+} }
 `;
 
 // Updated GraphQL Mutation to assign a task
@@ -149,26 +150,28 @@ const AssignTasks = () => {
             </div>
 
             <div>
-              <label className="text-sm text-gray-700">Assign to</label>
-              {loading ? (
-                <p>Loading leads...</p>
-              ) : error ? (
-                <p className="text-red-500">Error loading leads</p>
-              ) : (
-                <select
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="">Select Team Lead</option>
-                  {teamLeads.map((lead) => (
-                    <option key={lead.teamLeadId.id} value={lead.teamLeadId.id}>
-                      {lead.teamLeadId.username} - {lead.teamLeadId.email} ({lead.leadRole})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
+  <label className="text-sm text-gray-700">Assign to</label>
+  {loading ? (
+    <p>Loading leads...</p>
+  ) : error ? (
+    <p className="text-red-500">Error loading leads</p>
+  ) : (
+    <select
+  value={assignedTo}
+  onChange={(e) => setAssignedTo(e.target.value)}
+  className="w-full p-2 border rounded-md"
+>
+  <option value="">Select Team Lead</option>
+  {teamLeads?.teamLeads?.map((lead, index) => (
+    <option key={`${lead.teamLeadId}-${index}`} value={lead.teamLeadId}>
+      {lead.user.username} - {lead.user.email} ({lead.leadRole})
+    </option>
+  ))}
+</select>
+
+  )}
+</div>
+
 
             <button
               className="px-4 py-2 text-white transition bg-blue-600 rounded hover:bg-blue-700"

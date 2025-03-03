@@ -13,6 +13,7 @@ import AssignTeamMembers from "./AssignTeamMembersPage";
 import CreateTeam from "./CreateTeam";
 import MyTeams from "./MyTeams";
 import AssignTasks from "./AssignTaskPage";
+import MyTasks from "../../components/TeamLeadComponent/MyTasks";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -75,6 +76,9 @@ export default function ProjectDashboard() {
         activeComponent === "teamtasks" ? (
           <DisplayTeamTaskPage />
         ) :
+        activeComponent === "mytasks" ? (
+          <MyTasks />
+        ):
         (
           <>
             {loading ? (
