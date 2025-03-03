@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, User, X, Loader } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { gql, useQuery, useMutation } from "@apollo/client";
 
 // ✅ Fetch all leads
@@ -14,27 +14,18 @@ const GET_ALL_LEADS = gql`
   }
 `;
 
-// ✅ Assign Team Lead Mutation
+// ✅ Assign Team Lead Mutation (Modified as per request)
 const ASSIGN_TEAM_LEAD = gql`
   mutation AssignTeamLead($projectId: ID!, $teamLeads: [TeamLeadInput!]!) {
     assignTeamLead(projectId: $projectId, teamLeads: $teamLeads) {
       success
       message
-      project {
-        id
-        teamLeads {
-          teamLeadId {
-            id
-            username
-          }
-          leadRole
-        }
-      }
     }
   }
 `;
 
-function AssignTeamLead({ projectId }) {
+function AssignTeamLead() {
+  const { projectId } = useParams(); // ✅ Get projectId from URL params
   const { loading, error, data } = useQuery(GET_ALL_LEADS);
   const [assignTeamLead, { loading: assigning }] = useMutation(ASSIGN_TEAM_LEAD);
   const navigate = useNavigate();
@@ -49,7 +40,6 @@ function AssignTeamLead({ projectId }) {
     }
   }, [data]);
 
-  // ✅ Handle Search Input
   const handleSearch = (event) => {
     const query = event.target.value.toLowerCase();
     setSearchQuery(query);
@@ -62,49 +52,39 @@ function AssignTeamLead({ projectId }) {
     );
   };
 
-  // ✅ Assign multiple leads (Prevent duplicate entries)
   const handleAssignLead = (lead) => {
-    setAssignments((prevAssignments) => {
-      if (!prevAssignments.some((l) => l.id === lead.id)) {
-        return [...prevAssignments, { ...lead, leadRole: "" }];
+    setAssignments((prev) => {
+      if (!prev.some((l) => l.id === lead.id)) {
+        return [...prev, { ...lead, leadRole: "Design Lead" }];
       }
-      return prevAssignments;
+      return prev;
     });
   };
 
-  // ✅ Remove a lead
   const handleRemoveAssignment = (leadId) => {
-    setAssignments((prevAssignments) => prevAssignments.filter((lead) => lead.id !== leadId));
+    setAssignments((prev) => prev.filter((lead) => lead.id !== leadId));
   };
 
-  // ✅ Update lead role
   const handleRoleChange = (leadId, role) => {
-    setAssignments((prevAssignments) =>
-      prevAssignments.map((lead) =>
-        lead.id === leadId ? { ...lead, leadRole: role } : lead
-      )
+    setAssignments((prev) =>
+      prev.map((lead) => (lead.id === leadId ? { ...lead, leadRole: role } : lead))
     );
   };
 
-  // ✅ Submit assigned leads to backend
   const handleSaveAssignments = async () => {
     try {
       const teamLeads = assignments.map(({ id, leadRole }) => ({
-        teamLeadId: String(id),
-        leadRole: String(leadRole),
+        teamLeadId: id,
+        leadRole,
       }));
 
       const response = await assignTeamLead({
-        variables: {
-          projectId: String(projectId),
-          teamLeads,
-        },
+        variables: { projectId, teamLeads },
       });
 
       if (response.data.assignTeamLead.success) {
         alert("✅ Team leads assigned successfully!");
-        navigate(`/ProjectHome/${projectId}`)
-        // Redirect after success
+        navigate(`/ProjectHome/${projectId}`);
       } else {
         alert(`⚠️ ${response.data.assignTeamLead.message}`);
       }
@@ -117,7 +97,6 @@ function AssignTeamLead({ projectId }) {
   return (
     <div className="min-h-screen p-8 bg-gray-100">
       <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-md">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Assign Team Leads</h2>
           <button
@@ -132,7 +111,6 @@ function AssignTeamLead({ projectId }) {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {/* Available Team Leads */}
           <div className="md:col-span-1">
             <h3 className="mb-4 text-sm font-medium text-gray-700">Available Team Leads</h3>
             <div className="relative mb-3">
@@ -171,7 +149,6 @@ function AssignTeamLead({ projectId }) {
             )}
           </div>
 
-          {/* Assigned Team Leads */}
           <div className="md:col-span-2">
             <h3 className="mb-4 text-sm font-medium text-gray-700">Assigned Team Leads</h3>
             {assignments.length === 0 ? (

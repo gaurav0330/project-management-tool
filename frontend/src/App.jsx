@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route ,useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import './index.css';
 import Navbar from './components/Other/NavBar';
 import Footer from './components/Other/Footer';
@@ -30,17 +30,18 @@ import TaskManagementPage from './pages/TeamLead/TaskManagementPage';
 import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
+import TeamDetails from './pages/TeamLead/Teamdetails';
 
 function App() {
   const { userRole } = useAuth();  // ✅ Get user role
- 
-  
+
+
   const hideNavbarFooterRoutes = ["/login", "/signup"];
   return (
-    
+
     <Router>
       <Navbar />
-      
+
       {/* {!shouldHideNavbarFooter && <Navbar />} Show Navbar only if not hidden */}
       <div className="mt-16 main-content">
         <Routes>
@@ -82,6 +83,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/teamlead/project/:projectId/:teamId"
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <TeamDetails />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/teamleadtaskm" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskManagementPage /></ProtectedRoute>} />
           <Route path="/teamleadteamtask" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><DisplayTeamTaskPage /></ProtectedRoute>} />
           <Route path="/teamleadtaskDis" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskDistributionPage /></ProtectedRoute>} />

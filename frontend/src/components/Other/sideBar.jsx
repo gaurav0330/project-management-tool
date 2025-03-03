@@ -64,15 +64,15 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "My Teams", icon: MdGroup, component: "myteams" }, 
         ],
       }, 
-      {
-        category: "Team Tasks",
-        items: [ 
-          { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" }, 
-          { name: "Create Task", icon: MdAssignment, component: "CreateTask" },  
-          { name: "Task Distribution", icon: MdGroup, component: "taskDistribution" },  
-          { name: "Timeline", icon: MdTimeline, component: "timeline" },  
-        ],
-      },
+      // {
+      //   category: "Team Tasks",
+      //   items: [ 
+      //     { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" }, 
+      //     { name: "Create Task", icon: MdAssignment, component: "CreateTask" },  
+      //     { name: "Task Distribution", icon: MdGroup, component: "taskDistribution" },  
+      //     { name: "Timeline", icon: MdTimeline, component: "timeline" },  
+      //   ],
+      // },
     ],
     Team_Member: [
       {
