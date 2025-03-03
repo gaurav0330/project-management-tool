@@ -1,6 +1,8 @@
 const { ApolloError } = require("apollo-server-express"); // ✅ Import ApolloError
 const authController = require("../../controllers/authController");
 const User = require("../../models/User"); // ✅ Import User model
+const mongoose = require("mongoose");
+
 
 const authResolvers = {
   Mutation: {
@@ -12,6 +14,42 @@ const authResolvers = {
 const userResolvers = {
     Query: {
 
+      getUser: async (_, { userId }) => {
+        try {
+          console.log("Fetching user with ID:", userId);
+      
+          // Convert userId to ObjectId
+          const objectId = new mongoose.Types.ObjectId(userId);
+      
+          const user = await User.findById(objectId).select("-password"); // Exclude password
+      
+          if (!user) {
+            throw new Error("User not found");
+          }
+      
+          console.log("User found:", user);
+          return user;
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          throw new Error("Failed to fetch user");
+        }
+      },
+
+      getAllManagers: async () => {
+        try{
+          console.log("Fetching managers..."); // Debugging
+          const managerUsers = await User.find({ role: "Project_Manager" });
+  
+          console.log("Managers found:", managerUsers); // Debugging
+          return managerUsers.map(manager => ({
+            ...manager._doc,
+            id: manager._id.toString(),
+          }));
+        }catch(error){
+          console.error("Error fetching managers:", error);
+          throw new ApolloError("Error fetching managers", "INTERNAL_SERVER_ERROR");
+        }
+      },
       // Get all users with role "Team_Lead"
       getAllLeads: async () => {
         try {

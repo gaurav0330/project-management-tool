@@ -30,6 +30,42 @@ const memberTypeDefs = gql`
     task: Task
   }
 
+
+  type Project {
+  id: ID!
+  title: String!
+  description: String
+  startDate: String
+  endDate: String
+  category: String
+  projectManager: User
+  teamLeads: [TeamLead]
+  teams: [Team]
+  status: String
+}
+
+type TeamLead {
+  teamLeadId: User!
+  leadRole: String!
+}
+
+type Team {
+  id: ID!
+  projectId: ID!
+  leadId: User!
+  members: [TeamMember]
+}
+
+type TeamMember {
+  teamMemberId: User!
+  memberRole: String!
+}
+
+type Query {
+  getProjectsByMember(memberId: ID!): [Project]
+}
+
+
   extend type Mutation {
     updateTaskStatus(taskId: ID!, status: String!): TaskResponse!
     addTaskAttachment(taskId: ID!, attachment: String!): TaskResponse!

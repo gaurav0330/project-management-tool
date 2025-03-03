@@ -1,8 +1,63 @@
 const mongoose = require("mongoose");
 const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
+const Project = require("../models/Project");
+const User = require("../models/User");
+const Team = require("../models/Teams");
+
 
 const memberService = {
+   getProjectsByMember : async (memberId) => {
+    try {
+      console.log("Service received memberId:", memberId);
+      
+      if (!memberId) {
+        throw new Error("memberId is required in service function");
+      }
+  
+      const mongoose = require("mongoose");
+      const memberObjectId = new mongoose.Types.ObjectId(memberId);
+  
+      const projects = await Project.aggregate([
+        {
+          $lookup: {
+            from: "teams",
+            localField: "_id",
+            foreignField: "projectId",
+            as: "projectTeams",
+          },
+        },
+        {
+          $match: {
+            "projectTeams.members": {
+              $elemMatch: { teamMemberId: memberObjectId },
+            },
+          },
+        },
+        {
+          $project: {
+            id: "$_id",
+            title: 1,
+            description: 1,
+            startDate: 1,
+            endDate: 1,
+            category: 1,
+            projectManager: 1,
+            teamLeads: 1,
+            teams: 1,
+            status: 1,
+          },
+        },
+      ]);
+  
+      console.log("Projects found:", projects);
+      return projects;
+    } catch (error) {
+      console.error("Error fetching projects for member:", error);
+      throw new Error("Failed to fetch projects");
+    }
+  },
+
   // ✅ Update Task Status Service
   updateTaskStatusService: async ({ taskId, status }, user) => {
     try {
