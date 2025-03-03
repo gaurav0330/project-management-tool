@@ -59,9 +59,7 @@ const TeamLeadDashboard = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 h-full min-h-screen bg-white shadow-lg">
-        <Sidebar />
-      </div>
+      
 
       {/* Main Content */}
       <div className="flex-1 h-full min-h-screen p-6 overflow-auto bg-gray-100">
