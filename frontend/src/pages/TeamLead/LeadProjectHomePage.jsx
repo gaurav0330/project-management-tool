@@ -47,7 +47,7 @@ export default function ProjectDashboard() {
          ) 
         :
         activeComponent === "createteam" ? (
-          <CreateTeam />
+          <CreateTeam projectId={projectId} />
         ) :
         // activeComponent === "overview" ? (
         //   navigate('/teamleaddashboard')

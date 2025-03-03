@@ -8,6 +8,8 @@ const TeamMemberSchema = new mongoose.Schema({
 const TeamSchema = new mongoose.Schema({
   projectId: { type: mongoose.Schema.Types.ObjectId, ref: "Project", required: true },
   leadId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  teamName: { type: String, required: true },
+  description: { type: String, required: true },
   members: [TeamMemberSchema]
 });
 
