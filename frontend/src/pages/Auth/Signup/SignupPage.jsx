@@ -9,8 +9,8 @@ function SignUpPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
-    email: "",
-    password: "",
+    email: "@gmail.com",
+    password: "111111",
     role: "Project_Manager",
  // Default role
   });
@@ -36,21 +36,21 @@ function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-6xl w-full grid md:grid-cols-2 overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
+      <div className="grid w-full max-w-6xl overflow-hidden bg-white shadow-xl rounded-2xl md:grid-cols-2">
         {/* Left Section */}
-        <div className="p-8 md:p-12 flex flex-col">
+        <div className="flex flex-col p-8 md:p-12">
           <Logo />
           <IllustrationSection />
         </div>
 
         {/* Right Section */}
-        <div className="p-8 md:p-12 bg-white">
+        <div className="p-8 bg-white md:p-12">
           <div className="max-w-md mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-2 text-3xl font-bold text-gray-900">
               Create your account
             </h1>
-            <p className="text-gray-500 mb-8">
+            <p className="mb-8 text-gray-500">
               Start your 30-day free trial. No credit card required.
             </p>
 
@@ -99,19 +99,19 @@ function SignUpPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded"
+                className="w-full py-2 text-white bg-blue-600 rounded"
               >
                 {loading ? "Signing up..." : "Sign Up"}
               </button>
             </form>
 
-            {error && <p className="text-red-500 mt-2">{error.message}</p>}
+            {error && <p className="mt-2 text-red-500">{error.message}</p>}
 
             <p className="mt-6 text-center text-gray-500">
               Already have an account?{" "}
               <a
                 href="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="font-medium text-blue-600 hover:text-blue-700"
               >
                 Sign in
               </a>

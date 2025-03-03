@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route ,useLocation } from 'react-router-dom';
 import './index.css';
 import Navbar from './components/Other/NavBar';
 import Footer from './components/Other/Footer';
@@ -33,10 +33,15 @@ import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
 
 function App() {
   const { userRole } = useAuth();  // ✅ Get user role
-
+ 
+  
+  const hideNavbarFooterRoutes = ["/login", "/signup"];
   return (
+    
     <Router>
       <Navbar />
+      
+      {/* {!shouldHideNavbarFooter && <Navbar />} Show Navbar only if not hidden */}
       <div className="mt-16 main-content">
         <Routes>
           {/* 🟢 Public Routes */}

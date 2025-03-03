@@ -1,12 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdSearch, MdNotifications, MdMessage, MdHelp } from "react-icons/md";
+import {jwtDecode} from "jwt-decode"; // ✅ Import jwt-decode
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token"); // Check if user is authenticated
+  const token = localStorage.getItem("token");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const [userName, setUserName] = useState("");
+
+  // Decode token and get username
+  useEffect(() => {
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        setUserName(decodedToken.username || "User"); // ✅ Set username (default: "User")
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    }
+  }, [token]);
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -44,7 +58,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Right side icons - Show different items based on authentication */}
+          {/* Right Side - Show items based on authentication */}
           <div className="flex items-center space-x-4">
             {token ? (
               <>
@@ -72,11 +86,11 @@ const Navbar = () => {
                     onClick={() => setIsDropdownOpen((prev) => !prev)}
                   >
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100">
-                      <span className="text-sm font-medium text-primary-600">JD</span>
+                      <span className="text-sm font-medium text-primary-600">{userName.charAt(0)}</span>
                     </div>
                     <div className="hidden text-left md:block">
-                      <p className="text-sm font-medium text-gray-700">John Doe</p>
-                      <p className="text-xs text-gray-500">Admin</p>
+                      <p className="text-sm font-medium text-gray-700">{userName}</p>
+                      <p className="text-xs text-gray-500">User</p>
                     </div>
                   </button>
 

@@ -11,8 +11,8 @@ function LoginPage() {
   const { setUserRole } = useAuth();  // ✅ Get setUserRole from AuthContext
 
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: "@gmail.com",
+    password: "111111",
   });
 
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION, {
