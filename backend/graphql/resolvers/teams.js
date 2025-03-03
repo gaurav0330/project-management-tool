@@ -21,35 +21,33 @@ const teamResolvers = {
   },
 
   Mutation: {
-    createTeam: async (_, { projectId }, { user }) => {
+    createTeam: async (_, { projectId, teamName, description }, { user }) => {
       try {
         if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
-
+    
         const project = await Project.findById(projectId);
-        if (!project) {
-          throw new ApolloError("Project not found", "NOT_FOUND");
-        }
-
+        if (!project) throw new ApolloError("Project not found", "NOT_FOUND");
+    
         // Check if the user is a Team Lead of this project
         const isLead = project.teamLeads.some((lead) => lead.teamLeadId.toString() === user.id);
-        if (!isLead) {
-          throw new ApolloError("Only Team Leads can create a team!", "FORBIDDEN");
-        }
-
-        // ✅ Create the team
+        if (!isLead) throw new ApolloError("Only Team Leads can create a team!", "FORBIDDEN");
+    
+        // ✅ Create the team with name and description
         const newTeam = new Team({
           projectId,
           leadId: user.id,
+          teamName,
+          description,
           members: [],
         });
-
+    
         await newTeam.save();
-
+    
         // ✅ Update the project schema to include the new team
         await Project.findByIdAndUpdate(projectId, {
           $push: { teams: newTeam._id },
         });
-
+    
         return {
           success: true,
           message: "Team created successfully",
@@ -60,6 +58,7 @@ const teamResolvers = {
         throw new ApolloError(`Failed to create team: ${error.message}`, "INTERNAL_SERVER_ERROR");
       }
     },
+    
     
     addMemberToTeam: async (_, { teamId, teamMembers }, { user }) => {
       try {
