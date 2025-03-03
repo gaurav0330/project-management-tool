@@ -1,26 +1,45 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MdSearch, MdNotifications, MdMessage, MdHelp } from "react-icons/md";
-import {jwtDecode} from "jwt-decode"; // ✅ Import jwt-decode
+import { jwtDecode } from "jwt-decode"; 
+import { gql, useQuery } from "@apollo/client"; // Import GraphQL query hook
+
+const GET_USER = gql`
+  query GetUser($userId: ID!) {
+    getUser(userId: $userId) {
+      id
+      username
+      email
+      role
+    }
+  }
+`;
 
 const Navbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const [userName, setUserName] = useState("");
+  const [userId, setUserId] = useState(null);
 
-  // Decode token and get username
   useEffect(() => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
-        setUserName(decodedToken.username || "User"); // ✅ Set username (default: "User")
+        setUserId(decodedToken.id); // Extract userId from token
       } catch (error) {
         console.error("Invalid token:", error);
       }
     }
   }, [token]);
+
+  // Fetch user details from backend
+  const { data, loading, error } = useQuery(GET_USER, {
+    variables: { userId },
+    skip: !userId, // Skip query if userId is not available
+  });
+
+  const user = data?.getUser || {};
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -29,7 +48,6 @@ const Navbar = () => {
     }
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -86,11 +104,13 @@ const Navbar = () => {
                     onClick={() => setIsDropdownOpen((prev) => !prev)}
                   >
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100">
-                      <span className="text-sm font-medium text-primary-600">{userName.charAt(0)}</span>
+                      <span className="text-sm font-medium text-primary-600">
+                        {loading ? "..." : user.username?.charAt(0).toUpperCase() || "U"}
+                      </span>
                     </div>
                     <div className="hidden text-left md:block">
-                      <p className="text-sm font-medium text-gray-700">{userName}</p>
-                      <p className="text-xs text-gray-500">User</p>
+                      <p className="text-sm font-medium text-gray-700">{loading ? "Loading..." : user.username || "User"}</p>
+                      <p className="text-xs text-gray-500">{loading ? "..." : user.role || "Member"}</p>
                     </div>
                   </button>
 
