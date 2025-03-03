@@ -17,29 +17,39 @@ const GET_LEADS_BY_PROJECT_ID = gql`
   }
 `;
 
-// GraphQL Mutation to assign a task
+// Updated GraphQL Mutation to assign a task
 const ASSIGN_TASK = gql`
   mutation AssignTask(
     $projectId: ID!
     $title: String!
-    $description: String
     $assignedTo: ID!
     $priority: String
     $dueDate: String
+    $description: String
   ) {
     assignTask(
       projectId: $projectId
       title: $title
-      description: $description
       assignedTo: $assignedTo
       priority: $priority
       dueDate: $dueDate
+      description: $description
     ) {
       success
       message
       task {
         id
         title
+        description
+        project
+        createdBy
+        assignedTo
+        status
+        priority
+        dueDate
+        createdAt
+        attachments
+        updatedAt
       }
     }
   }
@@ -67,13 +77,7 @@ const AssignTasks = () => {
     onCompleted: (data) => {
       if (data.assignTask.success) {
         alert("Task assigned successfully!");
-
-        // Ensure projectId exists before navigating
-        if (projectId) {
-          navigate(`/projectHome/${projectId}`);
-        } else {
-          alert("Project ID is missing! Cannot navigate.");
-        }
+        navigate(`/projectHome/${projectId}`);
       } else {
         alert(data.assignTask.message || "Failed to assign task");
       }
@@ -101,7 +105,6 @@ const AssignTasks = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="p-6 bg-white rounded-lg shadow-md">
           <h2 className="mb-4 text-xl font-semibold">Create New Task</h2>
@@ -158,16 +161,11 @@ const AssignTasks = () => {
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="">Select Team Lead</option>
-                  {teamLeads
-                    .filter(
-                      (lead, index, self) =>
-                        self.findIndex((l) => l.teamLeadId.id === lead.teamLeadId.id) === index
-                    )
-                    .map((lead) => (
-                      <option key={lead.teamLeadId.id} value={lead.teamLeadId.id}>
-                        {lead.teamLeadId.username} - {lead.teamLeadId.email} ({lead.leadRole})
-                      </option>
-                    ))}
+                  {teamLeads.map((lead) => (
+                    <option key={lead.teamLeadId.id} value={lead.teamLeadId.id}>
+                      {lead.teamLeadId.username} - {lead.teamLeadId.email} ({lead.leadRole})
+                    </option>
+                  ))}
                 </select>
               )}
             </div>
