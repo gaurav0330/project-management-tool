@@ -1,28 +1,72 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, gql } from "@apollo/client";
+import {jwtDecode} from "jwt-decode";
 import TaskOverview from "../../components/TeamLeadComponent/TaskOverview";
 import WorkloadChart from "../../components/TeamLeadComponent/WorkLoadChart";
 import RecentTasks from "../../components/TeamLeadComponent/RecentTask";
 import FilterControls from "../../components/TeamLeadComponent/FilterControls";
 import ExportButton from "../../components/TeamLeadComponent/ExportButton";
 
-const TaskDistributionPage = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, name: "Homepage Redesign", assignee: "John Doe", avatar: "https://randomuser.me/api/portraits/men/1.jpg", dueDate: "Mar 25, 2025", status: "Completed", priority: "High" },
-    { id: 2, name: "API Integration", assignee: "Jane Smith", avatar: "https://randomuser.me/api/portraits/women/2.jpg", dueDate: "Mar 28, 2025", status: "In Progress", priority: "Medium" },
-    { id: 3, name: "User Testing", assignee: "Mike Johnson", avatar: "https://randomuser.me/api/portraits/men/3.jpg", dueDate: "Apr 1, 2025", status: "Pending", priority: "Low" },
-  ]);
+const GET_TASKS_BY_TEAM_LEAD = gql`
+  query GetTasksByTeamLead($teamLeadId: ID!, $projectId: ID!) {
+    getTasksByTeamLead(teamLeadId: $teamLeadId, projectId: $projectId) {
+      id
+      title
+      assignedTo
+      status
+      priority
+      dueDate
+    }
+  }
+`;
 
-  const workloadData = [
-    { name: "John Doe", tasks: 45 },
-    { name: "Jane Smith", tasks: 38 },
-    { name: "Mike Johnson", tasks: 27 },
-  ];
+const TaskDistributionPage = ({ projectId }) => {
+  const token = localStorage.getItem("token");
+  const decodedToken = token ? jwtDecode(token) : null;
+  const teamLeadId = decodedToken?.id || null;
+
+  const { loading, error, data } = useQuery(GET_TASKS_BY_TEAM_LEAD, {
+    variables: { teamLeadId, projectId },
+    skip: !teamLeadId,
+  });
+
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    if (data && data.getTasksByTeamLead) {
+      setTasks(
+        data.getTasksByTeamLead.map((task) => ({
+          id: task.id,
+          name: task.title,
+          assignee: task.assignedTo || "Unassigned",
+          avatar: "https://randomuser.me/api/portraits/men/1.jpg", // Replace with actual user data
+          dueDate: new Date(parseInt(task.dueDate)).toDateString(),
+          status: task.status,
+          priority: task.priority,
+        }))
+      );
+    }
+  }, [data]);
+
+  const workloadData = tasks.reduce((acc, task) => {
+    const assignee = task.assignee || "Unassigned";
+    const existing = acc.find((item) => item.name === assignee);
+    if (existing) {
+      existing.tasks += 1;
+    } else {
+      acc.push({ name: assignee, tasks: 1 });
+    }
+    return acc;
+  }, []);
+
+  if (loading) return <p>Loading tasks...</p>;
+  if (error) return <p>Error fetching tasks!</p>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Task Distribution Dashboard</h1>
       <FilterControls />
-      <TaskOverview total={248} completed={156} pending={92} />
+      <TaskOverview total={tasks.length} completed={tasks.filter((t) => t.status === "Completed").length} pending={tasks.filter((t) => t.status !== "Completed").length} />
       <div className="grid grid-cols-2 gap-4 mt-4">
         <WorkloadChart data={workloadData} />
         <RecentTasks tasks={tasks} />

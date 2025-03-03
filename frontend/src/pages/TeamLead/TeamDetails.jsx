@@ -20,7 +20,7 @@ const GET_PROJECT_BY_ID = gql`
 `;
 
 export default function TeamDetails() {
-  const { projectId } = useParams();
+  const { projectId, teamId} = useParams();
   const navigate = useNavigate();
   const { loading, error, data } = useQuery(GET_PROJECT_BY_ID, {
     variables: { id: projectId },
@@ -47,13 +47,13 @@ export default function TeamDetails() {
       {/* Main Content */}
       <div className="w-4/5 p-8 overflow-auto">
         {activeComponent === "createtasks" ? (
-          <AssignTasks />
+          <AssignTasks projectId={projectId} teamId={teamId} />
         ) : activeComponent === "addmembers" ? (
           <AssignTeamMembers />
         ) : activeComponent === "taskDistribution" ? (
-          <TaskDistributionPage />
+          <TaskDistributionPage projectId={projectId} />
         ) : activeComponent === "managetasks" ? (
-          <TaskManagementPage />
+          <TaskManagementPage projectId={projectId} />
         ) : activeComponent === "teamtasks" ? (
           <DisplayTeamTaskPage />
         ) : (

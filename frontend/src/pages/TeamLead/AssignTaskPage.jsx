@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { jwtDecode } from "jwt-decode";
 
-// GraphQL Query to fetch leads by project ID
-const GET_LEADS_BY_PROJECT_ID = gql`
-  query GetLeadsByProjectId($projectId: ID!) {
-    getLeadsByProjectId(projectId: $projectId) {
-      leadRole
-      teamLeadId {
+// GraphQL Query to fetch team members under a team lead
+const GET_TEAM_MEMBERS = gql`
+  query GetTeamMembers($teamLeadId: ID!, $projectId: ID!) {
+    getTeamMembers(teamLeadId: $teamLeadId, projectId: $projectId) {
+      teamMemberId
+      memberRole
+      user {
         id
         username
         email
@@ -19,7 +21,7 @@ const GET_LEADS_BY_PROJECT_ID = gql`
 
 // GraphQL Mutation to assign a task
 const ASSIGN_TASK = gql`
-  mutation AssignTask(
+  mutation AssignTaskMember(
     $projectId: ID!
     $title: String!
     $description: String
@@ -27,7 +29,7 @@ const ASSIGN_TASK = gql`
     $priority: String
     $dueDate: String
   ) {
-    assignTask(
+    assignTaskMember(
       projectId: $projectId
       title: $title
       description: $description
@@ -37,17 +39,15 @@ const ASSIGN_TASK = gql`
     ) {
       success
       message
-      task {
-        id
-        title
-      }
     }
   }
 `;
 
-const AssignTasks = () => {
-  const { projectId } = useParams(); // Get project ID from URL
+const AssignTasks = ({ projectId , teamId}) => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const decodedToken = token ? jwtDecode(token) : null;
+  const teamLeadId = decodedToken?.id || null; // Extract teamLeadId
 
   const [taskTitle, setTaskTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -55,28 +55,24 @@ const AssignTasks = () => {
   const [dueDate, setDueDate] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
 
-  // Fetch team leads based on project ID
-  const { data, loading, error } = useQuery(GET_LEADS_BY_PROJECT_ID, {
-    variables: { projectId },
+  // Fetch team members based on teamLeadId and projectId
+  const { data, loading, error } = useQuery(GET_TEAM_MEMBERS, {
+    variables: { teamLeadId, projectId },
+    skip: !teamLeadId, // Skip query if no teamLeadId is found
   });
 
-  const teamLeads = data?.getLeadsByProjectId || []; // Ensure teamLeads is always an array
+  const teamMembers = data?.getTeamMembers || []; // Ensure teamMembers is always an array
 
-  // Use Mutation Hook
+  // Mutation for assigning a task
   const [assignTask, { loading: assignLoading, error: assignError }] = useMutation(ASSIGN_TASK, {
     onCompleted: (data) => {
-      if (data.assignTask.success) {
+      if (data.assignTaskMember.success) {
         alert("Task assigned successfully!");
-
-        // Ensure projectId exists before navigating
-        if (projectId) {
-          navigate(`/projectHome/${projectId}`);
-        } else {
-          alert("Project ID is missing! Cannot navigate.");
-        }
+        navigate(`/teamlead/project/${projectId}/${teamId}`);
       } else {
-        alert(data.assignTask.message || "Failed to assign task");
+        alert(data.assignTaskMember.message || "Failed to assign task");
       }
+      navigate(`/teamlead/project/${projectId}/${teamId}`);
     },
   });
 
@@ -99,9 +95,12 @@ const AssignTasks = () => {
     });
   };
 
+  const uniqueTeamMembers = Array.from(
+    new Map(teamMembers.map((member) => [member.user.email, member])).values()
+  );
+  
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Main Content */}
       <div className="flex-1 p-6">
         <div className="p-6 bg-white rounded-lg shadow-md">
           <h2 className="mb-4 text-xl font-semibold">Create New Task</h2>
@@ -148,26 +147,21 @@ const AssignTasks = () => {
             <div>
               <label className="text-sm text-gray-700">Assign to</label>
               {loading ? (
-                <p>Loading leads...</p>
+                <p>Loading team members...</p>
               ) : error ? (
-                <p className="text-red-500">Error loading leads</p>
+                <p className="text-red-500">Error loading team members</p>
               ) : (
                 <select
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="">Select Team Lead</option>
-                  {teamLeads
-                    .filter(
-                      (lead, index, self) =>
-                        self.findIndex((l) => l.teamLeadId.id === lead.teamLeadId.id) === index
-                    )
-                    .map((lead) => (
-                      <option key={lead.teamLeadId.id} value={lead.teamLeadId.id}>
-                        {lead.teamLeadId.username} - {lead.teamLeadId.email} ({lead.leadRole})
-                      </option>
-                    ))}
+                  <option value="">Select Team Member</option>
+                  {uniqueTeamMembers.map((member) => (
+                    <option key={member.teamMemberId} value={member.user.id}>
+                      {member.user.username} - {member.user.email} ({member.memberRole})
+                    </option>
+                  ))}
                 </select>
               )}
             </div>

@@ -1,15 +1,65 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useQuery, gql } from "@apollo/client";
+import {jwtDecode} from "jwt-decode";
 import TaskTable from "../../components/TeamLeadComponent/TaskTable";
 import SearchBar from "../../components/TeamLeadComponent/SearchBar";
 import AddTaskButton from "../../components/TeamLeadComponent/AddtaskButton";
 
-const TaskManagementPage = () => {
+const GET_TASKS_BY_TEAM_LEAD = gql`
+  query GetTasksByTeamLead($teamLeadId: ID!, $projectId: ID!) {
+    getTasksByTeamLead(teamLeadId: $teamLeadId, projectId: $projectId) {
+      id
+      title
+      description
+      project
+      createdBy
+      assignedTo
+      status
+      priority
+      dueDate
+      createdAt
+      attachments
+      updatedAt
+      remarks
+    }
+  }
+`;
+
+const TaskManagementPage = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: 1, name: "Homepage Redesign", assignedTo: { name: "Sarah Wilson", avatar: "https://randomuser.me/api/portraits/women/1.jpg" }, status: "In Progress", dueDate: "Jan 20, 2025" },
-    { id: 2, name: "API Integration", assignedTo: { name: "Mike Chen", avatar: "https://randomuser.me/api/portraits/men/2.jpg" }, status: "Completed", dueDate: "Jan 15, 2025" },
-    { id: 3, name: "User Testing", assignedTo: { name: "Emily Brown", avatar: "https://randomuser.me/api/portraits/women/3.jpg" }, status: "To-Do", dueDate: "Jan 25, 2025" }
-  ]);
+  const [teamLeadId, setTeamLeadId] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decoded = jwtDecode(token);
+      setTeamLeadId(decoded.id);
+    }
+  }, []);
+
+  const { loading, error, data } = useQuery(GET_TASKS_BY_TEAM_LEAD, {
+    variables: { teamLeadId, projectId },
+    skip: !teamLeadId,
+  });
+
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    if (data && data.getTasksByTeamLead) {
+      setTasks(
+        data.getTasksByTeamLead.map((task) => ({
+          id: task.id,
+          name: task.title,
+          assignedTo: {
+            name: "Unassigned", // You may replace this with actual user data
+            avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+          },
+          status: task.status,
+          dueDate: new Date(parseInt(task.dueDate)).toDateString(),
+        }))
+      );
+    }
+  }, [data]);
 
   const handleAddTask = () => {
     const newTask = {
@@ -17,13 +67,13 @@ const TaskManagementPage = () => {
       name: "New Task",
       assignedTo: { name: "John Doe", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
       status: "To-Do",
-      dueDate: "Feb 1, 2025"
+      dueDate: "Feb 1, 2025",
     };
     setTasks([...tasks, newTask]);
   };
 
   const handleEditTask = (taskId) => {
-    const updatedTasks = tasks.map(task =>
+    const updatedTasks = tasks.map((task) =>
       task.id === taskId ? { ...task, name: `${task.name} (Edited)` } : task
     );
     setTasks(updatedTasks);
@@ -33,9 +83,12 @@ const TaskManagementPage = () => {
     alert(`Comment on Task ID: ${taskId}`);
   };
 
-  const filteredTasks = tasks.filter(task =>
+  const filteredTasks = tasks.filter((task) =>
     task.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) return <p>Loading tasks...</p>;
+  if (error) return <p>Error fetching tasks!</p>;
 
   return (
     <div className="max-w-6xl mx-auto p-6">

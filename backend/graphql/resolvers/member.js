@@ -22,19 +22,32 @@ const memberResolvers = {
         throw new Error("Failed to fetch projects");
       }
     },
-    getTeamMembers: async (_, { projectId, teamLeadId }) => {
+    getTeamMembers: async (_, { teamLeadId, projectId }) => {
       try {
-        const team = await Team.findOne({ projectId, leadId: teamLeadId }).populate("members.teamMemberId");
-        
+        // Find the team where leadId and projectId match
+        const team = await Team.findOne({ leadId: teamLeadId, projectId }).populate("members.teamMemberId");
+
         if (!team) {
           throw new Error("Team not found");
         }
 
-        return team;
+        // Format and return team members with user details
+        return team.members.map(member => ({
+          teamMemberId: member.teamMemberId._id,
+          memberRole: member.memberRole,
+          user: {
+            id: member.teamMemberId._id,
+            username: member.teamMemberId.username,
+            email: member.teamMemberId.email,
+            role: member.teamMemberId.role
+          }
+        }));
       } catch (error) {
         throw new Error(error.message);
       }
     }
+  
+    
   },
 
   Mutation: {

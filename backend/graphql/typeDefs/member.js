@@ -56,14 +56,28 @@ type Team {
   members: [TeamMember]
 }
 
+enum UserRole {
+        Project_Manager
+        Team_Lead
+        Team_Member
+    }
+        
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  role: UserRole!
+}
+
 type TeamMember {
   teamMemberId: ID!
   memberRole: String!
+  user: User!
 }
 
 type Query {
   getProjectsByMember(memberId: ID!): [Project]
-  getTeamMembers(projectId: ID!, teamLeadId: ID!): Team
+   getTeamMembers(teamLeadId: ID!, projectId: ID!): [TeamMember]
 }
 
 
