@@ -8,6 +8,7 @@ const teamTypeDefs = gql`
     teamName: String!
     description: String!
     members: [TeamMember!]!
+    createdAt: String!
   }
 
   type TeamMember {
@@ -33,13 +34,13 @@ const teamTypeDefs = gql`
   }
 
   type Query {
-    getTeamsByProject(projectId: ID!): [Team]
-    getTeamByLead(leadId: ID!): Team
+    getTeamsByProjectAndLead(projectId: ID!, leadId: ID!): [Team!]
   }
 
   type Mutation {
      createTeam(projectId: ID!, teamName: String!, description: String!): CreateTeamResponse!
     addMemberToTeam(teamId: ID!, teamMembers: [TeamMemberInput!]!): AssignMemberResponse!
+
   }
 `;
 

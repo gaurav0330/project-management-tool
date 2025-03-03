@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { create } = require("./Project");
 
 const TeamMemberSchema = new mongoose.Schema({
   teamMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -10,7 +11,8 @@ const TeamSchema = new mongoose.Schema({
   leadId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   teamName: { type: String, required: true },
   description: { type: String, required: true },
-  members: [TeamMemberSchema]
+  members: [TeamMemberSchema],
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model("Team", TeamSchema);

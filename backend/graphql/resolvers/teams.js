@@ -4,20 +4,15 @@ const Project = require("../../models/Project");
 
 const teamResolvers = {
   Query: {
-    getTeamsByProject: async (_, { projectId }) => {
-      try {
-        return await Team.find({ projectId }).populate("leadId members.teamMemberId");
-      } catch (error) {
-        throw new ApolloError("Error fetching teams", "INTERNAL_SERVER_ERROR");
-      }
-    },
-    getTeamByLead: async (_, { leadId }) => {
-      try {
-        return await Team.findOne({ leadId }).populate("leadId members.teamMemberId");
-      } catch (error) {
-        throw new ApolloError("Error fetching team", "INTERNAL_SERVER_ERROR");
-      }
-    }
+    
+     getTeamsByProjectAndLead: async (_, { projectId, leadId }) => {
+        try {
+          const teams = await Team.find({ projectId, leadId });
+          return teams;
+        } catch (error) {
+          throw new Error(error.message);
+        }
+     }
   },
 
   Mutation: {
@@ -63,22 +58,39 @@ const teamResolvers = {
     addMemberToTeam: async (_, { teamId, teamMembers }, { user }) => {
       try {
         if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-
+    
         const team = await Team.findById(teamId);
         if (!team) throw new ApolloError("Team not found", "BAD_REQUEST");
-
+    
         if (team.leadId.toString() !== user.id) {
           throw new ApolloError("Only the team lead can add members!", "FORBIDDEN");
         }
-
-        team.members.push(...teamMembers);
+    
+        // Validate and format team members before adding
+        const newMembers = teamMembers.map(({ teamMemberId, memberRole }) => ({
+          userId: teamMemberId,
+          role: memberRole || "Member", // Default role if not provided
+        }));
+    
+        // Prevent duplicate entries
+        const existingMemberIds = team.members.map((m) => m.userId.toString());
+        const filteredNewMembers = newMembers.filter(
+          (m) => !existingMemberIds.includes(m.userId.toString())
+        );
+    
+        if (filteredNewMembers.length === 0) {
+          throw new ApolloError("All selected members are already in the team.", "BAD_REQUEST");
+        }
+    
+        team.members.push(...filteredNewMembers);
         await team.save();
-
+    
         return { success: true, message: "Members added successfully", team };
       } catch (error) {
         return { success: false, message: `Failed: ${error.message}`, team: null };
       }
     }
+    
   }
 };
 
