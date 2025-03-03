@@ -39,7 +39,8 @@ const teamTypeDefs = gql`
 
   type Mutation {
      createTeam(projectId: ID!, teamName: String!, description: String!): CreateTeamResponse!
-    addMemberToTeam(teamId: ID!, teamMembers: [TeamMemberInput!]!): AssignMemberResponse!
+
+     addMemberToTeam(teamId: ID!, teamMembers: [TeamMemberInput!]!): AssignMemberResponse!
 
   }
 `;

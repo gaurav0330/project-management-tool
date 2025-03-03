@@ -63,6 +63,7 @@ type TeamMember {
 
 type Query {
   getProjectsByMember(memberId: ID!): [Project]
+  getTeamMembers(projectId: ID!, teamLeadId: ID!): Team
 }
 
 
