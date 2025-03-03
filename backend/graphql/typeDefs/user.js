@@ -12,6 +12,7 @@ const userTypeDefs = gql`
         username: String!
         email: String!
         role: UserRole!
+        token: String!
     }
 
     type Query {
