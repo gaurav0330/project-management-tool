@@ -52,18 +52,24 @@ const Sidebar = ({ setActiveComponent }) => {
       {
         category: "My Tasks",
         items: [
-          { name: "Dashboard", icon: MdDashboard, component: "dashboard" },   
+          { name: "Project Home", icon: MdDashboard, component: "projectHome" },   
           { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" },   
         ],
       },
       {
-        category: "Team Tasks",
+        category: "Manage Team ",
         items: [
-          { name: "My Teams", icon: MdFolderOpen, component: "teamtasks" },  
+          { name: "Create Team", icon: MdFolderOpen, component: "createteam" },  
+          { name: "Add Members", icon: MdAssignment, component: "addmembers" }, 
+          { name: "My Teams", icon: MdGroup, component: "myteams" }, 
+        ],
+      }, 
+      {
+        category: "Team Tasks",
+        items: [ 
           { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" }, 
           { name: "Create Task", icon: MdAssignment, component: "CreateTask" },  
-          { name: "Team Tasks", icon: MdGroup, component: "teamtasks" },  
-          { name: "Team Distribution", icon: MdGroup, component: "taskDistribution" },  
+          { name: "Task Distribution", icon: MdGroup, component: "taskDistribution" },  
           { name: "Timeline", icon: MdTimeline, component: "timeline" },  
         ],
       },

@@ -7,6 +7,12 @@ import AssignedTasks from "../../components/tasks/AssignedTasks";
 import TaskManagementPage from "./TaskManagementPage";
 import TaskDistributionPage from "./TaskDistributionPage";
 import DisplayTeamTaskPage from "./DisplayTeamTaskPage"
+import TaskApprovalPage from "../ProjectManager/TaskApprovalPage";
+import { act } from "react";
+import AssignTeamMembers from "./AssignTeamMembersPage";
+import CreateTeam from "./CreateTeam";
+import MyTeams from "./MyTeams";
+import AssignTasks from "./AssignTaskPage";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -36,14 +42,27 @@ export default function ProjectDashboard() {
 
       {/* Main Content Area */}
       <div className="w-4/5 p-8 overflow-auto">
-        {activeComponent === "manageTeams" ? (
-          <AssignMembers {...{ projectId }} />
-        // ) : activeComponent === "dashboard" ? (
-        //   navigate("/ProjectDashboard")
-        // ) 
-        ) 
+        { activeComponent === "projectHome" ? (  
+          window.location.reload()
+         ) 
+        :
+        activeComponent === "createteam" ? (
+          <CreateTeam />
+        ) :
+        // activeComponent === "overview" ? (
+        //   navigate('/teamleaddashboard')
+        // ) :
+        activeComponent === "approvetask" ? (
+          <TaskApprovalPage />
+        ) :
+        activeComponent === "addmembers" ? (
+          <AssignTeamMembers />
+        )
         : activeComponent === "CreateTask" ? (
-          <TaskManagementPage />
+          <AssignTasks/>
+        ) :
+        activeComponent === "myteams" ? (
+          <MyTeams />
         ) :
         activeComponent === "assignedTasks" ? (
           <AssignedTasks />
@@ -55,11 +74,8 @@ export default function ProjectDashboard() {
         ) :
         activeComponent === "teamtasks" ? (
           <DisplayTeamTaskPage />
-        )
-       :activeComponent === "projectHome" ? (
-            window.location.reload()
-        ) 
-        : (
+        ) :
+        (
           <>
             {loading ? (
               <p className="text-center text-gray-500">Loading project...</p>
