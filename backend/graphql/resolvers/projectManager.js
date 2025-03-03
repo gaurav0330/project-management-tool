@@ -18,33 +18,101 @@ const projectResolvers = {
     getProjectsByManagerId: async (_, args) => {
       return await projectService.getProjectsByManagerId(args.managerId);
     },
-    getLeadsByProjectId: async (_, { projectId }, { user }) => {
-      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+    // getLeadsByProjectId: async (_, { projectId }, { user }) => {
+    //   if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
   
-      try {
+    //   try {
           
-          console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
+    //       console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
   
-          // Find the project and populate the team leads
-          const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
+    //       // Find the project and populate the team leads
+    //       const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
   
-          if (!project) {
-              throw new ApolloError("Project not found", "NOT_FOUND");
-          }
+    //       if (!project) {
+    //           throw new ApolloError("Project not found", "NOT_FOUND");
+    //       }
   
-          // Extract both teamLeadId (User) and leadRole
-          const teamLeads = project.teamLeads.map(lead => ({
-              teamLeadId: lead.teamLeadId, // ✅ This will be a User object
-              leadRole: lead.leadRole      // ✅ This is a String
-          }));
+    //       // Extract both teamLeadId (User) and leadRole
+    //       const teamLeads = project.teamLeads.map(lead => ({
+    //           teamLeadId: lead.teamLeadId, // ✅ This will be a User object
+    //           leadRole: lead.leadRole      // ✅ This is a String
+    //       }));
   
-          console.log("✅ Leads found:", teamLeads);
-          return teamLeads;
-      } catch (error) {
-          console.error("❌ Error fetching leads:", error);
-          throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
+    //       console.log("✅ Leads found:", teamLeads);
+    //       return teamLeads;
+    //   } catch (error) {
+    //       console.error("❌ Error fetching leads:", error);
+    //       throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
+    //   }
+    // }  
+
+
+     getLeadsByProjectId : async (_, { projectId }, { user }) => {
+      if (!user) {
+        throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
       }
-    }  
+    
+      try {
+        console.log(`🔍 Fetching leads for project ID: ${projectId}`);
+    
+        // Find the project
+        const project = await Project.findById(projectId);
+        if (!project) {
+          console.error("❌ Project not found!");
+          return {
+            success: false,
+            message: "Project not found",
+            teamLeads: [],
+          };
+        }
+    
+        // Extract team lead IDs
+        const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
+        console.log("📌 Team Lead IDs:", teamLeadIds);
+    
+        // Fetch all users in one query
+        const users = await User.find({ _id: { $in: teamLeadIds } });
+        console.log("👥 Retrieved Users:", users);
+    
+        // Map leads with user details
+        const teamLeads = project.teamLeads
+          .map((lead) => {
+            const userDetails = users.find((user) => user.id === lead.teamLeadId.toString());
+            
+            if (!userDetails) {
+              console.warn(`⚠️ User with ID ${lead.teamLeadId} not found`);
+              return null; // Handle missing users gracefully
+            }
+    
+            return {
+              user: {
+                id: userDetails.id,
+                username: userDetails.username,
+                email: userDetails.email,
+                role: userDetails.role,
+              },
+              leadRole: lead.leadRole,
+              teamLeadId: lead.teamLeadId, // Ensure teamLeadId is included
+            };
+          })
+          .filter(Boolean); // Remove any null values
+    
+        console.log("✅ Final Team Leads:", teamLeads);
+    
+        return {
+          success: true,
+          message: "Team Leads retrieved successfully",
+          teamLeads: teamLeads,
+        };
+      } catch (error) {
+        console.error("❌ Error fetching leads:", error);
+        return {
+          success: false,
+          message: "Error fetching team leads",
+          teamLeads: [],
+        };
+      }
+    }
     
   },
 

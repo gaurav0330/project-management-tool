@@ -27,15 +27,21 @@ const projectTypeDefs = gql`
   }
 
   type TeamLead {
-    teamLeadId: ID!  
+     user: User!  
     leadRole: String
   }
+
+  type GetLeadsResponse {
+  success: Boolean!
+  message: String!
+  teamLeads: [TeamLead!]!
+}
 
   type Query {
     getAllProjects: [Project]
     getProjectById(id: ID!): Project
     getProjectsByManagerId(managerId: ID!): [Project]
-    getLeadsByProjectId(projectId: ID!): [TeamLead]
+    getLeadsByProjectId(projectId: ID!): GetLeadsResponse!
   }
 
   type Mutation {
