@@ -4,8 +4,25 @@ const { ApolloError } = require("apollo-server-express");
 const mongoose = require("mongoose");
 const taskService = require("../../services/taskService");
 
+
 const taskResolvers = {
   Query: {
+    async getTaskById(_, { taskId }) {
+      try {
+        // 🔹 Find the task by ID
+        const task = await Task.findById(taskId);
+
+        if (!task) {
+          throw new Error("Task not found");
+        }
+
+        return task;
+      } catch (error) {
+        console.error("Error fetching task:", error);
+        throw new Error("Failed to fetch task");
+      }
+    },
+  
     async getTaskHistory(_, { taskId }) {
       try {
         const task = await Task.findById(taskId);

@@ -43,6 +43,7 @@ const typeDefs = gql`
     getTasksByTeamLead(teamLeadId: ID!, memberId: ID, projectId: ID): [Task]
     getTasksForMember(memberId: ID!, projectLeadId: ID, projectId: ID): [Task]
     getTasksForLead(teamLeadId: ID!, projectManagerId: ID, projectId: ID): [Task]
+    getTaskById(taskId: ID!): Task
   }
 `;
 

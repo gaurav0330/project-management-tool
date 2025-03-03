@@ -23,6 +23,7 @@ import ProjectHomePage from './pages/ProjectManager/ProjectHomePage';
 import TeamMemberDashboardPage from './pages/TeamMember/TeamMemberDashboardPage';
 import MyTasksPage from './pages/TeamMember/MyTasksPage';
 import TaskSubmissionPage from './pages/TeamMember/TaskSubmissionPage';
+import TeamMemberHome from './pages/TeamMember/TeamMemberHome';
 
 // Team Lead Pages
 import TeamLeadDashboard from './pages/TeamLead/teamLeadDashboard';
@@ -67,9 +68,17 @@ function App() {
           <Route path="/taskapproval" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><TaskApprovalPage /></ProtectedRoute>} />
 
           {/* Team Member Only */}
+          <Route path="/teamMember/project/:projectId" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TeamMemberHome /></ProtectedRoute>} />
           <Route path="/teammemberdashboard" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TeamMemberDashboardPage /></ProtectedRoute>} />
           <Route path="/teammembertask" element={<ProtectedRoute allowedRoles={["Team_Member"]}><MyTasksPage /></ProtectedRoute>} />
-          <Route path="/teammembertasksubmission" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TaskSubmissionPage /></ProtectedRoute>} />
+          <Route
+  path="/teammembertasksubmission/:projectId/:taskId"
+  element={
+    <ProtectedRoute allowedRoles={["Team_Member"]}>
+      <TaskSubmissionPage />
+    </ProtectedRoute>
+  }
+/>
 
           {/* Team Lead Only */}
           <Route path="/teamleaddashboard" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TeamLeadDashboard /></ProtectedRoute>} />
