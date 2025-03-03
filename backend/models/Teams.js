@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { create } = require("./Project");
 
 const TeamMemberSchema = new mongoose.Schema({
   teamMemberId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

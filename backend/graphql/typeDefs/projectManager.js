@@ -27,7 +27,7 @@ const projectTypeDefs = gql`
   }
 
   type TeamLead {
-    teamLeadId: User!  
+    teamLeadId: ID!  
     leadRole: String
   }
 

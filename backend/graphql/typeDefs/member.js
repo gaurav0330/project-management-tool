@@ -45,19 +45,19 @@ const memberTypeDefs = gql`
 }
 
 type TeamLead {
-  teamLeadId: User!
+  teamLeadId: ID!
   leadRole: String!
 }
 
 type Team {
   id: ID!
   projectId: ID!
-  leadId: User!
+  leadId: ID!
   members: [TeamMember]
 }
 
 type TeamMember {
-  teamMemberId: User!
+  teamMemberId: ID!
   memberRole: String!
 }
 

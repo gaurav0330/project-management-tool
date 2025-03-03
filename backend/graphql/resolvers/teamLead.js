@@ -10,13 +10,7 @@ const leadResolvers = {
   },
  
   Mutation: {
-    addTeamMember: async (_, { projectId, teamMembers }, { user }) => {
-      try {
-        return await leadService.assignTeamMembers(projectId, teamMembers, user);
-      } catch (error) {
-        throw new ApolloError(error.message, "ADD_TEAM_MEMBER_FAILED");
-      }
-    },
+    
 
     assignTaskMember: async (_, args, context) => {
       try {
