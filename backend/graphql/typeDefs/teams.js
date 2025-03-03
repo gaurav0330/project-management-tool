@@ -4,7 +4,7 @@ const teamTypeDefs = gql`
   type Team {
     id: ID!
     projectId: ID!
-    leadId: User!
+    leadId: ID!
     teamName: String!
     description: String!
     members: [TeamMember!]!
@@ -12,7 +12,7 @@ const teamTypeDefs = gql`
   }
 
   type TeamMember {
-    teamMemberId: User!
+    teamMemberId: ID!
     memberRole: String!
   }
 

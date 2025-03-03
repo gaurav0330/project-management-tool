@@ -15,7 +15,7 @@ const leadTypeDefs = gql`
   }
 
   type TeamLead {
-    teamLeadId: User!
+    teamLeadId: ID!
     leadRole: String!
   }
   
@@ -41,22 +41,8 @@ const leadTypeDefs = gql`
     history: [TaskHistory]
   }
 
-  type TeamMember {
-    teamMemberId: User!
-    memberRole: String!
-  }
-
-  input TeamMemberInput {
-    teamMemberId: ID!
-    memberRole: String!
-  }
-
-  type AssignTeamMemberResponse {
-    success: Boolean!
-    message: String!
-    project: Project
-  }
-
+ 
+ 
   type TaskResponse {
     success: Boolean!
     message: String!
@@ -68,7 +54,6 @@ const leadTypeDefs = gql`
   }
 
   type Mutation {
-    addTeamMember(projectId: ID!, teamMembers: [TeamMemberInput!]!): AssignTeamMemberResponse!
 
     assignTaskMember(
       projectId: ID!

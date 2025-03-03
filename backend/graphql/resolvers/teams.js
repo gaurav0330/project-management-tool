@@ -1,6 +1,9 @@
 const { ApolloError } = require("apollo-server-express");
 const Team = require("../../models/Teams");
 const Project = require("../../models/Project");
+const mongoose  = require("mongoose");
+
+
 
 const teamResolvers = {
   Query: {
@@ -57,40 +60,40 @@ const teamResolvers = {
     
     addMemberToTeam: async (_, { teamId, teamMembers }, { user }) => {
       try {
-        if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-    
-        const team = await Team.findById(teamId);
-        if (!team) throw new ApolloError("Team not found", "BAD_REQUEST");
-    
-        if (team.leadId.toString() !== user.id) {
-          throw new ApolloError("Only the team lead can add members!", "FORBIDDEN");
-        }
-    
-        // Validate and format team members before adding
-        const newMembers = teamMembers.map(({ teamMemberId, memberRole }) => ({
-          userId: teamMemberId,
-          role: memberRole || "Member", // Default role if not provided
-        }));
-    
-        // Prevent duplicate entries
-        const existingMemberIds = team.members.map((m) => m.userId.toString());
-        const filteredNewMembers = newMembers.filter(
-          (m) => !existingMemberIds.includes(m.userId.toString())
-        );
-    
-        if (filteredNewMembers.length === 0) {
-          throw new ApolloError("All selected members are already in the team.", "BAD_REQUEST");
-        }
-    
-        team.members.push(...filteredNewMembers);
-        await team.save();
-    
-        return { success: true, message: "Members added successfully", team };
+          if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+  
+          const team = await Team.findById(teamId);
+          if (!team) throw new ApolloError("Team not found", "BAD_REQUEST");
+  
+          if (team.leadId.toString() !== user.id) {
+              throw new ApolloError("Only the team lead can add members!", "FORBIDDEN");
+          }
+  
+          // Convert teamMembers to the correct format & avoid duplicates
+          const newMembers = teamMembers.map(({ teamMemberId, memberRole }) => ({
+              teamMemberId: teamMemberId, 
+              memberRole: memberRole,
+          }));
+  
+          team.members.push(...newMembers);
+          await team.save();
+  
+          // Populate `teamMemberId` to ensure it is fully retrieved
+          const updatedTeam = await Team.findById(teamId);
+  
+          return {
+              success: true,
+              message: "Members added successfully",
+              team: updatedTeam,
+          };
       } catch (error) {
-        return { success: false, message: `Failed: ${error.message}`, team: null };
+          console.error("Error adding team members:", error);
+          return { success: false, message: `Failed: ${error.message}`, team: null };
       }
-    }
-    
+  }
+  
+  
+
   }
 };
 
