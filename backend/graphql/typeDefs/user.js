@@ -12,11 +12,11 @@ const userTypeDefs = gql`
         username: String!
         email: String!
         role: UserRole!
-        token: String
     }
 
     type Query {
-        me: User
+        getUser(userId: ID!): User
+        getAllManagers: [User]  # ✅ Query to fetch all managers
         getAllLeads: [User]  # ✅ Query to fetch all leads
         getAllTeamMembers: [User]  # ✅ Query to fetch all leads
     }
