@@ -25,6 +25,8 @@ const ProjectCard = ({ project }) => {
       navigate(`/teamLead/project/${project.id}`);
     } else if (role === "Project_Manager") {
       navigate(`/projectHome/${project.id}`);
+    } else if (role === "Team_Member") {
+      navigate(`/teamMember/project/${project.id}`);
     }
   };
 

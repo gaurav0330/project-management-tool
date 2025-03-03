@@ -48,7 +48,7 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Dashboard", icon: MdDashboard, component: "overview" },
           { name: "Analytics", icon: MdInsights, component: "analytics" },
         ],
-      },
+      }, 
       {
         category: "My Tasks",
         items: [
