@@ -52,7 +52,8 @@ const Sidebar = ({ setActiveComponent }) => {
       {
         category: "My Tasks",
         items: [
-          { name: "Project Home", icon: MdDashboard, component: "projectHome" },   
+          { name: "Project Home", icon: MdDashboard, component: "projectHome" }, 
+          { name: "My Tasks", icon: MdAssignment, component: "mytasks" },  
           { name: "Approve Tasks", icon: MdAssignment, component: "approvetask" },   
         ],
       },

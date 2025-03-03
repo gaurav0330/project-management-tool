@@ -9,6 +9,7 @@ import AssignTasks from "../../components/tasks/AssignTasks";
 import CreateProjectPage from "../../pages/ProjectManager/CreateProjectPage";
 import TaskApprovalPage from "./TaskApprovalPage";
 import AssignedTasks from "../../components/tasks/AssignedTasks";
+import Mytasks from "../../components/TeamLeadComponent/MyTasks";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
