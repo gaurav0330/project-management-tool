@@ -25,6 +25,7 @@ const taskService = {
 
         return tasks.map(task => ({
             ...task,
+            id: task._id.toString(),
             createdBy: task.createdBy._id.toString(),  // Convert createdBy to string
             assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null  // Convert assignedTo if exists
         }));
