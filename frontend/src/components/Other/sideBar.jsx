@@ -34,6 +34,7 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Manage Lead", icon: MdSupervisorAccount, component: "managelead" },
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
           { name: "Manage Task", icon: MdAssignment, component: "assignedTasks" },
+          { name: "Approve Task", icon: MdAssignment, component: "approvetask" },
           { name: "Timeline", icon: MdTimeline, component: "timeline" },
           { name: "Reports", icon: MdBarChart, component: "reports" },
           { name: "Analytics", icon: MdAnalytics , component: "analytics" },
