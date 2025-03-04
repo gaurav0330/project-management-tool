@@ -75,7 +75,7 @@ function App() {
   path="/teammembertasksubmission/:projectId/:taskId"
   element={
     <ProtectedRoute allowedRoles={["Team_Member"]}>
-      <TaskSubmissionPage />
+      <TaskSubmissionPage/>
     </ProtectedRoute>
   }
 />

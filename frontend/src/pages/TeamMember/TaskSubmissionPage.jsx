@@ -33,7 +33,7 @@ const TaskSubmissionPage = () => {
   // 🔹 Fetch Task Data
   const { data, loading, error } = useQuery(GET_TASK_BY_ID, {
     variables: { taskId },
-    skip: !taskId, // Prevent query execution if taskId is missing
+    skip: !taskId, 
   });
 
   console.log("Task ID:", taskId);

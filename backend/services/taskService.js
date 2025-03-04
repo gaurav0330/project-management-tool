@@ -19,12 +19,15 @@ const taskService = {
         const tasks = await Task.find(filter)
             .populate("createdBy")
             .populate("assignedTo")
-            .lean(); // Convert Mongoose documents to plain JavaScript objects
-
+            .lean(); 
+            
         console.log("Retrieved Tasks:", tasks);
 
         return tasks.map(task => ({
             ...task,
+            dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+            createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+            updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
             id: task._id.toString(),
             createdBy: task.createdBy._id.toString(),  // Convert createdBy to string
             assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null  // Convert assignedTo if exists
@@ -64,6 +67,9 @@ const taskService = {
         // Return formatted tasks
         return tasks.map(task => ({
             ...task,
+            dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+            createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+            updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
             id: task._id.toString(),
             createdBy: task.createdBy._id.toString(), // Ensure createdBy is returned as an ID string
             assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null // Convert assignedTo if exists
@@ -164,8 +170,9 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
             createdBy: task.createdBy._id.toString(),  // Task creator (Project Manager)
             assignedTo: task.assignedTo._id.toString(), // Team Lead assigned to the task
             project: task.project ? task.project.toString() : null,
-            createdAt: task.createdAt.toISOString(),
-            updatedAt: task.updatedAt.toISOString(),
+            dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+            createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+            updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
         }));
     } catch (error) {
         console.error("Error fetching tasks:", error);
