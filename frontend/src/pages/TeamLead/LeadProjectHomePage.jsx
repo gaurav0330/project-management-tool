@@ -59,6 +59,9 @@ export default function ProjectDashboard() {
       <div className="w-4/5 p-8 overflow-auto">
         {activeComponent === "createteam" ? (
           <CreateTeam projectId={projectId} />
+        activeComponent === "approvetask" ? (
+          <TaskSubmissionPage projectId={projectId} />
+       
         ) : activeComponent === "approvetask" ? (
           <TaskSubmissionPage />
         ) : activeComponent === "addmembers" ? (
