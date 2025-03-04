@@ -7,38 +7,11 @@ const { GraphQLScalarType, Kind } = require("graphql");
 
 
 const taskResolvers = {
-  Date: new GraphQLScalarType({
-    name: "Date",
-    description: "Date custom scalar type",
-    serialize(value) {
-      return value instanceof Date ? value.toISOString() : null; // Convert Date to ISO String
-    },
-    parseValue(value) {
-      return new Date(value); // Convert ISO String to Date
-    },
-    parseLiteral(ast) {
-      if (ast.kind === Kind.STRING) {
-        return new Date(ast.value);
-      }
-      return null;
-    }
-  }),
+  
 
   Query: {
     async getTaskById(_, { taskId }) {
-      try {
-        // 🔹 Find the task by ID
-        const task = await Task.findById(taskId);
-
-        if (!task) {
-          throw new Error("Task not found");
-        }
-
-        return task;
-      } catch (error) {
-        console.error("Error fetching task:", error);
-        throw new Error("Failed to fetch task");
-      }
+    return await taskService.getTaskById(taskId);
     },
   
     async getTaskHistory(_, { taskId }) {
