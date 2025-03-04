@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, UploadCloud, CheckCircle } from "lucide-react"; // ✅ Added CheckCircle icon
+import { ArrowLeft, UploadCloud, CheckCircle } from "lucide-react";
+import { motion } from "framer-motion";
 import TaskHeader from "../../components/TeamMember/TaskHeader";
 import ProgressBar from "../../components/TeamMember/ProgressBar";
 import FileUpload from "../../components/TeamMember/FileUpload";
@@ -109,73 +110,92 @@ const TaskSubmissionPage = () => {
     }
   };
 
-  if (loading) return <p className="text-center text-gray-500">Loading task details...</p>;
-  if (error) return <p className="text-center text-red-500">Error: {error.message}</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center text-gray-500">Loading task details...</div>
+    </div>
+  );
+  if (error) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center text-red-500">Error: {error.message}</div>
+    </div>
+  );
 
   const task = data?.getTaskById;
-  if (!task) return <p className="text-center text-gray-500">Task not found</p>;
+  if (!task) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center text-gray-500">Task not found</div>
+    </div>
+  );
 
   return (
-    <div className="max-w-4xl p-6 mx-auto my-6 space-y-6 bg-white rounded-lg shadow-lg">
-      {/* 🔹 Back Button */}
-      <button
-        className="flex items-center px-4 py-2 text-sm text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
-        onClick={() => navigate("/teammemberdashboard")}
+    <motion.div
+  className="max-w-4xl p-8 mx-auto my-8 space-y-8 transition-all duration-300 bg-white shadow-xl rounded-2xl"
+  initial={{ opacity: 0, y: -20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+>
+  {/* 🔹 Back Button */}
+  <motion.button
+    className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 transition-transform transform bg-gray-100 rounded-lg shadow hover:bg-gray-200 hover:shadow-md hover:scale-105"
+    onClick={() => navigate(`/teamMember/project/${projectId}`)}
+  >
+    <ArrowLeft size={18} className="mr-2" />
+    Back to Dashboard
+  </motion.button>
+
+  {/* 🔹 Task Header */}
+  <TaskHeader title={task.title} dueDate={task.dueDate} priority={task.priority} />
+
+  {/* 🔹 Task Description */}
+  <motion.div
+    className="p-4 border border-gray-200 rounded-lg shadow-inner bg-gray-50"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+  >
+    <p className="text-gray-700">{task.description}</p>
+  </motion.div>
+
+  {/* 🔹 Progress Bar */}
+  <ProgressBar status={status} />
+
+  {/* 🔹 Dynamic Status Buttons */}
+  <div className="mt-6 space-y-4">
+    {status === "Completed" ? (
+      // ✅ Show checkmark for Completed tasks
+      <motion.div
+        className="flex items-center p-4 text-green-600 rounded-lg shadow bg-green-50"
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
       >
-        <ArrowLeft size={18} className="mr-2" />
-        Back to Dashboard
-      </button>
+        <CheckCircle size={24} className="mr-2" />
+        <span className="text-lg font-semibold">Task Completed</span>
+      </motion.div>
+    ) : status === "Pending Approval" ? (
+      // ❌ No buttons for Pending Approval
+      <div className="font-medium text-yellow-600">Pending Approval</div>
+    ) : status === "Done" ? (
+      // ✅ Only show "Send for Approval" for Done tasks
+      <motion.button
+        className="px-6 py-3 text-white transition-transform transform bg-green-500 rounded-lg shadow hover:bg-green-600 hover:scale-105"
+        onClick={handleSendForApproval}
+        disabled={approving}
+      >
+        {approving ? "Processing..." : "Send for Approval"}
+      </motion.button>
+    ) : (
+      // ✅ Show "Mark as Done" for To Do / In Progress
+      <motion.button
+        className="px-6 py-3 text-white transition-transform transform bg-blue-500 rounded-lg shadow hover:bg-blue-600 hover:scale-105"
+        onClick={handleStatusUpdate}
+        disabled={updating}
+      >
+        {updating ? "Processing..." : "Mark as Done"}
+      </motion.button>
+    )}
+  </div>
+</motion.div>
 
-      {/* 🔹 Task Header */}
-      <TaskHeader title={task.title} dueDate={task.dueDate} priority={task.priority} />
-
-      {/* 🔹 Task Description */}
-      <p className="text-gray-600">{task.description}</p>
-
-      {/* 🔹 Progress Bar */}
-      <ProgressBar status={status} />
-
-      {/* 🔹 Dynamic Status Buttons */}
-      <div className="mt-4">
-        {status === "Completed" ? (
-          // ✅ Show checkmark for Completed tasks
-          <div className="flex items-center text-green-600">
-            <CheckCircle size={24} className="mr-2" />
-            <span className="text-lg font-semibold">Task Completed</span>
-          </div>
-        ) : status === "Pending Approval" ? (
-          // ❌ No buttons for Pending Approval
-          null
-        ) : status === "Done" ? (
-          // ✅ Only show "Send for Approval" for Done tasks
-          <button
-            className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
-            onClick={handleSendForApproval}
-            disabled={approving}
-          >
-            {approving ? "Processing..." : "Send for Approval"}
-          </button>
-        ) : (
-          // ✅ Show "Mark as Done" for To Do / In Progress
-          <button
-            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
-            onClick={handleStatusUpdate}
-            disabled={updating}
-          >
-            {updating ? "Processing..." : "Mark as Done"}
-          </button>
-        )}
-      </div>
-
-      {/* 🔹 File Upload */}
-      <div className="flex items-center gap-2">
-        <UploadCloud size={24} className="text-blue-500" />
-        <FileUpload />
-      </div>
-
-      {/* 🔹 Attachments List */}
-      <AttachmentList files={task.attachments || []} />
-    </div>
   );
 };
 

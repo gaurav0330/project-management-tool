@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { useQuery, gql } from "@apollo/client"; // Apollo Client for GraphQL
+import { useQuery, gql } from "@apollo/client";
+import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaCalendarAlt, FaFolder, FaClock, FaCheckCircle, FaTasks } from "react-icons/fa";
 import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
-import ProjectCard from "../../components/Other/ProjectCard";  
+import ProjectCard from "../../components/Other/ProjectCard";
 import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionMemberPage";
 
-// 🔹 GraphQL Query for fetching projects
-const GET_PROJECTS_BY_MEMBER = gql`
-  query GetProjectsByMember($memberId: ID!) {
-    getProjectsByMember(memberId: $memberId) {
+// GraphQL Query for fetching project by ID
+const GET_PROJECT_BY_ID = gql`
+  query GetProjectById($id: ID!) {
+    getProjectById(id: $id) {
       id
       title
       description
@@ -21,52 +24,26 @@ const GET_PROJECTS_BY_MEMBER = gql`
   }
 `;
 
-// 🔹 Function to extract memberId from token
-const getMemberIdFromToken = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-
-  try {
-    const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-    return decodedToken.memberId;
-  } catch (error) {
-    console.error("❌ Error decoding token:", error);
-    return null;
-  }
-};
-
 export default function TeamMemberDashboardPage() {
-  const memberId = getMemberIdFromToken();
+  const { projectId } = useParams();
 
-  // 🔹 Fetch projects from GraphQL
-  const { data, loading, error } = useQuery(GET_PROJECTS_BY_MEMBER, {
-    variables: { memberId },
-    skip: !memberId,
+  // Fetch project data from GraphQL
+  const { data, loading, error } = useQuery(GET_PROJECT_BY_ID, {
+    variables: { id: projectId },
   });
 
-  // 🔹 Component States
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
+  // Component States
   const [activeComponent, setActiveComponent] = useState("overview");
 
-  // 🔹 Extract projects from data
-  const projects = data?.getProjectsByMember || [];
+  if (loading) return <p className="text-center text-gray-500">Loading project details...</p>;
+  if (error) return <p className="text-center text-red-500">Error fetching project: {error.message}</p>;
 
-  // 🔹 Filter projects based on search & status
-  const filteredProjects = projects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (statusFilter === "All" || project.status === statusFilter)
-  );
-
-  // 🔹 Handle loading & error states
-  if (loading) return <p className="text-center text-gray-500">Loading projects...</p>;
-  if (error) return <p className="text-center text-red-500">Error fetching projects: {error.message}</p>;
+  const project = data?.getProjectById;
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar with Fixed Width */}
-      <div className="w-1/6 min-w-[250px] flex-shrink-0 bg-white shadow-md">
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-1/6 min-w-[250px] flex-shrink-0 bg-white shadow-lg">
         <Sidebar setActiveComponent={setActiveComponent} />
       </div>
 
@@ -78,27 +55,41 @@ export default function TeamMemberDashboardPage() {
           <TaskSubmissionPage />
         ) : (
           <>
-            {/* Header */}
-            <h2 className="text-2xl font-semibold">Projects Overview</h2>
-
-            {/* FilterBar */}
-            <FilterBar
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-            />
-
-            {/* Project List */}
-            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.length > 0 ? (
-                filteredProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))
-              ) : (
-                <p className="text-center text-gray-500 col-span-full">No projects found.</p>
-              )}
-            </div>
+            <motion.h2
+              className="mb-6 text-4xl font-extrabold text-gray-900"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <FaTasks className="inline-block mr-2 text-blue-600" />
+              {project?.title || "Project Details"}
+            </motion.h2>
+            <motion.div
+              className="p-8 bg-white shadow-xl rounded-2xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              <p className="mb-4 text-xl text-gray-800">{project?.description}</p>
+              <div className="mt-6 space-y-4 text-gray-700">
+                <p className="flex items-center gap-3">
+                  <FaFolder className="text-blue-600" />
+                  <strong>Category:</strong> {project?.category}
+                </p>
+                <p className="flex items-center gap-3">
+                  <FaCheckCircle className="text-green-600" />
+                  <strong>Status:</strong> {project?.status}
+                </p>
+                <p className="flex items-center gap-3">
+                  <FaCalendarAlt className="text-purple-600" />
+                  <strong>Start Date:</strong> {project?.startDate}
+                </p>
+                <p className="flex items-center gap-3">
+                  <FaClock className="text-red-600" />
+                  <strong>End Date:</strong> {project?.endDate}
+                </p>
+              </div>
+            </motion.div>
           </>
         )}
       </div>
