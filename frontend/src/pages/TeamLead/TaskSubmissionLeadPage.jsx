@@ -1,52 +1,135 @@
 import { useState } from "react";
+import { useQuery, useMutation, gql } from "@apollo/client";
+import { jwtDecode } from "jwt-decode";
+import { motion, AnimatePresence } from "framer-motion";
 import TaskList from "./TaskList";
+import TaskDetails from "./TaskDetiledLead";
 
-const tasks = [
-  { id: 1, title: "Task 1", description: "Complete UI design for dashboard." },
-  { id: 2, title: "Task 2", description: "Implement API integration for user auth." },
-  { id: 3, title: "Task 3", description: "Fix bugs in task assignment logic." },
-];
+const GET_TASKS_FOR_LEAD = gql`
+  query GetTasksForLead($teamLeadId: ID!, $projectId: ID!) {
+    getTasksForLead(teamLeadId: $teamLeadId, projectId: $projectId) {
+      id
+      title
+      description
+      status
+      priority
+      dueDate
+      updatedAt
+    }
+  }
+`;
 
-export default function TaskSubmissionPage() {
+const UPDATE_TASK_STATUS = gql`
+  mutation UpdateTaskStatus($taskId: ID!, $status: String!) {
+    updateTaskStatus(taskId: $taskId, status: $status) {
+      success
+      message
+      task {
+        id
+        status
+      }
+    }
+  }
+`;
+
+const getTeamLeadIdFromToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const decodedToken = jwtDecode(token);
+    return decodedToken.id || null;
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+};
+
+export default function TaskSubmissionPage({ projectId }) {
+  const teamLeadId = getTeamLeadIdFromToken();
   const [selectedTask, setSelectedTask] = useState(null);
-  const [submissionText, setSubmissionText] = useState("");
+  const [taskStatus, setTaskStatus] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [isCompleted, setIsCompleted] = useState(false);
+
+  const { loading, error, data } = useQuery(GET_TASKS_FOR_LEAD, {
+    variables: { teamLeadId, projectId },
+    skip: !teamLeadId,
+  });
+
+  const [updateTaskStatus] = useMutation(UPDATE_TASK_STATUS);
+
+  const handleStatusChange = (status) => {
+    if (!isCompleted) {
+      setTaskStatus(status);
+    }
+  };
+
+  const handleMarkAsDone = async () => {
+    if (!selectedTask) return;
+
+    try {
+      const { data } = await updateTaskStatus({
+        variables: { taskId: selectedTask.id, status: "Done" },
+      });
+
+      if (data.updateTaskStatus.success) {
+        setIsCompleted(true);
+      }
+    } catch (err) {
+      console.error("Error updating task status:", err);
+    }
+  };
+
+  const renderContent = () => {
+    if (!teamLeadId) {
+      return <p className="text-center text-red-500">Unauthorized: No valid token found.</p>;
+    }
+
+    if (loading) {
+      return <p className="text-center text-gray-500">Loading tasks...</p>;
+    }
+
+    if (error) {
+      return <p className="text-center text-red-500">Error fetching tasks: {error.message}</p>;
+    }
+
+    const tasks = data?.getTasksForLead || [];
+
+    return (
+      <>
+        <motion.div className="w-2/5 p-4 bg-white shadow-md rounded-lg">
+          <TaskList tasks={tasks} onSelectTask={(task) => {
+            setSelectedTask(task);
+            setTaskStatus(task.status);
+            setIsCompleted(task.status === "Done");
+          }} />
+        </motion.div>
+        <div className="flex-1 p-6 bg-gray-50 rounded-lg shadow-md">
+          <AnimatePresence>
+            {selectedTask ? (
+              <TaskDetails
+                selectedTask={selectedTask}
+                taskStatus={taskStatus}
+                isCompleted={isCompleted}
+                handleStatusChange={handleStatusChange}
+                handleMarkAsDone={handleMarkAsDone}
+                files={files}
+                setFiles={setFiles}
+              />
+            ) : (
+              <motion.p className="text-gray-500 text-center">Select a task to view details.</motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div className="flex h-screen p-4">
-      {/* Task List Component */}
-      <TaskList tasks={tasks} onSelectTask={setSelectedTask} />
-
-      {/* Task Details & Submission */}
-      <div className="w-2/3 p-4">
-        {selectedTask ? (
-          <div className="border p-6 rounded-lg shadow-lg bg-white">
-            <h2 className="text-2xl font-semibold">{selectedTask.title}</h2>
-            <p className="text-gray-600 mt-2">{selectedTask.description}</p>
-
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Submission Details
-              </label>
-              <textarea
-                placeholder="Provide submission details here..."
-                className="w-full p-2 border rounded-md"
-                value={submissionText}
-                onChange={(e) => setSubmissionText(e.target.value)}
-              />
-            </div>
-
-            <div className="mt-4 flex gap-4">
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                Submit Task
-              </button>
-              <button className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                Mark as Done
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className="text-gray-500">Select a task to view details.</p>
-        )}
+    <div className="h-screen bg-gray-100 flex flex-col">
+      <h1 className="text-3xl font-bold text-center my-4">Task Management</h1>
+      <div className="flex flex-grow">
+        {renderContent()}
       </div>
     </div>
   );

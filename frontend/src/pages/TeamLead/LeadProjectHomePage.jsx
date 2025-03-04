@@ -55,7 +55,7 @@ export default function ProjectDashboard() {
         //   navigate('/teamleaddashboard')
         // ) :
         activeComponent === "approvetask" ? (
-          <TaskSubmissionPage />
+          <TaskSubmissionPage projectId={projectId} />
         ) :
         activeComponent === "addmembers" ? (
           <AssignTeamMembers />
