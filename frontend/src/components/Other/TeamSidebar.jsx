@@ -10,9 +10,11 @@ const TeamSidebar = ({ setActiveComponent }) => {
     { name: "Project Home", icon: MdDashboard, component: "projectHome" },
     { name: "Create Tasks", icon: MdAssignment, component: "createtasks" },
     { name: "Manage Tasks", icon: MdTimeline, component: "managetasks" },
+    { name: "Approve Tasks", icon: MdBarChart, component: "approvetasks" },
     { name: "Add Members", icon: MdPeople, component: "addmembers" },
     { name: "Task Distribution", icon: MdBarChart, component: "taskDistribution" },
     { name: "Reports", icon: MdBarChart, component: "reports" },
+    
   ];
 
   return (

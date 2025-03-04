@@ -181,7 +181,7 @@ approveTaskCompletionService: async ({ taskId, approved, remarks }, user) => {
         }
 
         task.status = approved ? "Completed" : "In Progress";
-        task.remarks = remarks || "";  // ✅ Add remarks when updating the task
+        task.remarks = remarks || "";  
 
         task.history.push({
             updatedBy: user.id,
