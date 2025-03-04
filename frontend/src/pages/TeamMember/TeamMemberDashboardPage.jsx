@@ -68,13 +68,13 @@ export default function TeamMemberDashboardPage() {
           <TaskSubmissionPage />
         ) : (
           <>
-            <h2 className="text-2xl font-semibold">Projects Overview</h2>
-            <FilterBar
+            <h2 className="text-2xl font-semibold">My Projects </h2>
+            {/* <FilterBar
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}
-            />
+            /> */}
 
             <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredProjects.map((project) => (

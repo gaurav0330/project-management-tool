@@ -1,27 +1,24 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FaCalendarAlt, FaFolder, FaClock, FaArrowRight } from "react-icons/fa";
-import { jwtDecode } from "jwt-decode"; // Ensure you installed it: npm install jwt-decode
-
-
+import { FaCalendarAlt, FaFolder, FaClock, FaArrowRight, FaStar } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
+import { motion } from "framer-motion";
 
 const ProjectCard = ({ project }) => {
-  const navigate = useNavigate(); // ✅ useNavigate Hook for navigation
+  const navigate = useNavigate();
 
-  // ✅ Extract role from token
   let role = null;
   const token = localStorage.getItem("token");
 
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      role = decoded.role; // Ensure your backend sends 'role' in the JWT
+      role = decoded.role;
     } catch (error) {
       console.error("❌ Error decoding token:", error);
     }
   }
 
-  // ✅ Handle navigation dynamically
   const handleNavigation = () => {
     if (role === "Team_Lead") {
       navigate(`/teamLead/project/${project.id}`);
@@ -33,12 +30,17 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <div className="relative p-6 transition-transform duration-300 bg-white rounded-lg shadow-lg hover:shadow-xl hover:scale-105">
+    <motion.div
+      className="relative p-8 transition-transform duration-300 bg-white shadow-xl rounded-3xl hover:shadow-2xl hover:scale-105"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Title & Category */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-gray-800">{project.title}</h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-2xl font-bold text-gray-900">{project.title}</h3>
         {project.category && (
-          <span className="flex items-center gap-2 px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full">
+          <span className="flex items-center gap-2 px-4 py-2 text-lg font-semibold text-blue-700 bg-blue-200 rounded-full">
             <FaFolder className="text-blue-600" />
             {project.category}
           </span>
@@ -46,31 +48,34 @@ const ProjectCard = ({ project }) => {
       </div>
 
       {/* Project Description */}
-      <p className="mt-3 text-sm text-gray-600 line-clamp-2">{project.description}</p>
+      <p className="mt-4 text-lg text-gray-700 line-clamp-3">{project.description}</p>
 
       {/* Date Section */}
-      <div className="mt-4 space-y-2 text-sm text-gray-600">
-        <p className="flex items-center gap-2">
+      <div className="mt-6 space-y-3 text-base text-gray-700">
+        <p className="flex items-center gap-3">
           <FaCalendarAlt className="text-green-600" />
-          <span className="font-medium">Start Date:</span> {project.startDate}
+          <span className="font-semibold">Start Date:</span> {project.startDate}
         </p>
-        <p className="flex items-center gap-2">
+        <p className="flex items-center gap-3">
           <FaClock className="text-red-600" />
-          <span className="font-medium">End Date:</span> {project.endDate}
+          <span className="font-semibold">End Date:</span> {project.endDate}
+        </p>
+        <p className="flex items-center gap-3">
+          <FaStar className="text-yellow-500" />
+          <span className="font-semibold">Priority:</span> {project.priority || 'Normal'}
         </p>
       </div>
 
       {/* View Project Button */}
       <button
         onClick={handleNavigation}
-        className="flex items-center justify-center w-full px-4 py-2 mt-4 text-sm font-semibold text-white transition-colors duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
+        className="flex items-center justify-center w-full px-6 py-3 mt-8 text-lg font-bold text-white transition-colors duration-300 bg-blue-600 rounded-full hover:bg-blue-700"
       >
-        View Project <FaArrowRight className="ml-2" />
+        View Project <FaArrowRight className="ml-3" />
       </button>
 
       {/* Decorative Border at Bottom */}
-      <div className="absolute bottom-0 left-0 w-full h-1 rounded-b-lg bg-gradient-to-r from-blue-400 to-purple-500"></div>
-    </div>
+      </motion.div>
   );
 };
 
