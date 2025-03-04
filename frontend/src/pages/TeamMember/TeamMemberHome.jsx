@@ -4,7 +4,7 @@ import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard";  
 import MyTasksPage from "./MyTasksPage";
-import TaskSubmissionPage from "./TaskSubmissionPage";
+import TaskSubmissionPage from "./TaskSubmissionMemberPage";
 
 // 🔹 GraphQL Query for fetching projects
 const GET_PROJECTS_BY_MEMBER = gql`

@@ -14,6 +14,7 @@ import CreateTeam from "./CreateTeam";
 import MyTeams from "./MyTeams";
 import AssignTasks from "./AssignTaskPage";
 import MyTasks from "../../components/TeamLeadComponent/MyTasks";
+import TaskSubmissionPage from "./TaskSubmissionLeadPage";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -54,7 +55,7 @@ export default function ProjectDashboard() {
         //   navigate('/teamleaddashboard')
         // ) :
         activeComponent === "approvetask" ? (
-          <TaskApprovalPage />
+          <TaskSubmissionPage />
         ) :
         activeComponent === "addmembers" ? (
           <AssignTeamMembers />

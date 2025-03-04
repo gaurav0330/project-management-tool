@@ -7,6 +7,7 @@ import AssignTeamMembers from "./AssignTeamMembersPage";
 import TaskManagementPage from "./TaskManagementPage";
 import TaskDistributionPage from "./TaskDistributionPage";
 import DisplayTeamTaskPage from "./DisplayTeamTaskPage";
+import TaskApprovalPageLead from "../TeamLead/TaskApprovalPageLead";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -52,6 +53,8 @@ export default function TeamDetails() {
           <AssignTeamMembers />
         ) : activeComponent === "taskDistribution" ? (
           <TaskDistributionPage projectId={projectId} />
+        ) : activeComponent === "approvetasks" ? (
+          <TaskApprovalPageLead projectId={projectId} />
         ) : activeComponent === "managetasks" ? (
           <TaskManagementPage projectId={projectId} />
         ) : activeComponent === "teamtasks" ? (
