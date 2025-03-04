@@ -3,9 +3,27 @@ const User = require("../../models/User");
 const { ApolloError } = require("apollo-server-express");
 const mongoose = require("mongoose");
 const taskService = require("../../services/taskService");
+const { GraphQLScalarType, Kind } = require("graphql");
 
 
 const taskResolvers = {
+  Date: new GraphQLScalarType({
+    name: "Date",
+    description: "Date custom scalar type",
+    serialize(value) {
+      return value instanceof Date ? value.toISOString() : null; // Convert Date to ISO String
+    },
+    parseValue(value) {
+      return new Date(value); // Convert ISO String to Date
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING) {
+        return new Date(ast.value);
+      }
+      return null;
+    }
+  }),
+
   Query: {
     async getTaskById(_, { taskId }) {
       try {

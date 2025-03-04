@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ArrowLeft, UploadCloud } from "lucide-react"; // ✅ Lucide Icons
 import TaskHeader from "../../components/TeamMember/TaskHeader";
 import ProgressBar from "../../components/TeamMember/ProgressBar";
@@ -27,14 +27,18 @@ const GET_TASK_BY_ID = gql`
 
 const TaskSubmissionPage = () => {
   const navigate = useNavigate();
-  const { projectId, taskId } = useParams();
+  
+  // 🔹 Static Task ID
+  const taskId = "67c5cfaba451690f5b5b77d6";
 
   // 🔹 Fetch Task Data
   const { data, loading, error } = useQuery(GET_TASK_BY_ID, {
     variables: { taskId },
+    skip: !taskId, // Prevent query execution if taskId is missing
   });
 
-  console.log(taskId);
+  console.log("Task ID:", taskId);
+
   const [progress, setProgress] = useState(75);
   const [status, setStatus] = useState("In Progress");
   const [files, setFiles] = useState([]);
@@ -52,7 +56,8 @@ const TaskSubmissionPage = () => {
   if (loading) return <p className="text-center text-gray-500">Loading task details...</p>;
   if (error) return <p className="text-center text-red-500">Error: {error.message}</p>;
 
-  const task = data?.getTaskById ;
+  const task = data?.getTaskById;
+  if (!task) return <p className="text-center text-gray-500">Task not found</p>;
 
   return (
     <div className="max-w-4xl p-6 mx-auto my-6 space-y-6 bg-white rounded-lg shadow-lg">
