@@ -43,8 +43,8 @@ export default function ProjectDashboard() {
           <AssignTeamLead {...{ projectId }} />
         ) : activeComponent === "dashboard" ? (
           navigate("/ProjectDashboard")
-        ) : activeComponent === "taskapproval" ? (
-          <TaskApprovalPage />
+        ) : activeComponent === "approvetask" ? (
+          <TaskApprovalPage projectId={projectId} />
         ) : activeComponent === "tasks" ? (
           <AssignTasks />
         ) :
