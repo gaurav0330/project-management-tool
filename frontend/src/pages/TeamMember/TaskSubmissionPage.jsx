@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { useQuery, gql } from "@apollo/client";
+import React, { useState, useEffect } from "react";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, UploadCloud } from "lucide-react"; // ✅ Lucide Icons
+import { ArrowLeft, UploadCloud, CheckCircle } from "lucide-react"; // ✅ Added CheckCircle icon
 import TaskHeader from "../../components/TeamMember/TaskHeader";
 import ProgressBar from "../../components/TeamMember/ProgressBar";
 import FileUpload from "../../components/TeamMember/FileUpload";
 import AttachmentList from "../../components/TeamMember/Attachment";
 
-// 🔹 GraphQL Query
+// 🔹 GraphQL Queries & Mutations
 const GET_TASK_BY_ID = gql`
   query GetTaskById($taskId: ID!) {
     getTaskById(taskId: $taskId) {
@@ -25,31 +25,88 @@ const GET_TASK_BY_ID = gql`
   }
 `;
 
+const UPDATE_TASK_STATUS = gql`
+  mutation UpdateTaskStatus($taskId: ID!, $status: String!) {
+    updateTaskStatus(taskId: $taskId, status: $status) {
+      success
+      message
+      task {
+        id
+        title
+        status
+        updatedAt
+      }
+    }
+  }
+`;
+
+const SEND_TASK_FOR_APPROVAL = gql`
+  mutation SendTaskForApproval($taskId: ID!) {
+    sendTaskForApproval(taskId: $taskId) {
+      success
+      message
+      task {
+        id
+        status
+      }
+    }
+  }
+`;
+
 const TaskSubmissionPage = () => {
   const navigate = useNavigate();
-  const { projectId,taskId } = useParams();
-  
+  const { projectId, taskId } = useParams();
 
   // 🔹 Fetch Task Data
-  const { data, loading, error } = useQuery(GET_TASK_BY_ID, {
+  const { data, loading, error, refetch } = useQuery(GET_TASK_BY_ID, {
     variables: { taskId },
     skip: !taskId, // Prevent query execution if taskId is missing
   });
 
-  console.log("Task ID:", taskId);
+  const [updateTaskStatus, { loading: updating }] = useMutation(UPDATE_TASK_STATUS, {
+    onCompleted: () => refetch(), // Refresh task data after update
+  });
 
-  const [progress, setProgress] = useState(75);
-  const [status, setStatus] = useState("In Progress");
-  const [files, setFiles] = useState([]);
+  const [sendTaskForApproval, { loading: approving }] = useMutation(SEND_TASK_FOR_APPROVAL, {
+    onCompleted: () => {
+      refetch(); // Refresh task data after sending for approval
+      alert("Task sent for approval!");
+    },
+  });
 
-  // 🔹 Handle File Upload
-  const handleFileUpload = (newFiles) => {
-    setFiles((prev) => [...prev, ...newFiles]);
+  const [status, setStatus] = useState(null);
+  const [isCompleted, setIsCompleted] = useState(false); // Track if task was marked as completed
+
+  // 🔹 Update status when data is fetched
+  useEffect(() => {
+    if (data?.getTaskById?.status) {
+      setStatus(data.getTaskById.status);
+      setIsCompleted(data.getTaskById.status === "Completed"); // Set flag if task is completed
+    }
+  }, [data]);
+
+  // 🔹 Handle Status Update
+  const handleStatusUpdate = async () => {
+    if (!status || status === "Done") return; // Prevent going back from Done
+
+    try {
+      await updateTaskStatus({ variables: { taskId, status: "Done" } });
+      alert(`Task status updated to Done!`);
+      setStatus("Done");
+    } catch (err) {
+      console.error("Error updating status:", err);
+    }
   };
 
-  // 🔹 Handle File Delete
-  const handleDeleteFile = (index) => {
-    setFiles(files.filter((_, i) => i !== index));
+  // 🔹 Handle Sending Task for Approval
+  const handleSendForApproval = async () => {
+    if (status !== "Done") return; // Only send if status is "Done"
+
+    try {
+      await sendTaskForApproval({ variables: { taskId } });
+    } catch (err) {
+      console.error("Error sending task for approval:", err);
+    }
   };
 
   if (loading) return <p className="text-center text-gray-500">Loading task details...</p>;
@@ -76,18 +133,48 @@ const TaskSubmissionPage = () => {
       <p className="text-gray-600">{task.description}</p>
 
       {/* 🔹 Progress Bar */}
-      <ProgressBar progress={progress} status={status} setStatus={setStatus} />
+      <ProgressBar status={status} />
 
-      <button> Update Status</button>
+      {/* 🔹 Dynamic Status Buttons */}
+      <div className="mt-4">
+        {status === "Completed" ? (
+          // ✅ Show checkmark for Completed tasks
+          <div className="flex items-center text-green-600">
+            <CheckCircle size={24} className="mr-2" />
+            <span className="text-lg font-semibold">Task Completed</span>
+          </div>
+        ) : status === "Pending Approval" ? (
+          // ❌ No buttons for Pending Approval
+          null
+        ) : status === "Done" ? (
+          // ✅ Only show "Send for Approval" for Done tasks
+          <button
+            className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600"
+            onClick={handleSendForApproval}
+            disabled={approving}
+          >
+            {approving ? "Processing..." : "Send for Approval"}
+          </button>
+        ) : (
+          // ✅ Show "Mark as Done" for To Do / In Progress
+          <button
+            className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+            onClick={handleStatusUpdate}
+            disabled={updating}
+          >
+            {updating ? "Processing..." : "Mark as Done"}
+          </button>
+        )}
+      </div>
 
       {/* 🔹 File Upload */}
       <div className="flex items-center gap-2">
         <UploadCloud size={24} className="text-blue-500" />
-        <FileUpload onFileUpload={handleFileUpload} />
+        <FileUpload />
       </div>
 
       {/* 🔹 Attachments List */}
-      <AttachmentList files={files} onDelete={handleDeleteFile} />
+      <AttachmentList files={task.attachments || []} />
     </div>
   );
 };
