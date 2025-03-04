@@ -61,7 +61,7 @@ const Sidebar = ({ setActiveComponent }) => {
         category: "Manage Team ",
         items: [
           { name: "Create Team", icon: MdFolderOpen, component: "createteam" },  
-          { name: "Add Members", icon: MdAssignment, component: "addmembers" }, 
+          // { name: "Add Members", icon: MdAssignment, component: "addmembers" }, 
           { name: "My Teams", icon: MdGroup, component: "myteams" }, 
         ],
       }, 
