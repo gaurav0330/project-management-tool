@@ -1,6 +1,32 @@
 const Task = require("../models/Task");
 
 const taskService = {
+
+    getTaskById : async (taskId) => {
+        try{
+            // 🔹 Find the task by ID
+            const task = await Task.findById(taskId);
+
+            if(!task){
+                throw new Error("Task not found");
+            }
+
+            return ({
+                ...task._doc,
+                dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+                createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+                updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
+                id: task._id.toString(),
+                createdBy: task.createdBy._id.toString(),  // Convert createdBy to string
+                assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null  // Convert assignedTo if exists
+            });
+
+        }catch(error){
+            console.error("Error fetching task:", error);
+            throw new Error("Failed to fetch task");
+        }
+    },
+    
  getTasksByManager : async (managerId, projectId) => {
     try {
         console.log("Fetching tasks for Manager ID:", managerId);
