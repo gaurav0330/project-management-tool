@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, UploadCloud } from "lucide-react"; // ✅ Lucide Icons
 import TaskHeader from "../../components/TeamMember/TaskHeader";
 import ProgressBar from "../../components/TeamMember/ProgressBar";
@@ -27,9 +27,8 @@ const GET_TASK_BY_ID = gql`
 
 const TaskSubmissionPage = () => {
   const navigate = useNavigate();
+  const { projectId,taskId } = useParams();
   
-  // 🔹 Static Task ID
-  const taskId = "67c5cfaba451690f5b5b77d6";
 
   // 🔹 Fetch Task Data
   const { data, loading, error } = useQuery(GET_TASK_BY_ID, {
@@ -78,6 +77,8 @@ const TaskSubmissionPage = () => {
 
       {/* 🔹 Progress Bar */}
       <ProgressBar progress={progress} status={status} setStatus={setStatus} />
+
+      <button> Update Status</button>
 
       {/* 🔹 File Upload */}
       <div className="flex items-center gap-2">

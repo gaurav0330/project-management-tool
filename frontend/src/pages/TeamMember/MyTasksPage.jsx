@@ -151,9 +151,7 @@ export default function MyTasksPage() {
               className="px-4 py-2 mt-4 text-white transition bg-blue-600 rounded-md shadow-md hover:bg-blue-700"
               whileHover={{ scale: 1.05 }} // ✅ Button Hover Animation
               whileTap={{ scale: 0.95 }} // ✅ Click Animation
-              onClick={() => navigate(`/teammembertasksubmission/${projectId}/${task.id})}
-              
-`)}
+              onClick={() => navigate(`/teammembertasksubmission/${projectId}/${task.id}`)}
             >
               Submit Task
             </motion.button>

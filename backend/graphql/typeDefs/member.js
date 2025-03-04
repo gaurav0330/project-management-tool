@@ -79,7 +79,7 @@ type Query {
   getProjectsByMember(memberId: ID!): [Project]
    getTeamMembers(teamLeadId: ID!, projectId: ID!): [TeamMember]
 }
-
+  
 
   extend type Mutation {
     updateTaskStatus(taskId: ID!, status: String!): TaskResponse!
