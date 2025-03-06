@@ -8,6 +8,7 @@ import TaskManagementPage from "./TaskManagementPage";
 import TaskDistributionPage from "./TaskDistributionPage";
 import DisplayTeamTaskPage from "./DisplayTeamTaskPage";
 import TaskApprovalPageLead from "../TeamLead/TaskApprovalPageLead";
+import Footer from "../../components/Other/Footer2";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -38,7 +39,7 @@ export default function TeamDetails() {
     }
   };
 
-  return (
+  return ( <div>
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <div className="w-64 h-full min-h-screen bg-white shadow-lg">
@@ -75,6 +76,8 @@ export default function TeamDetails() {
           </>
         )}
       </div>
+    </div>
+   <Footer/>
     </div>
   );
 }

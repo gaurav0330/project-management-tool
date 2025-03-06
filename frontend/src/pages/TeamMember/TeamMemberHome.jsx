@@ -8,6 +8,7 @@ import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard";
 import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionMemberPage";
+import Footer from "../../components/Other/Footer2"
 
 // GraphQL Query for fetching project by ID
 const GET_PROJECT_BY_ID = gql`
@@ -40,7 +41,7 @@ export default function TeamMemberDashboardPage() {
 
   const project = data?.getProjectById;
 
-  return (
+  return ( <div>
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <div className="w-1/6 min-w-[250px] flex-shrink-0 bg-white shadow-lg">
@@ -93,6 +94,8 @@ export default function TeamMemberDashboardPage() {
           </>
         )}
       </div>
+    </div>
+    <Footer/>
     </div>
   );
 }

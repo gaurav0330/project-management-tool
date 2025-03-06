@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client"; // Apollo Client for GraphQL
-import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard"; 
 import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionMemberPage";
+import Footer from "../../components/Other/Footer";
 
 // GraphQL Query
 const GET_PROJECTS_BY_MEMBER = gql`
@@ -57,10 +57,8 @@ export default function TeamMemberDashboardPage() {
   if (loading) return <p>Loading projects...</p>;
   if (error) return <p>Error fetching projects: {error.message}</p>;
 
-  return (
+  return ( <div>
     <div className="flex min-h-screen bg-gray-100">
-      
-
       <div className="w-4/5 p-8 overflow-auto">
         {activeComponent === "tasks" ? (
           <MyTasksPage />
@@ -84,6 +82,8 @@ export default function TeamMemberDashboardPage() {
           </>
         )}
       </div>
+    </div>
+    <Footer/>
     </div>
   );
 }

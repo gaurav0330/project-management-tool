@@ -1,0 +1,33 @@
+/* Sidebar.css */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+  
+  .hover\:animate-shake:hover {
+    animation: shake 0.5s ease-in-out;
+  }
+  
+  .hover\:shadow-lg:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* 3D effect */
+  }
+
+  .transform:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover for 3D effect */
+  }
+
+  /* Custom Colors */
+  .bg-navy-600 {
+    background-color: #003366; /* Navy Blue */
+  }
+
+  .bg-navy-700 {
+    background-color: #002244; /* Darker Navy Blue */
+  }
+
+  .bg-light-gray {
+    background-color: #f5f5f5; /* Light Gray */
+  }
