@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "../../../graphql/authQueries";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../components/authContext";  // ✅ Import useAuth
+import { useAuth } from "../../../components/authContext";
 import Logo from "../../../components/authComponent/Logo";
 import LoginIllustration from "../../../components/authComponent/LoginIllustration";
+import Alert from '@mui/material/Alert';
+import Snackbar from '@mui/material/Snackbar';
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { setUserRole } = useAuth();  // ✅ Get setUserRole from AuthContext
+  const { setUserRole } = useAuth();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [redirectPath, setRedirectPath] = useState(null);
 
   const [formData, setFormData] = useState({
     email: "@gmail.com",
@@ -20,23 +24,41 @@ function LoginPage() {
       if (data?.login) {
         const { token, role } = data.login;
 
-        // ✅ Store user data in localStorage
+        // Store user data in localStorage
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify({ role }));
 
-        // ✅ Update AuthContext state
+        // Update AuthContext state
         setUserRole(role);
 
-        alert("Login successful!");
+        // Show success message
+        setOpenSnackbar(true);
 
-        // ✅ Navigate based on role
-        if (role === "Project_Manager") navigate("/projectDashboard");
-        else if (role === "Team_Lead") navigate("/teamleaddashboard");
-        else if (role === "Team_Member") navigate("/teammemberdashboard");
-        else navigate("/"); // Default redirect
+        // Set the redirect path based on role
+        if (role === "Project_Manager") setRedirectPath("/projectDashboard");
+        else if (role === "Team_Lead") setRedirectPath("/teamleaddashboard");
+        else if (role === "Team_Member") setRedirectPath("/teammemberdashboard");
+        else setRedirectPath("/"); // Default redirect
       }
     },
   });
+
+  // Effect to handle redirection after showing the snackbar
+  useEffect(() => {
+    if (redirectPath) {
+      const timer = setTimeout(() => {
+        navigate(redirectPath);
+      }, 800); // Delay navigation by 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [redirectPath, navigate]);
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -109,6 +131,18 @@ function LoginPage() {
           <LoginIllustration />
         </div>
       </div>
+
+      {/* Snackbar for Success Message */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success">
+          Login Successful!
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

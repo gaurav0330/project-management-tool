@@ -27,15 +27,7 @@ const projectService = {
 
   getProjectById: async (id) => {
     const projects =  await Project.findById(id).populate("projectManager");
-    return projects.map(project => ({
-      id: project.id,
-      title: project.title,
-      description: project.description,
-      startDate: new Date(project.startDate).toISOString(), // Convert to ISO string or format as needed
-      endDate: new Date(project.endDate).toISOString(),     // Convert to ISO string or format as needed
-      category: project.category,
-      status: project.status
-    }));
+    return projects;
   },
 
   getProjectsByManagerId: async (managerId) => {
