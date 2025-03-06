@@ -31,11 +31,16 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Tasks", icon: MdAssignment, component: "tasks" },
           { name: "Members", icon: MdAssignment, component: "members" },
           { name: "Approve Task", icon: MdAssignment, component: "approvetask" },
+        ],
+
+      },{
+        category:"Analytics Section",
+        items:[
           { name: "Timeline", icon: MdTimeline, component: "timeline" },
           { name: "Reports", icon: MdBarChart, component: "reports" },
           { name: "Analytics", icon: MdAnalytics, component: "analytics" },
         ],
-      },
+      }
     ],
     Team_Lead: [
       {
