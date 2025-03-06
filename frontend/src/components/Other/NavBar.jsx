@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MdSearch, MdNotifications, MdMessage, MdHelp } from "react-icons/md";
 import { jwtDecode } from "jwt-decode"; 
 import { gql, useQuery } from "@apollo/client"; // Import GraphQL query hook
+import logo from '../../assets/logo.png'; 
 
 const GET_USER = gql`
   query GetUser($userId: ID!) {
@@ -21,12 +22,14 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [userId, setUserId] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
         setUserId(decodedToken.id); // Extract userId from token
+        setUserRole(decodedToken.role); // Extract user role from token
       } catch (error) {
         console.error("Invalid token:", error);
       }
@@ -48,6 +51,25 @@ const Navbar = () => {
     }
   };
 
+  const handleDashboardRedirect = () => {
+    if (userRole) {
+      switch (userRole) {
+        case 'Project_Manager':
+          navigate('/projectDashboard'); 
+          break;
+        case 'Team_Lead':
+          navigate('/teamleaddashboard'); // Redirect to Team Lead dashboard
+          break;
+        case 'Team_Member':
+          navigate('/teammemberdashboard'); // Redirect to Team Member dashboard
+          break;
+        default:
+          navigate('/'); // Default dashboard
+          break;
+      }
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -59,9 +81,12 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-      <div className="px-4 mx-auto">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
+      <div className="px-6 mx-auto max-w-7xl">
         <div className="flex items-center justify-between h-16">
+          <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+            <img src={logo} alt="Logo" className="h-10 w-auto" /> {/* Logo image */}
+          </div>
           {/* Search Bar */}
           <div className="flex-1 max-w-xl">
             <div className="relative">
@@ -70,7 +95,7 @@ const Navbar = () => {
               </div>
               <input
                 type="search"
-                className="block w-full py-2 pl-10 pr-3 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="block w-full py-2 pl-10 pr-3 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Search projects, tasks, or team members..."
               />
             </div>
@@ -81,30 +106,33 @@ const Navbar = () => {
             {token ? (
               <>
                 {/* Notifications */}
-                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100 transition duration-200">
                   <MdNotifications className="w-6 h-6" />
                   <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
                 </button>
 
                 {/* Messages */}
-                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100">
+                <button className="relative p-2 text-gray-600 rounded-lg hover:bg-gray-100 transition duration-200">
                   <MdMessage className="w-6 h-6" />
                   <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
                 </button>
 
-                {/* Help */}
-                <button className="p-2 text-gray-600 rounded-lg hover:bg-gray-100" onClick={() => navigate("/")}>
-                  <MdHelp className="w-6 h-6" />
+                {/* Go to Dashboard Button */}
+                <button
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
+                  onClick={handleDashboardRedirect}
+                >
+                  Go to Dashboard
                 </button>
 
                 {/* Profile Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    className="flex items-center p-2 space-x-3 rounded-lg hover:bg-gray-100"
+                    className="flex items-center p-2 space-x-3 rounded-lg hover:bg-gray-100 transition duration-200"
                     onClick={() => setIsDropdownOpen((prev) => !prev)}
                   >
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary-100">
-                      <span className="text-sm font-medium text-primary-600">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100">
+                      <span className="text-sm font-medium text-blue-600">
                         {loading ? "..." : user.username?.charAt(0).toUpperCase() || "U"}
                       </span>
                     </div>
@@ -119,24 +147,32 @@ const Navbar = () => {
                     <div className="absolute right-0 w-40 p-2 mt-2 bg-white rounded-lg shadow-lg">
                       <button
                         onClick={handleLogout}
-                        className="block w-full px-4 py-2 text-sm text-left text-red-600 rounded-lg hover:bg-gray-100"
+                        className="block w-full px-4 py-2 text-sm text-left text-red-600 rounded-lg hover:bg-gray-100 transition duration-200"
                       >
                         Logout
                       </button>
                     </div>
                   )}
                 </div>
+
+                {/* Logout Button at the rightmost end */}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-200 ml-2"
+                >
+                  Logout
+                </button>
               </>
             ) : (
               <>
                 <button
-                  className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-100"
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-200"
                   onClick={() => navigate("/login")}
                 >
                   Login
                 </button>
                 <button
-                  className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600"
+                  className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition duration-200"
                   onClick={() => navigate("/signup")}
                 >
                   Sign Up

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
+import {jwtDecode} from "jwt-decode"; // Install this if not already installed
 import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard";
@@ -10,31 +11,55 @@ import TaskApprovalPage from "./TaskApprovalPage";
 import TeamMemberDashboardPage from "../TeamMember/TeamMemberDashboardPage";
 import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
 
-// GraphQL Query to Fetch All Projects
-const GET_ALL_PROJECTS = gql`
-  query GetAllProjects {
-    getAllProjects {
+// Function to get managerId from the token
+const getManagerIdFromToken = () => {
+  const token = localStorage.getItem("token"); // Assuming token is stored in localStorage
+  if (!token) return null;
+
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.id; // Ensure this matches the key in your token payload
+  } catch (error) {
+    console.error("Invalid token", error);
+    return null;
+  }
+};
+
+// GraphQL Query to Fetch Projects by Manager ID
+const GET_PROJECTS_BY_MANAGER_ID = gql`
+  query GetProjectsByManagerId($managerId: ID!) {
+    getProjectsByManagerId(managerId: $managerId) {
       id
       title
       description
       startDate
       endDate
       category
+      status
     }
   }
 `;
 
-
 export default function ProjectDashboard() {
-  const { loading, error, data } = useQuery(GET_ALL_PROJECTS);
+  const managerId = getManagerIdFromToken(); // Extract managerId from token
+
+  const { loading, error, data } = useQuery(GET_PROJECTS_BY_MANAGER_ID, {
+    variables: { managerId }, // Pass managerId dynamically
+    skip: !managerId, // Skip query if managerId is not available
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [activeComponent, setActiveComponent] = useState("overview");
 
+  if (!managerId) {
+    return <p className="text-center text-red-500">Unauthorized: No valid token found.</p>;
+  }
+
   if (loading) return <p className="text-center text-gray-500">Loading projects...</p>;
   if (error) return <p className="text-center text-red-500">Error loading projects.</p>;
 
-  const projects = data?.getAllProjects || [];
+  const projects = data?.getProjectsByManagerId || [];
 
   // Filter projects based on search and status
   const filteredProjects = projects.filter(

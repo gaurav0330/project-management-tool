@@ -54,11 +54,11 @@ const ProjectCard = ({ project }) => {
       <div className="mt-6 space-y-3 text-base text-gray-700">
         <p className="flex items-center gap-3">
           <FaCalendarAlt className="text-green-600" />
-          <span className="font-semibold">Start Date:</span> {project.startDate}
+          <span className="font-semibold">Start Date:</span> {project.startDate.split("T")[0]}
         </p>
         <p className="flex items-center gap-3">
           <FaClock className="text-red-600" />
-          <span className="font-semibold">End Date:</span> {project.endDate}
+          <span className="font-semibold">End Date:</span> {project.endDate.split("T")[0]}  
         </p>
         <p className="flex items-center gap-3">
           <FaStar className="text-yellow-500" />
