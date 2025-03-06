@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../../components/Other/Sidebar";
+import Sidebar from "../../components/Other/sideBar";
 import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard";
 import AssignTeamLead from "../../components/tasks/AssignTeamLead";
@@ -16,6 +16,7 @@ import Footer from "../../components/Other/Footer2";
 
 import TeamLeadsList from "./TeamLeadsList";
 import TeamMembersList from "./TeamMemberList";
+import AnalyticsDashboard from "./AnalyticsDashboard";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -49,7 +50,7 @@ export default function ProjectDashboard() {
   
     >
       {/* Sidebar */}
-      <div className=" w-64 h-full min-h-screen bg-white shadow-lg">
+      <div className="w-64 h-full min-h-screen bg-white shadow-lg ">
         <Sidebar setActiveComponent={setActiveComponent} />
       </div>
 
@@ -72,6 +73,9 @@ export default function ProjectDashboard() {
           ) :
           activeComponent === "assignedTasks" ? (
             <AssignedTasks />
+          ) :
+          activeComponent === "analytics" ? (
+            <AnalyticsDashboard projectId={projectId} />
           ) :
             activeComponent === "projectHome" ? (
               window.location.reload()
