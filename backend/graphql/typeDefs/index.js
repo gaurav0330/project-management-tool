@@ -5,26 +5,16 @@ const userTypeDefs = require("./user");
 const teamTypeDefs = require("./teams");
 const memberTypeDefs = require("./member");
 const taskTypeDefs = require("./task");
-
-
-const baseTypeDefs = gql`
-  type Query {
-    _empty: String
-  }
-
-  type Mutation {
-    _empty: String
-  }
-`;
+const analyticsTypeDefs = require("./analytics");
 
 const typeDefs = [
   userTypeDefs,
-  baseTypeDefs,
   leadTypeDefs,
   teamTypeDefs,
   memberTypeDefs,
   projectManagerTypeDefs,
-  taskTypeDefs
+  taskTypeDefs,
+  analyticsTypeDefs
 ];
 
 module.exports = typeDefs;
