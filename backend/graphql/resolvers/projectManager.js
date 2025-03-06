@@ -117,21 +117,25 @@ const projectResolvers = {
   },
 
   Mutation: {
-    createProject: async (_, { title, description, startDate, endDate }, { user }) => {
+    createProject: async (_, { title, description, startDate, endDate , category }, { user }) => {
       if (!user || user.role !== "Project_Manager") {
         throw new ApolloError("Unauthorized! Only Project Managers can create projects.", "FORBIDDEN");
       }
-
+  console.log(category);
       const project = await projectService.createProject({
         title,
         description,
         startDate,
         endDate,
-        managerId: user.id, 
+        category: category,
+        managerId: user.id
       });
+
+      console.log(project);
 
       return {
         ...project._doc,
+        category: category,
         id: project._id.toString(),
         projectManager: {
           ...project.projectManager._doc,

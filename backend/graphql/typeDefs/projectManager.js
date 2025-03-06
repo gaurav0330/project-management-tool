@@ -50,6 +50,7 @@ const projectTypeDefs = gql`
       description: String
       startDate: String!
       endDate: String!
+      category: String
     ): Project!
 
     assignTeamLead(projectId: ID!, teamLeads: [TeamLeadInput!]!): AssignTeamLeadResponse! 
