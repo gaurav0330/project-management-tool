@@ -75,9 +75,16 @@ type TeamMember {
   user: User!
 }
 
+type GetMembersResponse {
+  success: Boolean!
+  message: String!
+  members: [User]!  # Fix: Change User to [User] to return an array
+}
+
 type Query {
   getProjectsByMember(memberId: ID!): [Project]
    getTeamMembers(teamLeadId: ID!, projectId: ID!): [TeamMember]
+   getMembersByProjectId(projectId: ID!): GetMembersResponse!  # Now correctly returns multiple users
 }
   
 
