@@ -41,10 +41,11 @@ function App() {
   return (
 
     <Router>
-      <Navbar />
+     <Navbar />
 
       {/* {!shouldHideNavbarFooter && <Navbar />} Show Navbar only if not hidden */}
       <div className="mt-16 main-content">
+      
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />

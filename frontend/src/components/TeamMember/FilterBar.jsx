@@ -1,10 +1,10 @@
 const FilterBar = ({ searchTerm, setSearchTerm, statusFilter, setStatusFilter, setSortBy }) => {
   return (
-    <div className="flex justify-between items-center mt-4">
+    <div className="flex items-center justify-between mt-4">
       <input
         type="text"
         placeholder="Search tasks..."
-        className="p-2 border rounded w-1/3"
+        className="w-1/3 p-2 border rounded"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
@@ -21,11 +21,11 @@ const FilterBar = ({ searchTerm, setSearchTerm, statusFilter, setStatusFilter, s
           <option value="Done">Completed</option>
         </select>
 
-        <select className="border p-2 rounded" onChange={(e) => setSortBy(e.target.value)}>
+        <select className="p-2 border rounded" onChange={(e) => setSortBy(e.target.value)}>
           <option value="Priority">Sort by Priority</option>
         </select>
 
-        <button className="bg-blue-500 text-white px-4 py-2 rounded">+ New Project</button>
+        
       </div>
     </div>
   );

@@ -106,11 +106,11 @@ export default function ProjectDashboard() {
                 </p>
                 <p className="flex items-center gap-3">
                   <FaCalendarAlt className="text-purple-600" />
-                  <strong>Start Date:</strong> {project?.startDate}
+                  <strong>Start Date:</strong> {project?.startDate.split("T")[0]}
                 </p>
                 <p className="flex items-center gap-3">
                   <FaClock className="text-red-600" />
-                  <strong>End Date:</strong> {project?.endDate}
+                  <strong>End Date:</strong> {project?.endDate.split("T")[0]}
                 </p>
               </div>
             </motion.div>

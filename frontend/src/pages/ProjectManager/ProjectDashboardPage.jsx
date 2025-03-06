@@ -102,6 +102,14 @@ export default function ProjectDashboard() {
               setStatusFilter={setStatusFilter}
             />
 
+
+            <button
+              onClick={() => setActiveComponent("addproject")}
+              className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
+            >
+              + Add Project
+            </button>
+
             {/* Project List using ProjectCard */}
             <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredProjects.map((project) => (
