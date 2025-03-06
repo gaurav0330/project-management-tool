@@ -20,7 +20,6 @@ const Filters = ({ search, setSearch, statusFilter, setStatusFilter }) => {
         <option value="On Hold">On Hold</option>
         <option value="Completed">Completed</option>
       </select>
-      <button className="bg-blue-500 text-white px-4 py-2 rounded">+ New Project</button>
     </div>
   );
 };

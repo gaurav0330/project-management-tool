@@ -150,7 +150,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-gray-400 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-black text-sm mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} ProjectFlow. All rights reserved.
+            &copy; {new Date().getFullYear()} YOJANDESK. All rights reserved.
           </p>
           <motion.button 
             onClick={scrollToTop}

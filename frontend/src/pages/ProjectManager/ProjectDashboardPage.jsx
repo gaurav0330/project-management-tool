@@ -76,7 +76,7 @@ export default function ProjectDashboard() {
       </div> */}
 
       {/* Main Content Area */}
-      <div className="w-4/5 p-8 overflow-auto">
+      <div className="w-screen p-8 overflow-auto">
         {activeComponent === "addproject" ? (
           <CreateProjectPage />
         ) : activeComponent === "taskapproval" ? (
@@ -111,7 +111,7 @@ export default function ProjectDashboard() {
             </button>
 
             {/* Project List using ProjectCard */}
-            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
               {filteredProjects.map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}

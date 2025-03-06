@@ -7,14 +7,15 @@ const { AuthenticationError } = require("apollo-server-express");
 const Team = require("../models/Teams");
 
 const projectService = {
-  createProject: async ({ title, description, startDate, endDate, managerId }) => {
+  createProject: async ({ title, description, startDate, endDate, managerId,category }) => {
     const project = new Project({
       title,
       description,
       startDate,
       endDate,
+      category,
       projectManager: managerId,  // ✅ Correct field name
-      status: "Planned"
+      status: "In Progress"
     });
   
     await project.save();

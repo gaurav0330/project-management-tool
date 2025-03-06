@@ -21,6 +21,7 @@ function CreateProject() {
           title: projectName,
           startDate,
           endDate,
+          category: selectedCategory,
           description: projectDescription,
         },
       });

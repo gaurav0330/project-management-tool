@@ -7,10 +7,42 @@ import intImg from "../../assets/int.jpg"
 import { FaQuoteLeft } from "react-icons/fa";
 import { FaTasks, FaUsers, FaPlug } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { useState, useEffect } from "react";
 
 export default function TrelloSection() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+   const [userRole, setUserRole] = useState(null);
+   const token = localStorage.getItem("token");
+    useEffect(() => {
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token);
+          setUserRole(decodedToken.role); // Extract user role from token
+        } catch (error) {
+          console.error("Invalid token:", error);
+        }
+      }
+    }, [token]);
+
+    const handleDashboardRedirect = () => {
+      if (userRole) {
+        switch (userRole) {
+          case 'Project_Manager':
+            navigate('/projectDashboard');
+            break;
+          case 'Team_Lead':
+            navigate('/teamleaddashboard'); // Redirect to Team Lead dashboard
+            break;
+          case 'Team_Member':
+            navigate('/teammemberdashboard'); // Redirect to Team Member dashboard
+            break;
+          default:
+            navigate('/'); // Default dashboard
+            break;
+        }
+      }
+    };
 
   return (
     <div className="py-16 text-white bg-gradient-to-r from-blue-500 to-indigo-600">
@@ -31,7 +63,7 @@ export default function TrelloSection() {
           <div className="flex flex-col items-center space-y-4 md:flex-row md:space-y-0 md:space-x-4">
             {token ? (
               <button
-              onClick={() => navigate('/dashboard')}
+              onClick={handleDashboardRedirect}
               className="px-6 py-3 text-white bg-gradient-to-r from-green-400 to-green-600 rounded-lg shadow-md hover:from-green-600 hover:to-green-800 hover:shadow-lg transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75"
             >
               Go to Dashboard

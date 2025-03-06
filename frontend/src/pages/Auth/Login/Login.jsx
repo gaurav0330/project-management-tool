@@ -3,7 +3,7 @@ import { useMutation } from "@apollo/client";
 import { LOGIN_MUTATION } from "../../../graphql/authQueries";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../components/authContext";
-import Logo from "../../../components/authComponent/Logo";
+import Logo from "../../../assets/logo.png";
 import LoginIllustration from "../../../components/authComponent/LoginIllustration";
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
@@ -78,7 +78,7 @@ function LoginPage() {
       <div className="grid w-full max-w-6xl overflow-hidden bg-white shadow-xl rounded-2xl md:grid-cols-2">
         {/* Left Section */}
         <div className="p-8 md:p-12">
-          <Logo />
+          <img src={Logo} height={50} width={180}/>
           <div className="max-w-md">
             <h1 className="mt-8 mb-2 text-3xl font-bold text-gray-900">
               Welcome back

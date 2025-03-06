@@ -16,7 +16,7 @@ const GET_USER = gql`
       role
     }
   }
-`;
+`; 
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -118,7 +118,7 @@ const Navbar = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               className="flex items-center p-2 space-x-3 transition duration-200 rounded-lg hover:bg-gray-100"
-              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              onClick={() => ""}
             >
               <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
                 <span className="text-sm font-medium text-blue-600">
