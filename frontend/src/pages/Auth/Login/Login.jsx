@@ -48,7 +48,7 @@ function LoginPage() {
     if (redirectPath) {
       const timer = setTimeout(() => {
         navigate(redirectPath);
-      }, 800); // Delay navigation by 2 seconds
+      }, 800); // Delay navigation by  2 seconds
       return () => clearTimeout(timer);
     }
   }, [redirectPath, navigate]);
