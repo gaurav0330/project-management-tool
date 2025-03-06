@@ -12,6 +12,8 @@ import AssignedTasks from "../../components/tasks/AssignedTasks";
 import Mytasks from "../../components/TeamLeadComponent/MyTasks";
 import { motion } from "framer-motion";
 import { FaCalendarAlt, FaFolder, FaClock, FaCheckCircle, FaTasks } from "react-icons/fa";
+import TeamLeadsList from "./TeamLeadsList";
+import TeamMembersList from "./TeamMemberList";
 
 
 const GET_PROJECT_BY_ID = gql`
@@ -57,6 +59,12 @@ export default function ProjectDashboard() {
         ) : activeComponent === "tasks" ? (
           <AssignTasks />
         ) :
+          activeComponent === "members" ? (
+            <TeamMembersList projectId={projectId}/>
+          ) :
+          activeComponent === "manageteam" ? (
+          <TeamLeadsList projectId={projectId} />
+          ) :
           activeComponent === "assignedTasks" ? (
             <AssignedTasks />
           ) :
