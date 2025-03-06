@@ -107,7 +107,6 @@ function App() {
           <Route path="/teamleadtaskDis" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskDistributionPage /></ProtectedRoute>} />
         </Routes>
       </div>
-      <Footer />
     </Router>
   );
 }

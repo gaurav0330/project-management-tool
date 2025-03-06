@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { jwtDecode } from "jwt-decode"; // Ensure you installed: npm install jwt-decode
-import Sidebar from "../../components/Other/sideBar";
 import ProjectCard from "../../components/Other/ProjectCard";
 import Filters from "../../components/TeamLeadComponent/Filters";
+import Footer from "../../components/Other/Footer";
 
 // ✅ GraphQL Query (Using leadId as a variable)
 const GET_PROJECTS_BY_LEAD_ID = gql`
@@ -57,10 +57,9 @@ const TeamLeadDashboard = () => {
   ) || [];
 
   return (
+    <div>
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       
-
       {/* Main Content */}
       <div className="flex-1 h-full min-h-screen p-6 overflow-auto bg-gray-100">
         <h2 className="text-2xl font-semibold">Projects Overview</h2>
@@ -85,6 +84,8 @@ const TeamLeadDashboard = () => {
         )}
       </div>
     </div>
+    <Footer/>
+</div>
   );
 };
 

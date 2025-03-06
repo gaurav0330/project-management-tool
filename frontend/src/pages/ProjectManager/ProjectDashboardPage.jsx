@@ -10,6 +10,7 @@ import CreateProjectPage from "../../pages/ProjectManager/CreateProjectPage";
 import TaskApprovalPage from "./TaskApprovalPage";
 import TeamMemberDashboardPage from "../TeamMember/TeamMemberDashboardPage";
 import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
+import Footer from "../../components/Other/Footer"
 
 // Function to get managerId from the token
 const getManagerIdFromToken = () => {
@@ -118,7 +119,9 @@ export default function ProjectDashboard() {
             </div>
           </>
         )}
+        <Footer/>
       </div>
+      
     </div>
   );
 }
