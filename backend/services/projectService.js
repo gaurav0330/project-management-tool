@@ -26,11 +26,31 @@ const projectService = {
   },
 
   getProjectById: async (id) => {
-    return await Project.findById(id).populate("projectManager");
+    const projects =  await Project.findById(id).populate("projectManager");
+    return projects.map(project => ({
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      startDate: new Date(project.startDate).toISOString(), // Convert to ISO string or format as needed
+      endDate: new Date(project.endDate).toISOString(),     // Convert to ISO string or format as needed
+      category: project.category,
+      status: project.status
+    }));
   },
 
   getProjectsByManagerId: async (managerId) => {
-    return await Project.find({ projectManager: managerId });
+    const projects = await Project.find({ projectManager: managerId });
+  
+    // Format the projects to convert date strings to Date objects or formatted strings
+    return projects.map(project => ({
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      startDate: new Date(project.startDate).toISOString(), // Convert to ISO string or format as needed
+      endDate: new Date(project.endDate).toISOString(),     // Convert to ISO string or format as needed
+      category: project.category,
+      status: project.status
+    }));
   },
 
   assignTeamLeads : async (projectId, teamLeads, user) => {
