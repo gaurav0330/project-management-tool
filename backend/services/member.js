@@ -213,6 +213,44 @@ const memberService = {
     }
   },
 
+  getMembersByProjectId: async (projectId) => {
+    try {
+      // Find users who are Team Members and belong to the given project
+      const members = await User.find({ role: "Team_Member", projectId });
+  
+      if (!members || members.length === 0) {
+        return {
+          success: false,
+          message: "No team members found for this project.",
+          members: [],
+        };
+      }
+  
+      return {
+        success: true,
+        message: "Team members retrieved successfully.",
+        members: members.map((user) => ({
+          memberId: user._id,
+          role: user.role, // Always "Team_Member"
+          user: {
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+          },
+        })),
+      };
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+      return {
+        success: false,
+        message: "An error occurred while fetching team members.",
+        members: [],
+      };
+    }
+  },
+  
+
 };
 
 module.exports = memberService;
