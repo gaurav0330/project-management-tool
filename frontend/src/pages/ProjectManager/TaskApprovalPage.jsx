@@ -5,6 +5,7 @@ import { Search, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskList from "../../components/tasks/TaskList";
 import TaskDetails from "../../pages/ProjectManager/TaskDetailsManager";
+import  SkeletonCard  from "../../components/UI/SkeletonCard";
 
 const GET_TASKS_BY_MANAGER = gql`
   query GetTasksByManager($managerId: ID!, $projectId: ID!) {
@@ -69,7 +70,7 @@ export default function TaskApprovalPage({ projectId }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  if (loading) return <p>Loading tasks...</p>;
+  if (loading) return <SkeletonCard />;
   if (error) return <p>Error loading tasks: {error.message}</p>;
 
   const filteredTasks = data.getTasksByManager.filter(
@@ -82,13 +83,13 @@ export default function TaskApprovalPage({ projectId }) {
     <div className="flex h-screen p-4 bg-gray-100">
       {/* Left Panel - Task List */}
       <motion.div
-        className="w-2/3 p-4 bg-white rounded-lg shadow flex flex-col"
+        className="flex flex-col w-2/3 p-4 bg-white rounded-lg shadow"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
       >
         {/* Search Bar & Filter */}
-        <div className="sticky top-0 bg-white z-10 pb-2 flex flex-col gap-3">
+        <div className="sticky top-0 z-10 flex flex-col gap-3 pb-2 bg-white">
           <div className="flex items-center gap-2">
             <Search className="w-5 h-5 text-gray-500" />
             <input
@@ -104,7 +105,7 @@ export default function TaskApprovalPage({ projectId }) {
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => setShowFilter((prev) => !prev)}
-              className="w-full p-2 flex justify-between items-center border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex items-center justify-between w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {filter} <Filter className="w-5 h-5 text-gray-500" />
             </button>
@@ -113,7 +114,7 @@ export default function TaskApprovalPage({ projectId }) {
             <AnimatePresence>
               {showFilter && (
                 <motion.div
-                  className="absolute left-0 w-full mt-2 bg-white border rounded-md shadow-lg z-10"
+                  className="absolute left-0 z-10 w-full mt-2 bg-white border rounded-md shadow-lg"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
@@ -126,7 +127,7 @@ export default function TaskApprovalPage({ projectId }) {
                         setFilter(option);
                         setShowFilter(false);
                       }}
-                      className="p-2 hover:bg-gray-200 cursor-pointer transition"
+                      className="p-2 transition cursor-pointer hover:bg-gray-200"
                     >
                       {option}
                     </div>
@@ -138,14 +139,14 @@ export default function TaskApprovalPage({ projectId }) {
         </div>
 
         {/* Task List */}
-        <div className="overflow-y-auto flex-1 mt-2 pr-2" style={{ maxHeight: "calc(100vh - 160px)" }}>
+        <div className="flex-1 pr-2 mt-2 overflow-y-auto" style={{ maxHeight: "calc(100vh - 160px)" }}>
           <TaskList tasks={filteredTasks} onSelectTask={setSelectedTask} />
         </div>
       </motion.div>
 
       {/* Right Panel - Task Details */}
       <motion.div
-        className="w-1/3 p-4 bg-white rounded-lg shadow ml-4 overflow-y-auto"
+        className="w-1/3 p-4 ml-4 overflow-y-auto bg-white rounded-lg shadow"
         style={{ maxHeight: "100vh" }}
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}

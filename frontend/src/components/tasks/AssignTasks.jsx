@@ -1,24 +1,26 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { Alert, Snackbar } from "@mui/material";
 
 // GraphQL Query to fetch leads by project ID
 const GET_LEADS_BY_PROJECT_ID = gql`
   query GetLeadsByProjectId($projectId: ID!) {
     getLeadsByProjectId(projectId: $projectId) {
-    teamLeads {
-            teamLeadId
-            leadRole
-            user {
-                id
-                username
-                email
-            }
+      teamLeads {
+        teamLeadId
+        leadRole
+        user {
+          id
+          username
+          email
         }
-} }
+      }
+    }
+  }
 `;
 
-// Updated GraphQL Mutation to assign a task
+// GraphQL Mutation to assign a task
 const ASSIGN_TASK = gql`
   mutation AssignTask(
     $projectId: ID!
@@ -38,26 +40,12 @@ const ASSIGN_TASK = gql`
     ) {
       success
       message
-      task {
-        id
-        title
-        description
-        project
-        createdBy
-        assignedTo
-        status
-        priority
-        dueDate
-        createdAt
-        attachments
-        updatedAt
-      }
     }
   }
 `;
 
 const AssignTasks = () => {
-  const { projectId } = useParams(); // Get project ID from URL
+  const { projectId } = useParams();
   const navigate = useNavigate();
 
   const [taskTitle, setTaskTitle] = useState("");
@@ -65,30 +53,48 @@ const AssignTasks = () => {
   const [priority, setPriority] = useState("Low");
   const [dueDate, setDueDate] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   // Fetch team leads based on project ID
   const { data, loading, error } = useQuery(GET_LEADS_BY_PROJECT_ID, {
     variables: { projectId },
   });
 
-  const teamLeads = data?.getLeadsByProjectId || []; // Ensure teamLeads is always an array
+  // Remove duplicate leads
+  const uniqueTeamLeads = Array.from(
+    new Map(
+      (data?.getLeadsByProjectId?.teamLeads || []).map((lead) => [lead.teamLeadId, lead])
+    ).values()
+  );
 
   // Use Mutation Hook
-  const [assignTask, { loading: assignLoading, error: assignError }] = useMutation(ASSIGN_TASK, {
+  const [assignTask, { loading: assignLoading }] = useMutation(ASSIGN_TASK, {
     onCompleted: (data) => {
       if (data.assignTask.success) {
-        alert("Task assigned successfully!");
-        navigate(`/projectHome/${projectId}`);
+        setSnackbarMessage("Task assigned successfully!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        setTimeout(() => navigate(0), 2000);
       } else {
-        alert(data.assignTask.message || "Failed to assign task");
+        setSnackbarMessage(data.assignTask.message || "Failed to assign task");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
       }
+    },
+    onError: () => {
+      setSnackbarMessage("Failed to assign task");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     },
   });
 
-  // Function to handle task creation
   const handleCreateTask = () => {
     if (!taskTitle.trim() || !assignedTo) {
-      alert("Task title and assigned user are required");
+      setSnackbarMessage("Task title and assigned user are required");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
       return;
     }
 
@@ -150,28 +156,26 @@ const AssignTasks = () => {
             </div>
 
             <div>
-  <label className="text-sm text-gray-700">Assign to</label>
-  {loading ? (
-    <p>Loading leads...</p>
-  ) : error ? (
-    <p className="text-red-500">Error loading leads</p>
-  ) : (
-    <select
-  value={assignedTo}
-  onChange={(e) => setAssignedTo(e.target.value)}
-  className="w-full p-2 border rounded-md"
->
-  <option value="">Select Team Lead</option>
-  {teamLeads?.teamLeads?.map((lead, index) => (
-    <option key={`${lead.teamLeadId}-${index}`} value={lead.teamLeadId}>
-      {lead.user.username} - {lead.user.email} ({lead.leadRole})
-    </option>
-  ))}
-</select>
-
-  )}
-</div>
-
+              <label className="text-sm text-gray-700">Assign to</label>
+              {loading ? (
+                <p>Loading leads...</p>
+              ) : error ? (
+                <p className="text-red-500">Error loading leads</p>
+              ) : (
+                <select
+                  value={assignedTo}
+                  onChange={(e) => setAssignedTo(e.target.value)}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="">Select Team Lead</option>
+                  {uniqueTeamLeads.map((lead) => (
+                    <option key={lead.teamLeadId} value={lead.teamLeadId}>
+                      {lead.user.username} - {lead.user.email} ({lead.leadRole})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
 
             <button
               className="px-4 py-2 text-white transition bg-blue-600 rounded hover:bg-blue-700"
@@ -180,10 +184,20 @@ const AssignTasks = () => {
             >
               {assignLoading ? "Assigning..." : "Create Task"}
             </button>
-            {assignError && <p className="text-red-500">Failed to assign task</p>}
           </div>
         </div>
       </div>
+
+      {/* Snackbar for Success/Error Messages */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+      >
+        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

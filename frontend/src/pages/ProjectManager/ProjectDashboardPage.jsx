@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, gql } from "@apollo/client";
-import {jwtDecode} from "jwt-decode"; // Install this if not already installed
-import Sidebar from "../../components/Other/sideBar";
+import { jwtDecode } from "jwt-decode"; // Install this if not already installed // Import Skeleton from ShadCN
 import FilterBar from "../../components/TeamMember/FilterBar";
 import ProjectCard from "../../components/Other/ProjectCard";
 import AssignTeamLead from "../../components/tasks/AssignTeamLead";
@@ -10,7 +9,8 @@ import CreateProjectPage from "../../pages/ProjectManager/CreateProjectPage";
 import TaskApprovalPage from "./TaskApprovalPage";
 import TeamMemberDashboardPage from "../TeamMember/TeamMemberDashboardPage";
 import TeamLeadDashboard from "../../pages/TeamLead/teamLeadDashboard";
-import Footer from "../../components/Other/Footer"
+import Footer from "../../components/Other/Footer";
+import  SkeletonCard  from "../../components/UI/SkeletonCard";
 
 // Function to get managerId from the token
 const getManagerIdFromToken = () => {
@@ -57,8 +57,9 @@ export default function ProjectDashboard() {
     return <p className="text-center text-red-500">Unauthorized: No valid token found.</p>;
   }
 
-  if (loading) return <p className="text-center text-gray-500">Loading projects...</p>;
-  if (error) return <p className="text-center text-red-500">Error loading projects.</p>;
+  if (error) {
+    return <p className="text-center text-red-500">Error loading projects.</p>;
+  }
 
   const projects = data?.getProjectsByManagerId || [];
 
@@ -71,11 +72,6 @@ export default function ProjectDashboard() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      {/* <div className="w-64 h-full min-h-screen bg-white shadow-lg">
-        <Sidebar setActiveComponent={setActiveComponent} />
-      </div> */}
-
       {/* Main Content Area */}
       <div className="w-screen p-8 overflow-auto">
         {activeComponent === "addproject" ? (
@@ -103,7 +99,6 @@ export default function ProjectDashboard() {
               setStatusFilter={setStatusFilter}
             />
 
-
             <button
               onClick={() => setActiveComponent("addproject")}
               className="px-4 py-2 mt-4 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
@@ -111,17 +106,24 @@ export default function ProjectDashboard() {
               + Add Project
             </button>
 
-            {/* Project List using ProjectCard */}
-            <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
+            {/* Show Skeleton while loading */}
+            {loading ? (
+              <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, index) => (
+                  <SkeletonCard key={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredProjects.map((project) => (
+                  <ProjectCard key={project.id} project={project} />
+                ))}
+              </div>
+            )}
           </>
         )}
-        <Footer/>
+        <Footer />
       </div>
-      
     </div>
   );
 }
