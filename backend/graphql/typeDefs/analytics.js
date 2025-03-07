@@ -5,7 +5,7 @@ const analyticsTypeDefs = gql`
     getProjectProgress(projectId: ID!): ProjectProgress
     getTeamPerformance(projectId: ID!): [TeamPerformance]
     getTaskStatusBreakdown(projectId: ID!): TaskStatusBreakdown
-    getTaskHistory(taskId: ID!): [TaskHistory]
+    getTasksHistory(projectId: ID!): [TaskHistoryWithDetails]
     getOverdueAndUpcomingTasks(projectId: ID!): OverdueAndUpcomingTasks
     getProjectIssues(projectId: ID!): [ProjectIssue]
   }
@@ -42,6 +42,14 @@ const analyticsTypeDefs = gql`
     updatedAt: String!
     oldStatus: String!
     newStatus: String!
+    updatedByName: String
+    user: User
+  }
+
+  type TaskHistoryWithDetails {
+    taskId: ID!
+    title: String!
+    history: [TaskHistory!]!
   }
 
   type OverdueAndUpcomingTasks {
@@ -53,15 +61,23 @@ const analyticsTypeDefs = gql`
     taskId: ID!
     title: String!
     dueDate: String!
-    assignedTo: String!
+    assignedTo: ID!
+    assignedUser: User!
   }
 
   type ProjectIssue {
     taskId: ID!
     title: String!
-    assignedTo: String!
+    assignedTo: ID!
+    assignedUser: User!
     status: String!
     remarks: String
+  }
+
+  type User {
+    id: ID!
+    username: String!
+    email: String
   }
 `;
 

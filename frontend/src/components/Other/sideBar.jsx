@@ -36,8 +36,7 @@ const Sidebar = ({ setActiveComponent }) => {
       },{
         category:"Analytics Section",
         items:[
-          { name: "Timeline", icon: MdTimeline, component: "timeline" },
-          { name: "Reports", icon: MdBarChart, component: "reports" },
+          { name: "Timeline", icon: MdTimeline, component: "TimeLine" },
           { name: "Analytics", icon: MdAnalytics, component: "analytics" },
         ],
       }
