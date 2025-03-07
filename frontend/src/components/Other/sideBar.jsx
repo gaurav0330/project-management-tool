@@ -32,7 +32,7 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Members", icon: MdAssignment, component: "members" },
           { name: "Approve Task", icon: MdAssignment, component: "approvetask" },
         ],
-
+  
       },{
         category:"Analytics Section",
         items:[
@@ -87,7 +87,7 @@ const Sidebar = ({ setActiveComponent }) => {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed z-50 p-2 text-white rounded-md top-4 left-4 bg-navy-600 lg:hidden hover:bg-navy-700 transition duration-300"
+        className="fixed z-50 p-2 text-white transition duration-300 rounded-md top-4 left-4 bg-navy-600 lg:hidden hover:bg-navy-700"
       >
         {isOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
       </button>
@@ -97,7 +97,7 @@ const Sidebar = ({ setActiveComponent }) => {
           ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
           w-64 z-40 flex flex-col rounded-lg`}
       >
-        <div className="flex items-center justify-center flex-shrink-0 h-16 bg-navy-600 rounded-t-lg">
+        <div className="flex items-center justify-center flex-shrink-0 h-16 rounded-t-lg bg-navy-600">
           <h1 className="text-xl font-bold text-white">Project Manager</h1>
         </div>
 
@@ -106,7 +106,7 @@ const Sidebar = ({ setActiveComponent }) => {
             {sidebarMenu.length > 0 ? (
               sidebarMenu.map((category, categoryIndex) => (
                 <div key={categoryIndex} className="mb-6">
-                  <h2 className="px-4 mb-3 text-xs font-semibold tracking-wider text-gray-600 uppercase bg-gray-200 p-2 rounded-md">
+                  <h2 className="p-2 px-4 mb-3 text-xs font-semibold tracking-wider text-gray-600 uppercase bg-gray-200 rounded-md">
                     {category.category}
                   </h2>
                   <div className="space-y-3"> {/* Increased spacing between buttons */}
@@ -122,7 +122,7 @@ const Sidebar = ({ setActiveComponent }) => {
                           ${activeItem === item.name ? 'bg-blue-200' : 'hover:bg-blue-100'} 
                           hover:shadow-lg transform hover:scale-105`} // 3D effect on hover
                       >
-                        <div className="flex items-center justify-center w-8 h-8 bg-blue-50 rounded-full mr-3">
+                        <div className="flex items-center justify-center w-8 h-8 mr-3 rounded-full bg-blue-50">
                           {React.createElement(item.icon, { className: "w-5 h-5 text-blue-600" })}
                         </div>
                         <span className="font-medium">{item.name}</span>
