@@ -1,134 +1,124 @@
 import React from "react";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
 import { useQuery, gql } from "@apollo/client";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import dayjs from "dayjs";
 
-const GET_TASK_HISTORY = gql`
-  query GetTaskHistory($taskId: ID!) {
-    getTaskHistory(taskId: $taskId) {
-      updatedBy
-      updatedAt
-      oldStatus
-      newStatus
+const GET_TASKS_HISTORY = gql`
+  query GetTasksHistory($projectId: ID!) {
+    getTasksHistory(projectId: $projectId) {
+      taskId
+      title
+      history {
+        updatedBy
+        updatedAt
+        oldStatus
+        newStatus
+        updatedByName
+      }
     }
   }
 `;
 
-const statusColors = {
-  "To Do": "#f59e0b",
-  "In Progress": "#3b82f6",
-  "Needs Revision": "#ef4444",
-  "Done": "#10b981",
-};
+const statusCategories = [
+  { name: "To Do", color: "border-gray-300 bg-gray-100", borderColor: "border-gray-500" },
+  { name: "In Progress", color: "border-yellow-300 bg-yellow-100", borderColor: "border-yellow-500" },
+  { name: "Needs Revision", color: "border-red-300 bg-red-100", borderColor: "border-red-500" },
+  { name: "Done", color: "border-green-300 bg-green-100", borderColor: "border-green-500" },
+  { name: "Pending Approval", color: "border-blue-300 bg-blue-100", borderColor: "border-blue-500" },
+  { name: "Approved", color: "border-purple-300 bg-purple-100", borderColor: "border-purple-500" },
+  { name: "Completed", color: "border-teal-300 bg-teal-100", borderColor: "border-teal-500" },
+];
 
-// Skeleton loading styles
-const skeletonStyle = {
-  width: '100%',
-  height: '350px',
-  backgroundColor: '#e0e0e0',
-  borderRadius: '8px',
-  marginBottom: '16px',
-};
-
-const TaskStatusTimeline = () => {
-  const { loading, error, data } = useQuery(GET_TASK_HISTORY, {
-    variables: { taskId: "67c423fd995c5d645cfe97df" },
+const KanbanBoard = ({ projectId }) => {
+  const { loading, error, data } = useQuery(GET_TASKS_HISTORY, {
+    variables: { projectId },
   });
 
-  if (loading) {
-    return (
-      <div className="p-6 bg-white text-gray-900 rounded-xl shadow-lg">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">📊 Task Status Timeline</h2>
-        <div style={skeletonStyle} /> {/* Skeleton for the chart */}
-        <div style={skeletonStyle} /> {/* Skeleton for the table */}
-      </div>
-    );
-  }
+  if (loading) return <p className="text-center text-gray-500">Loading tasks...</p>;
+  if (error) return <p className="text-red-500 text-center">Error: {error.message}</p>;
 
-  if (error) {
-    console.error("GraphQL Error:", error);
-    return <p className="text-red-500">Error loading task history: {error.message}</p>;
-  }
+  // Organize tasks by status & count totals
+  const taskMap = {};
+  const statusCounts = {};
+  statusCategories.forEach((status) => {
+    taskMap[status.name] = [];
+    statusCounts[status.name] = 0;
+  });
 
-  const transformedData = data.getTaskHistory.map((entry, index) => ({
-    index,
-    date: dayjs(Number(entry.updatedAt)).format("MMM DD, HH:mm"),
-    status: entry.newStatus,
-  }));
+  data?.getTasksHistory?.forEach((task) => {
+    if (task.history.length > 0) {
+      const latestStatus = task.history[task.history.length - 1];
+      taskMap[latestStatus.newStatus]?.push({ ...task, latestStatus });
+      statusCounts[latestStatus.newStatus] += 1;
+    }
+  });
+
+  const onDragEnd = (result) => {
+    console.log("Drag is disabled, no updates allowed.");
+  };
 
   return (
-    <div className="p-6 bg-white text-gray-900 rounded-xl shadow-lg">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">📊 Task Status Timeline</h2>
+    <div className="p-6 bg-gray-50 min-h-screen flex justify-center">
+      {/* Main Container with Border */}
+      <div className="w-full max-w-7xl border-2 border-gray-300 shadow-lg bg-white rounded-lg p-6">
+        {/* Summary Section */}
+        <div className="flex flex-wrap justify-center mb-6 space-x-4">
+          {statusCategories.map(({ name, borderColor }) => (
+            <div
+              key={name}
+              className={`p-3 rounded-lg shadow-md ${borderColor} border-2 bg-white transition-transform transform hover:scale-105`}
+            >
+              <h3 className="text-sm font-semibold text-gray-700">{name}</h3>
+              <p className="text-lg font-bold text-gray-900">{statusCounts[name] || 0}</p>
+            </div>
+          ))}
+        </div>
 
-      {/* Step Line Chart */}
-      <div className="p-4 bg-white rounded-lg shadow-md">
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={transformedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="index"
-              tickFormatter={(tick) => transformedData[tick]?.date || ""}
-              tick={{ fontSize: 12, fill: "#555" }}
-            />
-            <YAxis
-              dataKey="status"
-              type="category"
-              tickFormatter={(status) => status}
-              allowDuplicatedCategory={false}
-              tick={{ fontSize: 12, fill: "#555" }}
-            />
-            <Tooltip />
-            <Line
-              type="stepAfter"
-              dataKey="status"
-              stroke="#6366f1"
-              strokeWidth={3}
-              dot={{ r: 5, fill: "#6366f1" }}
-              activeDot={{ r: 8, fill: "#4f46e5" }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Status Table */}
-      <div className="mt-6 bg-white rounded-lg shadow-lg overflow-hidden">
-        <table className="w-full text-left text-gray-700">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-4 text-sm font-semibold">📅 Updated At</th>
-              <th className="p-4 text-sm font-semibold">📌 New Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transformedData.map((entry, index) => (
-              <tr
-                key={index}
-                className="border-t hover:bg-gray-100 transition duration-200 ease-in-out"
+        {/* Kanban Board */}
+        <DragDropContext onDragEnd={onDragEnd}>
+          <div className="flex space-x-6 overflow-auto">
+            {statusCategories.map(({ name, color, borderColor }) => (
+              <div
+                key={name}
+                className={`w-1/5 p-4 rounded-lg shadow-lg border-2 ${color} ${borderColor} transition-all duration-300 hover:shadow-xl`}
               >
-                <td className="p-4">{entry.date}</td>
-                <td className="p-4">
-                  <span
-                    className="px-4 py-1 text-white text-sm font-medium rounded-full shadow-md"
-                    style={{ backgroundColor: statusColors[entry.status] || "#374151" }}
-                  >
-                    {entry.status}
-                  </span>
-                </td>
-              </tr>
+                <h2 className="text-lg font-bold text-gray-700 mb-4 text-center">{name}</h2>
+                <Droppable droppableId={name} isDropDisabled={true}>
+                  {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps} className="min-h-[250px] space-y-3">
+                      {taskMap[name].length > 0 ? (
+                        taskMap[name].map((task, index) => (
+                          <Draggable key={task.title} draggableId={task.title} index={index} isDragDisabled={true}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={`bg-white p-4 rounded-lg shadow-md border-l-4 ${borderColor} transform transition-transform hover:scale-105 hover:bg-gray-50`}
+                              >
+                                <p className="text-sm font-semibold text-gray-800">Task Title: {task.title}</p>
+                                <p className="text-xs text-gray-500">
+                                  Last Updated: {dayjs(Number(task.latestStatus.updatedAt)).format("MMM DD, HH:mm")}
+                                </p>
+                                <p className="text-xs font-medium text-gray-700">Updated By: {task.latestStatus.updatedByName}</p>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center">No tasks</p>
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </DragDropContext>
       </div>
     </div>
   );
 };
 
-export default TaskStatusTimeline;
+export default KanbanBoard;

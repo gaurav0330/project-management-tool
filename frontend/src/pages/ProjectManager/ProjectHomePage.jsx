@@ -14,9 +14,11 @@ import { motion } from "framer-motion";
 import { FaCalendarAlt, FaFolder, FaClock, FaCheckCircle, FaTasks } from "react-icons/fa";
 import Footer from "../../components/Other/Footer2";
 
+
 import TeamLeadsList from "./TeamLeadsList";
 import TeamMembersList from "./TeamMemberList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
+import TaskStatusTimeline from "../../components/charts/TaskAssignment";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -73,6 +75,9 @@ export default function ProjectDashboard() {
           ) :
           activeComponent === "assignedTasks" ? (
             <AssignedTasks />
+          ) :
+          activeComponent === "TimeLine" ? (
+            <TaskStatusTimeline projectId={projectId} />
           ) :
           activeComponent === "analytics" ? (
             <AnalyticsDashboard projectId={projectId} />

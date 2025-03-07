@@ -22,7 +22,6 @@ const GET_DEADLINES_OVERVIEW = gql`
   }
 `;
 
-// Skeleton loading styles
 const skeletonStyle = {
   width: '100%',
   height: '300px',
@@ -40,8 +39,8 @@ const DeadlinesOverview = ({ projectId }) => {
     return (
       <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold mb-4">Deadlines Overview</h2>
-        <div style={skeletonStyle} /> {/* Skeleton for the chart */}
-        <div style={skeletonStyle} /> {/* Skeleton for the table */}
+        <div style={skeletonStyle} />
+        <div style={skeletonStyle} />
       </div>
     );
   }
@@ -52,6 +51,18 @@ const DeadlinesOverview = ({ projectId }) => {
 
   const overdueTasks = data.getOverdueAndUpcomingTasks.overdueTasks;
   const upcomingTasks = data.getOverdueAndUpcomingTasks.upcomingTasks;
+
+  // Total Task Count
+  const totalTasks = overdueTasks.length + upcomingTasks.length;
+
+  // Average Overdue Days Calculation
+  const today = dayjs();
+  const totalOverdueDays = overdueTasks.reduce((sum, task) => sum + today.diff(dayjs(task.dueDate), "day"), 0);
+  const avgOverdueDays = overdueTasks.length ? (totalOverdueDays / overdueTasks.length).toFixed(1) : 0;
+
+  // Closest Upcoming Deadline
+  const sortedUpcoming = [...upcomingTasks].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  const nextDeadline = sortedUpcoming.length ? dayjs(sortedUpcoming[0].dueDate).format("YYYY-MM-DD") : "N/A";
 
   // Transform data for Bar Chart
   const groupedData = {};
@@ -69,6 +80,30 @@ const DeadlinesOverview = ({ projectId }) => {
     <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
       <h2 className="text-xl font-semibold mb-4">Deadlines Overview</h2>
 
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="p-4 bg-gray-200 text-center rounded-lg">
+          <h3 className="text-lg font-semibold">📌 Total Tasks</h3>
+          <p className="text-2xl font-bold">{totalTasks}</p>
+        </div>
+        <div className="p-4 bg-red-200 text-center rounded-lg">
+          <h3 className="text-lg font-semibold">❌ Overdue Tasks</h3>
+          <p className="text-2xl font-bold">{overdueTasks.length}</p>
+        </div>
+        <div className="p-4 bg-blue-200 text-center rounded-lg">
+          <h3 className="text-lg font-semibold">⏳ Upcoming Tasks</h3>
+          <p className="text-2xl font-bold">{upcomingTasks.length}</p>
+        </div>
+        <div className="p-4 bg-yellow-200 text-center rounded-lg">
+          <h3 className="text-lg font-semibold">⌛ Avg. Overdue Days</h3>
+          <p className="text-2xl font-bold">{avgOverdueDays} days</p>
+        </div>
+        <div className="p-4 bg-green-200 text-center rounded-lg">
+          <h3 className="text-lg font-semibold">🔜 Next Deadline</h3>
+          <p className="text-2xl font-bold">{nextDeadline}</p>
+        </div>
+      </div>
+
       {/* Bar Chart */}
       <div className="mb-6">
         <ResponsiveContainer width="100%" height={300}>
@@ -84,7 +119,7 @@ const DeadlinesOverview = ({ projectId }) => {
         </ResponsiveContainer>
       </div>
 
-      {/* Table for detailed task information */}
+      {/* Task List Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white rounded-lg border border-gray-300">
           <thead className="bg-gray-200 text-gray-700">
