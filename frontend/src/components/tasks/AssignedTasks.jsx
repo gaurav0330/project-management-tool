@@ -21,10 +21,11 @@ const GET_TASKS_BY_MANAGER = gql`
       attachments
       updatedAt
       remarks
+      assignName
     }
   }
 `;
-
+ 
 const priorityOrder = { High: 1, Medium: 2, Low: 3 };
 const statusOrder = { Pending: 1, "In Progress": 2, Completed: 3 };
 
@@ -154,7 +155,7 @@ const AssignedTasks = () => {
                 filteredTasks.map((task) => (
                   <tr key={task.id} className="border-b">
                     <td className="p-3">{task.title}</td>
-                    <td className="p-3">{task.assignedTo || "N/A"}</td>
+                    <td className="p-3">{task.assignName || "N/A"}</td>
                     <td className="p-3">
                       <span
                         className={`px-2 py-1 text-white rounded ${
@@ -168,7 +169,7 @@ const AssignedTasks = () => {
                         {task.priority}
                       </span>
                     </td>
-                    <td className="p-3">{task.dueDate || "N/A"}</td>
+                    <td className="p-3">{task.dueDate.split("T")[0] || "N/A"}</td>
                     <td className="p-3">
                       <span
                         className={`px-2 py-1 text-white rounded ${

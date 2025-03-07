@@ -4,7 +4,7 @@ import {jwtDecode} from "jwt-decode";
 import TaskTable from "../../components/TeamLeadComponent/TaskTable";
 import SearchBar from "../../components/TeamLeadComponent/SearchBar";
 import AddTaskButton from "../../components/TeamLeadComponent/AddtaskButton";
-
+ 
 const GET_TASKS_BY_TEAM_LEAD = gql`
   query GetTasksByTeamLead($teamLeadId: ID!, $projectId: ID!) {
     getTasksByTeamLead(teamLeadId: $teamLeadId, projectId: $projectId) {
@@ -20,6 +20,7 @@ const GET_TASKS_BY_TEAM_LEAD = gql`
       createdAt
       attachments
       updatedAt
+      assignName
       remarks
     }
   }
@@ -50,27 +51,19 @@ const TaskManagementPage = ({ projectId }) => {
         data.getTasksByTeamLead.map((task) => ({
           id: task.id,
           name: task.title,
+          assignName:task.assignName,
           assignedTo: {
             name: "Unassigned", // You may replace this with actual user data
             avatar: "https://randomuser.me/api/portraits/men/1.jpg",
           },
           status: task.status,
-          dueDate: new Date(parseInt(task.dueDate)).toDateString(),
+          dueDate: task.dueDate,
         }))
       );
     }
   }, [data]);
 
-  const handleAddTask = () => {
-    const newTask = {
-      id: tasks.length + 1,
-      name: "New Task",
-      assignedTo: { name: "John Doe", avatar: "https://randomuser.me/api/portraits/men/4.jpg" },
-      status: "To-Do",
-      dueDate: "Feb 1, 2025",
-    };
-    setTasks([...tasks, newTask]);
-  };
+
 
   const handleEditTask = (taskId) => {
     const updatedTasks = tasks.map((task) =>
@@ -95,7 +88,6 @@ const TaskManagementPage = ({ projectId }) => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Task Management</h2>
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <AddTaskButton onAdd={handleAddTask} />
       </div>
       <TaskTable tasks={filteredTasks} onEdit={handleEditTask} onComment={handleCommentTask} />
     </div>
