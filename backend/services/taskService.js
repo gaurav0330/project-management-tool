@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const User = require("../models/User"); 
 
 const taskService = {
 
@@ -63,48 +64,65 @@ const taskService = {
         throw new Error(`Error fetching tasks: ${error.message}`);
     }
 },
- getTasksByTeamLead : async (teamLeadId, memberId, projectId) => {
+
+
+getTasksByTeamLead: async (teamLeadId, memberId, projectId) => {
     try {
         console.log("Fetching tasks created by Team Lead ID:", teamLeadId);
         if (memberId) console.log("Filtering by Member ID:", memberId);
         if (projectId) console.log("Filtering by Project ID:", projectId);
 
         // Build the filter query
-        const filter = { createdBy: teamLeadId }; // Tasks created by the Team Lead
+        const filter = { createdBy: teamLeadId };
 
         if (memberId) {
-            filter.assignedTo = memberId; // Filter tasks assigned to a specific Team Member
+            filter.assignedTo = memberId;
         }
 
         if (projectId) {
-            filter.project = projectId; // Filter tasks by project if provided
+            filter.project = projectId;
         }
 
         console.log("Applied Filter:", filter);
 
-        // Fetch tasks from the database
+        // Fetch tasks
         const tasks = await Task.find(filter)
-            .populate("createdBy")
-            .populate("assignedTo")
-            .lean(); // Convert Mongoose documents to plain JS objects
+            .populate("createdBy", "name") // Populate createdBy with name
+            .lean();
 
         console.log("Retrieved Tasks:", tasks);
 
-        // Return formatted tasks
+        // Fetch usernames for assignedTo users
+        const userIds = tasks.map(task => task.assignedTo).filter(id => id); // Get unique user IDs
+        const users = await User.find({ _id: { $in: userIds } }, "username").lean(); // Fetch usernames
+
+        // Create a mapping of userId -> username
+        const userMap = users.reduce((acc, user) => {
+            acc[user._id.toString()] = user.username;
+            return acc;
+        }, {});
+
+        // Format and return tasks
         return tasks.map(task => ({
             ...task,
             dueDate: task.dueDate ? task.dueDate.toISOString() : null,
             createdAt: task.createdAt ? task.createdAt.toISOString() : null,
             updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
             id: task._id.toString(),
-            createdBy: task.createdBy._id.toString(), // Ensure createdBy is returned as an ID string
-            assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null // Convert assignedTo if exists
+            createdBy: task.createdBy._id.toString(),
+            assignedTo: task.assignedTo ? task.assignedTo.toString() : null,
+            assignName: task.assignedTo ? userMap[task.assignedTo.toString()] || "Unknown" : null, // Get username
         }));
     } catch (error) {
         console.error("Error fetching tasks:", error);
         throw new Error(`Error fetching tasks: ${error.message}`);
     }
 },
+
+
+
+
+
 getTasksForMember : async (memberId, projectLeadId, projectId) => {
     try {
         console.log("Fetching tasks assigned to Member ID:", memberId);
@@ -147,6 +165,7 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
             priority: task.priority,
             createdBy: task.createdBy._id.toString(),
             assignedTo: task.assignedTo._id.toString(),
+            dueDate: task.dueDate.toISOString(),
             project: task.project ? task.project.toString() : null,
             createdAt: task.createdAt.toISOString(),
             updatedAt: task.updatedAt.toISOString(),

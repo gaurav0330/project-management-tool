@@ -34,6 +34,7 @@ const typeDefs = gql`
     dueDate: String
     attachments: [String]
     history: [TaskHistory]
+    assignName: String
     remarks: String
   }
 
