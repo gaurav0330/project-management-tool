@@ -4,6 +4,8 @@ import { jwtDecode } from "jwt-decode"; // Ensure you installed: npm install jwt
 import ProjectCard from "../../components/Other/ProjectCard";
 import Filters from "../../components/TeamLeadComponent/Filters";
 import Footer from "../../components/Other/Footer";
+import { Skeleton } from "../../components/UI/Skeleton";
+import SkeletonCard from "../../components/UI/SkeletonCard";
 
 // ✅ GraphQL Query (Using leadId as a variable)
 const GET_PROJECTS_BY_LEAD_ID = gql`
@@ -57,35 +59,43 @@ const TeamLeadDashboard = () => {
   ) || [];
 
   return (
-    <div>
-    <div className="flex min-h-screen bg-gray-100">
-      
-      {/* Main Content */}
-      <div className="flex-1 h-full min-h-screen p-6 overflow-auto bg-gray-100">
-        <h2 className="text-2xl font-semibold">Projects Overview</h2>
-        <Filters
-          search={search}
-          setSearch={setSearch}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
+    <div className="flex flex-col min-h-screen bg-gray-100">
+  <div className="flex-1 h-full min-h-screen p-6 overflow-auto bg-gray-100">
+    <h2 className="text-2xl font-semibold">Projects Overview</h2>
 
-        {/* Loading & Error Handling */}
-        {loading && <p>Loading projects...</p>}
-        {error && <p className="text-red-500">{error.message}</p>}
+    <Filters
+      search={search}
+      setSearch={setSearch}
+      statusFilter={statusFilter}
+      setStatusFilter={setStatusFilter}
+    />
 
-        {/* Display Projects */}
-        {!loading && !error && (
-          <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
-            ))}
-          </div>
-        )}
+    {/* Loading Skeletons */}
+    {loading && (
+      <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, index) => (
+          <SkeletonCard key={index} />
+        ))}
       </div>
-    </div>
-    <Footer/>
+    )}
+
+    {/* Error Handling */}
+    {error && <p className="text-red-500">{error.message}</p>}
+
+    {/* Display Projects */}
+    {!loading && !error && (
+      <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredProjects.map((project) => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
+      </div>
+    )}
+  </div>
+
+  {/* Footer at bottom */}
+  <Footer />
 </div>
+
   );
 };
 

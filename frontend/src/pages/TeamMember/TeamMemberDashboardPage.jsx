@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, gql } from "@apollo/client"; // Apollo Client for GraphQL
-import FilterBar from "../../components/TeamMember/FilterBar";
+import { jwtDecode } from "jwt-decode"; // Safely decode JWT
 import ProjectCard from "../../components/Other/ProjectCard"; 
 import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionMemberPage";
+import SkeletonCard from "../../components/UI/SkeletonCard"; // Ensure this path is correct
 import Footer from "../../components/Other/Footer";
 
 // GraphQL Query
@@ -27,10 +28,10 @@ const getMemberIdFromToken = () => {
   if (!token) return null;
 
   try {
-    const decodedToken = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-    return decodedToken.id; // Extract memberId
+    const decoded = jwtDecode(token); // Use jwt-decode for safer handling
+    return decoded.id; // Extract memberId
   } catch (error) {
-    console.error("Error decoding token:", error);
+    console.error("Invalid token:", error);
     return null;
   }
 };
@@ -46,44 +47,45 @@ export default function TeamMemberDashboardPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [activeComponent, setActiveComponent] = useState("overview");
 
-  const projects = data?.getProjectsByMember || [];
+  if (error)
+    return <p className="text-center text-red-500">Error fetching projects: {error.message}</p>;
 
+  const projects = data?.getProjectsByMember || [];
   const filteredProjects = projects.filter(
     (project) =>
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (statusFilter === "All" || project.status === statusFilter)
   );
 
-  if (loading) return <p>Loading projects...</p>;
-  if (error) return <p>Error fetching projects: {error.message}</p>;
-
-  return ( <div>
-    <div className="flex min-h-screen bg-gray-100">
-      <div className="w-4/5 p-8 overflow-auto">
-        {activeComponent === "tasks" ? (
-          <MyTasksPage />
-        ) : activeComponent === "taskSubmission" ? (
-          <TaskSubmissionPage />
-        ) : (
-          <>
-            <h2 className="text-2xl font-semibold">My Projects </h2>
-            {/* <FilterBar
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-            /> */}
-
-            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          </>
-        )}
+  return (
+    <div>
+      <div className="flex min-h-screen bg-gray-100">
+        <div className="w-4/5 p-8 overflow-auto">
+          {activeComponent === "tasks" ? (
+            <MyTasksPage />
+          ) : activeComponent === "taskSubmission" ? (
+            <TaskSubmissionPage />
+          ) : (
+            <>
+              {/* Display Skeleton Cards While Loading */}
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
+                  {[...Array(6)].map((_, index) => (
+                    <SkeletonCard key={index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
-    </div>
-    <Footer/>
+      <Footer />
     </div>
   );
 }
