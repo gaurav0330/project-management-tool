@@ -9,6 +9,7 @@ import TaskDistributionPage from "./TaskDistributionPage";
 import DisplayTeamTaskPage from "./DisplayTeamTaskPage";
 import TaskApprovalPageLead from "../TeamLead/TaskApprovalPageLead";
 import Footer from "../../components/Other/Footer2";
+import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -66,18 +67,12 @@ export default function TeamDetails() {
               <p className="text-center text-gray-500">Loading project...</p>
             ) : error ? (
               <p className="text-center text-red-500">Error loading project.</p>
-            ) : (
-              <div>
-                <h1 className="mb-4 text-2xl font-bold">{data.getProjectById.title}</h1>
-                <p className="mb-2 text-gray-700">{data.getProjectById.description}</p>
-                <p className="text-sm font-semibold text-gray-500">Status: {data.getProjectById.status}</p>
-              </div>
-            )}
+            ) : <ProjectDetailsCard project={data?.getProjectById} loading={loading} />}
           </>
         )}
       </div>
     </div>
-   <Footer/>
+   {/* <Footer/> */}
     </div>
   );
 }

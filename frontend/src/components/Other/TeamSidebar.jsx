@@ -34,7 +34,6 @@ const TeamSidebar = ({ setActiveComponent }) => {
       items: [
         { name: "Add Members", icon: MdPeople, component: "addmembers" },
         { name: "Task Distribution", icon: MdBarChart, component: "taskDistribution" },
-        { name: "Reports", icon: MdBarChart, component: "reports" },
       ],
     },
   ];

@@ -28,7 +28,7 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Manage Lead", icon: MdSupervisorAccount, component: "managelead" },
           { name: "Manage Task", icon: MdAssignment, component: "assignedTasks" },
           { name: "Manage Team", icon: MdGroup, component: "manageteam" },
-          { name: "Tasks", icon: MdAssignment, component: "tasks" },
+          { name: "Create Tasks", icon: MdAssignment, component: "tasks" },
           { name: "Members", icon: MdAssignment, component: "members" },
           { name: "Approve Task", icon: MdAssignment, component: "approvetask" },
         ],
@@ -42,13 +42,6 @@ const Sidebar = ({ setActiveComponent }) => {
       }
     ],
     Team_Lead: [
-      {
-        category: "Overview",
-        items: [
-          { name: "Dashboard", icon: MdDashboard, component: "overview" },
-          { name: "Analytics", icon: MdInsights, component: "analytics" },
-        ],
-      },
       {
         category: "My Tasks",
         items: [

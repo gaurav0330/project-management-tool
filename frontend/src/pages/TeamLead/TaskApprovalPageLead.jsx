@@ -17,6 +17,7 @@ const GET_TASKS_BY_TEAM_LEAD = gql`
       priority
       dueDate
       createdAt
+      assignName
       attachments {
         name
         size

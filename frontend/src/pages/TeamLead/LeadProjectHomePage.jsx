@@ -64,29 +64,21 @@ export default function ProjectDashboard() {
           <CreateTeam projectId={projectId} />     
         ) : activeComponent === "approvetask" ? (
           <TaskSubmissionPage projectId={projectId}/>
-        ) : activeComponent === "addmembers" ? (
-          <AssignTeamMembers />
-        ) : activeComponent === "CreateTask" ? (
-          <AssignTasks />
-        ) : activeComponent === "myteams" ? (
+        ) 
+        : activeComponent === "myteams" ? (
           <MyTeams />
-        ) : activeComponent === "assignedTasks" ? (
-          <AssignedTasks />
         ) : activeComponent === "taskDistribution" ? (
           <TaskDistributionPage />
-        ) : activeComponent === "tasks" ? (
-          <TaskManagementPage />
-        ) : activeComponent === "teamtasks" ? (
-          <DisplayTeamTaskPage />
-        ) : activeComponent === "mytasks" ? (
+        ) 
+        : activeComponent === "mytasks" ? (
           <MyTasks />
         ) : (
-          
+
             <ProjectDetailsCard project={data?.getProjectById} loading={loading} />
         )}
       </div>
     </div>
-    <Footer />
+    {/* <Footer /> */}
     </div>
   );
 }

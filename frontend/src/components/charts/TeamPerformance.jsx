@@ -62,7 +62,7 @@ const TeamPerformanceBarChart = ({ projectId }) => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="teamName" tick={{ fontSize: 12 }} />
               <YAxis domain={[0, maxTasks]} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value, name) => (name === "Completion Rate (%)" ? `${value}%` : value)} />
+              <Tooltip formatter={(value, name) => (name === "Completion Rate (%)" ? `${value.toFixed(2)}%` : value)} />
               <Legend wrapperStyle={{ fontSize: "14px" }} />
 
               {/* Total Tasks Bar */}
@@ -94,7 +94,7 @@ const TeamPerformanceBarChart = ({ projectId }) => {
               </div>
               <div className="flex items-center space-x-4 mt-1">
                 <span className="text-gray-700 font-medium">Completion Rate:</span>
-                <span className="text-gray-900 font-bold">{team.completionRate}%</span>
+                <span className="text-gray-900 font-bold">{team.completionRate.toFixed(2)}%</span>
               </div>
 
               {/* Progress Bar */}
@@ -116,3 +116,4 @@ const TeamPerformanceBarChart = ({ projectId }) => {
 };
 
 export default TeamPerformanceBarChart;
+

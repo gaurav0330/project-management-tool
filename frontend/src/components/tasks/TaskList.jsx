@@ -39,7 +39,7 @@ export default function TaskList({ tasks, onSelectTask }) {
           >
             <div>
               <h3 className="font-semibold text-gray-900">{task.title}</h3>
-              <p className="text-sm text-gray-600">{task.assignedTo}</p>
+              <p className="text-sm text-gray-600">{task.assignName}</p>
               <p className="text-xs text-gray-500">Submitted: {task.submittedDate}</p>
             </div>
             <span
