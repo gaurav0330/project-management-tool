@@ -17,6 +17,7 @@ const GET_TASKS_FOR_MEMBER = gql`
       priority
       status
       dueDate
+      createdAt
     }
   }
 `;
@@ -66,6 +67,12 @@ export default function MyTasksPage() {
 
   // 🔹 Apply sorting
   const sortedTasks = [...filteredTasks].sort((a, b) => {
+    // Sort by creation date (latest first) if available
+    if (a.createdAt && b.createdAt) {
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    }
+  
+    // Otherwise, sort by priority
     if (sortBy === "Priority") {
       const priorityOrder = { High: 1, Medium: 2, Low: 3 };
       return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -80,6 +87,8 @@ export default function MyTasksPage() {
 
   if (loading) return <p className="text-center text-gray-500">Loading tasks...</p>;
   if (error) return <p className="text-center text-red-500">Error fetching tasks: {error.message}</p>;
+  
+
 
   return (
     <div className="min-h-screen p-6 bg-gray-100">
@@ -169,10 +178,10 @@ export default function MyTasksPage() {
                   {task.status}
                 </span>
               </div>
-
+          
               {/* 🔹 Assigned By & Due Date */}
               <div className="flex items-center justify-between mt-3 text-sm text-gray-500">
-                <span>📅 Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+              <span>📅 Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No Due Date"}</span>
                 <span>👤 Assigned by: {task.assignedTo}</span>
               </div>
 

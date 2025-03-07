@@ -74,8 +74,6 @@ const Sidebar = ({ setActiveComponent }) => {
         category: "Tasks",
         items: [
           { name: "My Tasks", icon: MdAssignment, component: "tasks" },
-          { name: "Timeline", icon: MdTimeline, component: "timeline" },
-          { name: "Task Submission", icon: MdAssignmentTurnedIn, component: "taskSubmission" },
         ],
       },
     ],
