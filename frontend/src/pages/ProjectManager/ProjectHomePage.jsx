@@ -18,7 +18,7 @@ import Footer from "../../components/Other/Footer2";
 import TeamLeadsList from "./TeamLeadsList";
 import TeamMembersList from "./TeamMemberList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
-import TaskStatusTimeline from "../../components/charts/TaskAssignment
+import TaskStatusTimeline from "../../components/charts/TaskAssignment";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 
 const GET_PROJECT_BY_ID = gql`

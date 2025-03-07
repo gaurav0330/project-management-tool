@@ -1,5 +1,6 @@
 import { useMutation, gql } from "@apollo/client";
 import { useState } from "react";
+import { Snackbar, Alert, Button, TextField } from "@mui/material";
 
 // GraphQL Mutations
 const APPROVE_TASK = gql`
@@ -7,16 +8,6 @@ const APPROVE_TASK = gql`
     approveTaskCompletion(taskId: $taskId, approved: $approved, remarks: $remarks) {
       success
       message
-      task {
-        id
-        status
-        history {
-          updatedBy
-          updatedAt
-          oldStatus
-          newStatus
-        }
-      }
     }
   }
 `;
@@ -26,11 +17,6 @@ const REJECT_TASK = gql`
     rejectTask(taskId: $taskId, reason: $reason) {
       success
       message
-      task {
-        id
-        title
-        status
-      }
     }
   }
 `;
@@ -40,75 +26,86 @@ const REQUEST_MODIFICATIONS = gql`
     requestTaskModifications(taskId: $taskId, feedback: $feedback) {
       success
       message
-      task {
-        id
-        title
-        status
-      }
     }
   }
 `;
 
 export default function Feedback({ taskId }) {
   const [feedback, setFeedback] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
+  const [loading, setLoading] = useState(false);
 
   const [approveTask] = useMutation(APPROVE_TASK);
   const [rejectTask] = useMutation(REJECT_TASK);
   const [requestModifications] = useMutation(REQUEST_MODIFICATIONS);
 
-  const handleApprove = async () => {
-    try {
-      const { data } = await approveTask({
-        variables: { taskId, approved: true, remarks: feedback },
-      });
-      alert(data.approveTaskCompletion.message);
-    } catch (error) {
-      console.error("Approval failed:", error);
-    }
-  };
+  const handleSnackbarClose = () => setSnackbar({ ...snackbar, open: false });
 
-  const handleReject = async () => {
+  const handleAction = async (mutation, variables, successMessage) => {
+    setLoading(true);
     try {
-      const { data } = await rejectTask({
-        variables: { taskId, reason: feedback },
-      });
-      alert(data.rejectTask.message);
+      const { data } = await mutation({ variables });
+      setSnackbar({ open: true, message: data[Object.keys(data)[0]].message || successMessage, severity: "success" });
+      setFeedback(""); // Clear feedback after success
     } catch (error) {
-      console.error("Rejection failed:", error);
+      console.error("Action failed:", error);
+      setSnackbar({ open: true, message: "Something went wrong!", severity: "error" });
     }
-  };
-
-  const handleRequestChanges = async () => {
-    try {
-      const { data } = await requestModifications({
-        variables: { taskId, feedback },
-      });
-      alert(data.requestTaskModifications.message);
-    } catch (error) {
-      console.error("Request changes failed:", error);
-    }
+    setLoading(false);
   };
 
   return (
     <div className="mt-4">
-      <h3 className="text-lg font-semibold mb-2">Feedback</h3>
-      <textarea
+      <h3 className="mb-2 text-lg font-semibold">Feedback</h3>
+      
+      <TextField
+        fullWidth
+        multiline
+        rows={3}
         value={feedback}
         onChange={(e) => setFeedback(e.target.value)}
         placeholder="Add your feedback here..."
-        className="w-full p-2 border rounded-lg"
-      ></textarea>
+        variant="outlined"
+      />
+
       <div className="flex gap-2 mt-4">
-        <button onClick={handleApprove} className="px-4 py-2 bg-green-500 text-white rounded-lg">
+        <Button
+          variant="contained"
+          color="success"
+          disabled={loading}
+          onClick={() => handleAction(approveTask, { taskId, approved: true, remarks: feedback }, "Task approved successfully!")}
+        >
           ✔ Approve
-        </button>
-        <button onClick={handleRequestChanges} className="px-4 py-2 bg-yellow-500 text-white rounded-lg">
+        </Button>
+        <Button
+          variant="contained"
+          color="warning"
+          disabled={loading}
+          onClick={() => handleAction(requestModifications, { taskId, feedback }, "Requested modifications successfully!")}
+        >
           ⚠ Request Changes
-        </button>
-        <button onClick={handleReject} className="px-4 py-2 bg-red-500 text-white rounded-lg">
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          disabled={loading}
+          onClick={() => handleAction(rejectTask, { taskId, reason: feedback }, "Task rejected successfully!")}
+        >
           ✖ Reject
-        </button>
+        </Button>
       </div>
+
+      {/* Snackbar Notification */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert severity={snackbar.severity} onClose={handleSnackbarClose}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }
