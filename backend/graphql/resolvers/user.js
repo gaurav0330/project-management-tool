@@ -20,9 +20,11 @@ const userResolvers = {
       
           // Convert userId to ObjectId
           const objectId = new mongoose.Types.ObjectId(userId);
+          console.log("Converted ObjectId:", objectId);
       
           const user = await User.findById(objectId).select("-password"); // Exclude password
-      
+          console.log("User query result:", user);
+          
           if (!user) {
             throw new Error("User not found");
           }

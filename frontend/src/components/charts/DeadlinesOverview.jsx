@@ -1,5 +1,5 @@
 import React from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 import { useQuery, gql } from "@apollo/client";
 import dayjs from "dayjs";
 
@@ -10,56 +10,112 @@ const GET_DEADLINES_OVERVIEW = gql`
         taskId
         title
         dueDate
+        assignedTo
       }
       upcomingTasks {
         taskId
         title
         dueDate
+        assignedTo
       }
     }
   }
 `;
 
-const DeadlinesOverviewLineChart = ({ projectId }) => {
+// Skeleton loading styles
+const skeletonStyle = {
+  width: '100%',
+  height: '300px',
+  backgroundColor: '#e0e0e0',
+  borderRadius: '8px',
+  marginBottom: '16px',
+};
+
+const DeadlinesOverview = ({ projectId }) => {
   const { loading, error, data } = useQuery(GET_DEADLINES_OVERVIEW, {
     variables: { projectId },
   });
 
   if (loading) {
-    return <p>Loading deadlines data...</p>;
+    return (
+      <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
+        <h2 className="text-xl font-semibold mb-4">Deadlines Overview</h2>
+        <div style={skeletonStyle} /> {/* Skeleton for the chart */}
+        <div style={skeletonStyle} /> {/* Skeleton for the table */}
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="text-red-500">Error loading deadlines data.</p>;
+    return <p className="text-center text-red-500">Error loading deadlines data.</p>;
   }
 
-  const transformedData = [
-    ...data.getOverdueAndUpcomingTasks.overdueTasks.map(task => ({
-      date: dayjs(task.dueDate).format("YYYY-MM-DD"),
-      type: "Overdue",
-    })),
-    ...data.getOverdueAndUpcomingTasks.upcomingTasks.map(task => ({
-      date: dayjs(task.dueDate).format("YYYY-MM-DD"),
-      type: "Upcoming",
-    })),
-  ];
+  const overdueTasks = data.getOverdueAndUpcomingTasks.overdueTasks;
+  const upcomingTasks = data.getOverdueAndUpcomingTasks.upcomingTasks;
+
+  // Transform data for Bar Chart
+  const groupedData = {};
+  [...overdueTasks, ...upcomingTasks].forEach((task) => {
+    const date = dayjs(task.dueDate).format("YYYY-MM-DD");
+    if (!groupedData[date]) {
+      groupedData[date] = { date, Overdue: 0, Upcoming: 0 };
+    }
+    groupedData[date][overdueTasks.includes(task) ? "Overdue" : "Upcoming"] += 1;
+  });
+
+  const chartData = Object.values(groupedData).sort((a, b) => new Date(a.date) - new Date(b.date));
 
   return (
-    <div>
-      <h2 className="mb-4 text-lg font-semibold">Deadlines Overview</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={transformedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Line type="monotone" dataKey="type" stroke="#FF0000" name="Overdue Tasks" />
-          <Line type="monotone" dataKey="type" stroke="#0088FE" name="Upcoming Tasks" />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
+      <h2 className="text-xl font-semibold mb-4">Deadlines Overview</h2>
+
+      {/* Bar Chart */}
+      <div className="mb-6">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="date" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="Overdue" fill="#FF0000" name="Overdue Tasks" />
+            <Bar dataKey="Upcoming" fill="#0088FE" name="Upcoming Tasks" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Table for detailed task information */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse bg-white rounded-lg border border-gray-300">
+          <thead className="bg-gray-200 text-gray-700">
+            <tr>
+              <th className="p-3 border-b text-left">Task ID</th>
+              <th className="p-3 border-b text-left">Title</th>
+              <th className="p-3 border-b text-left">Due Date</th>
+              <th className="p-3 border-b text-left">Assigned To</th>
+              <th className="p-3 border-b text-left">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...overdueTasks, ...upcomingTasks].map((task) => (
+              <tr
+                key={task.taskId}
+                className="border-t border-gray-300 hover:bg-gray-100 transition duration-200 ease-in-out"
+              >
+                <td className="p-3">{task.taskId}</td>
+                <td className="p-3">{task.title}</td>
+                <td className="p-3">{dayjs(task.dueDate).format("YYYY-MM-DD")}</td>
+                <td className="p-3">{task.assignedTo}</td>
+                <td className={`p-3 font-semibold ${overdueTasks.includes(task) ? "text-red-600" : "text-green-600"}`}>
+                  {overdueTasks.includes(task) ? "Overdue" : "Upcoming"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-export default DeadlinesOverviewLineChart;
+export default DeadlinesOverview;
