@@ -14,17 +14,37 @@ const GET_PROJECT_ISSUES = gql`
   }
 `;
 
+// Skeleton loading styles
+const skeletonStyle = {
+  width: '100%',
+  height: '300px',
+  backgroundColor: '#e0e0e0',
+  borderRadius: '8px',
+  marginBottom: '16px',
+};
+
 const IssuesList = ({ projectId }) => {
   const { loading, error, data } = useQuery(GET_PROJECT_ISSUES, {
     variables: { projectId },
   });
 
   if (loading) {
-    return <p>Loading issues data...</p>;
+    return (
+      <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
+        <h2 className="text-lg font-semibold mb-4">Issues List</h2>
+        <div style={skeletonStyle} /> {/* Skeleton for the table */}
+        <div style={skeletonStyle} /> {/* Skeleton for the chart */}
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="text-red-500">Error loading issues data.</p>;
+    return (
+      <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
+        <h2 className="text-lg font-semibold mb-4">Issues List</h2>
+        <p className="text-red-500">Error loading issues data. Please try again later.</p>
+      </div>
+    );
   }
 
   const transformedData = data.getProjectIssues.reduce((acc, issue) => {
@@ -53,7 +73,10 @@ const IssuesList = ({ projectId }) => {
           </thead>
           <tbody>
             {data.getProjectIssues.map(issue => (
-              <tr key={issue.taskId} className="border border-gray-300">
+              <tr
+                key={issue.taskId}
+                className="border border-gray-300 hover:bg-gray-100 transition duration-200 ease-in-out"
+              >
                 <td className="px-4 py-2 border border-gray-300">{issue.title}</td>
                 <td className="px-4 py-2 border border-gray-300">{issue.assignedTo}</td>
                 <td className="px-4 py-2 border border-gray-300">{issue.status}</td>
