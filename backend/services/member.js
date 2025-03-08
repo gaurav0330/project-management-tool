@@ -4,7 +4,7 @@ const { ApolloError } = require("apollo-server-express");
 const Project = require("../models/Project");
 const User = require("../models/User");
 const Team = require("../models/Teams");
-
+const {sendTaskApprovalRequestEmail} = require("../services/emailService");
 
 const memberService = {
    getProjectsByMember : async (memberId) => {
@@ -164,6 +164,17 @@ const memberService = {
       });
 
       await task.save();
+       
+      // ✅ Find Project Manager or Team Lead who assigned the task
+       const taskCreator = await User.findById(task.createdBy);
+       if (taskCreator) {
+           await sendTaskApprovalRequestEmail({
+               email: taskCreator.email,
+               managerName: taskCreator.username,
+               taskTitle: task.title,
+               submittedBy: user.username,
+           });
+       }
 
       return { success: true, message: "Task sent for approval", task };
     } catch (error) {

@@ -57,8 +57,20 @@ const IssuesList = ({ projectId }) => {
     );
   }
 
+  const issues = data.getProjectIssues || [];
+  
+  // Handle case where there are no issues
+  if (issues.length === 0) {
+    return (
+      <div className="p-6 bg-white text-gray-900 rounded-lg shadow-lg">
+        <h2 className="text-lg font-semibold mb-4">Issues List</h2>
+        <p className="text-gray-500">No issues found for this project.</p>
+      </div>
+    );
+  }
+
   // Transform data to count issues by status
-  const statusCounts = data.getProjectIssues.reduce((acc, issue) => {
+  const statusCounts = issues.reduce((acc, issue) => {
     acc[issue.status] = (acc[issue.status] || 0) + 1;
     return acc;
   }, {});
@@ -70,7 +82,7 @@ const IssuesList = ({ projectId }) => {
   }));
 
   // Total Issues
-  const totalIssues = data.getProjectIssues.length;
+  const totalIssues = issues.length;
 
   // Calculate percentage distribution
   const percentageData = Object.keys(statusCounts).map(status => ({
@@ -79,13 +91,14 @@ const IssuesList = ({ projectId }) => {
   }));
 
   // Most Frequent Assignee
-  const assigneeCount = data.getProjectIssues.reduce((acc, issue) => {
+  const assigneeCount = issues.reduce((acc, issue) => {
     acc[issue.assignedTo] = (acc[issue.assignedTo] || 0) + 1;
     return acc;
   }, {});
 
-  const mostFrequentAssignee = Object.keys(assigneeCount).reduce((a, b) =>
-    assigneeCount[a] > assigneeCount[b] ? a : b
+  const mostFrequentAssignee = Object.keys(assigneeCount).reduce(
+    (a, b) => (assigneeCount[a] > assigneeCount[b] ? a : b),
+    null // Prevents error when there are no assignees
   );
 
   return (
@@ -102,7 +115,9 @@ const IssuesList = ({ projectId }) => {
           ))}
         </ul>
         <p className="mt-2 text-lg font-medium">
-          Most Frequent Assignee: <span className="font-bold text-purple-600">{mostFrequentAssignee}</span>
+          Most Frequent Assignee: <span className="font-bold text-purple-600">
+            {mostFrequentAssignee || "N/A"}
+          </span>
         </p>
       </div>
 
@@ -120,7 +135,7 @@ const IssuesList = ({ projectId }) => {
               </tr>
             </thead>
             <tbody>
-              {data.getProjectIssues.map(issue => (
+              {issues.map(issue => (
                 <tr
                   key={issue.taskId}
                   className="border border-gray-300 hover:bg-gray-50 transition duration-200 ease-in-out"

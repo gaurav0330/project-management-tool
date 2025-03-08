@@ -1,9 +1,12 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { sendLoginEmail } = require("../services/emailService");
+
 
 const generateToken = (user) => {
     return jwt.sign(
+
         { id: user.id,  username: user.username, email: user.email, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "1h" }
@@ -28,9 +31,13 @@ const login = async (email, password) => {
     const user = await User.findOne({ email });
     if (!user) throw new Error("User not found");
 
+     
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new Error("Invalid credentials");
+
+     // Send a login email notification
+     await sendLoginEmail(user.username, email, user.role);
 
     return { ...user._doc, id: user._id, token: generateToken(user) };
 };
