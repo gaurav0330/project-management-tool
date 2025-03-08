@@ -4,6 +4,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
+const { sendTeamAssignEmail , sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail,sendTaskSubmissionEmail} = require("../services/emailService");
 
 const leadService = {
 
@@ -66,6 +67,20 @@ getProjectsByLeadId: async (leadId) => {
           .populate("teamMembers.teamMemberId");
 
       console.log("✅ Successfully updated project:", updatedProject);
+
+ // Fetch team member details for emails
+ for (const member of formattedTeamMembers) {
+    const teamMember = await User.findById(member.teamMemberId);
+    if (teamMember) {
+      await sendTeamAssignEmail({
+        email: teamMember.email,
+        teamMemberName: teamMember.username,
+        teamLeadName: user.username,
+        projectName: project.title,
+        role: member.memberRole,
+      });
+    }
+  }
 
       return {
           success: true,
@@ -146,6 +161,28 @@ assignTaskMemberService: async ({ projectId, title, description, assignedTo, pri
 
         await newTask.save();
 
+        // ✅ Fetch Assigned Team Member Info
+        const teamMember = await User.findById(assignedTo);
+        if (!teamMember) {
+            return {
+                success: true,
+                message: "Task assigned but team member not found for email notification.",
+                task: newTask,
+            };
+        }
+
+        // ✅ Send Email Notification
+        await sendTaskAssignedEmail({
+            email: teamMember.email,
+            teamLeadName: teamMember.username,
+            projectManager: user.username,
+            projectName: project.title,
+            taskTitle: title,
+            priority: priority || "Medium",
+            dueDate: dueDate ? new Date(dueDate).toDateString() : "No due date",
+        });
+
+
         return {
             success: true,
             message: "Task assigned successfully",
@@ -192,6 +229,28 @@ approveTaskCompletionService: async ({ taskId, approved, remarks }, user) => {
 
         await task.save();
 
+         // Fetch Team Member Details
+         const teamMember = await User.findById(task.assignedTo);
+         if (!teamMember) {
+             return {
+                 success: true,
+                 message: "Task approved, but team member not found for email notification.",
+                 task,
+             };
+         }
+ 
+         // Send Email Notification
+         await sendTaskApprovalEmail({
+             email: teamMember.email,
+             teamMemberName: teamMember.username,
+             teamLeadName: user.username,
+             projectName: project.title,
+             taskTitle: task.title,
+             status: approved ? "Approved ✅" : "Rejected ❌",
+             remarks: remarks || "No additional remarks",
+         });
+
+
         return {
             success: true,
             message: approved ? "Task approved successfully!" : "Task rejected, sent back to In Progress.",
@@ -219,12 +278,20 @@ rejectTaskService: async (taskId, reason, user) => {
         task.remarks = reason; // ✅ Ensure this field is updated
         await task.save(); // ✅ Save changes
 
+        await sendTaskRejectionEmail({
+            email: teamMember.email,
+            teamMemberName: teamMember.username,
+            projectManager: user.username,
+            projectName: project.title,
+            taskTitle: task.title,
+            reason,
+        });
+
         return { success: true, message: "Task rejected successfully!", task };
     } catch (error) {
         return { success: false, message: `Failed to reject task: ${error.message}`, task: null };
     }
 },
-
 
   // ✅ Request Task Modifications
   requestTaskModificationsService: async (taskId, feedback, user) => {
@@ -237,6 +304,22 @@ rejectTaskService: async (taskId, reason, user) => {
       task.status = "Needs Revision";
       task.remarks = feedback;
       await task.save();
+
+       // Fetch the Team Member details
+       const teamMember = await User.findById(task.assignedTo);
+       if (!teamMember) {
+           return { success: true, message: "Requested task modifications but team member not found for email.", task };
+       }
+
+       // Send Email Notification
+       await sendTaskModificationEmail({
+           email: teamMember.email,
+           teamMemberName: teamMember.username,
+           reviewer: user.username,
+           taskTitle: task.title,
+           projectName: task.project ? (await Project.findById(task.project)).title : "Unknown Project",
+           feedback,
+       });
 
       return { success: true, message: "Requested task modifications!", task };
     } catch (error) {
@@ -295,6 +378,20 @@ rejectTaskService: async (taskId, reason, user) => {
 
       task.status = "Pending Approval";
       await task.save();
+
+      // Find the user who assigned the task (Project Manager or Team Lead)
+      const taskCreator = await User.findById(task.createdBy);
+      if (!taskCreator) {
+          return { success: true, message: "Task sent for approval, but no email sent (assigner not found).", task };
+      }
+
+      // Send email notification
+      await sendTaskSubmissionEmail({
+          email: taskCreator.email,
+          assignerName: taskCreator.username,
+          taskTitle: task.title,
+          submittedBy: user.username,
+      });
 
       return { success: true, message: "Task sent for approval!", task };
     } catch (error) {

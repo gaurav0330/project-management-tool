@@ -2,7 +2,7 @@ const { ApolloError } = require("apollo-server-express");
 const Team = require("../../models/Teams");
 const Project = require("../../models/Project");
 const mongoose  = require("mongoose");
-
+const {sendTeamMemberAddedEmail} = require("../../services/emailService");
 
 
 const teamResolvers = {
@@ -77,6 +77,20 @@ const teamResolvers = {
   
           team.members.push(...newMembers);
           await team.save();
+
+
+          // ✅ Fetch user details for email notification
+        const addedUsers = await User.find({ _id: { $in: teamMembers.map(m => m.teamMemberId) } });
+
+        // ✅ Send emails to new members
+        for (const member of addedUsers) {
+            await sendTeamMemberAddedEmail({
+                email: member.email,
+                memberName: member.username,
+                teamName: team.name,
+                leadName: user.username,
+            });
+        }
   
           // Populate `teamMemberId` to ensure it is fully retrieved
           const updatedTeam = await Team.findById(teamId);

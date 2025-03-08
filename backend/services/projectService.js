@@ -5,6 +5,7 @@ const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
 const { AuthenticationError } = require("apollo-server-express");
 const Team = require("../models/Teams");
+const { sendTeamLeadAssignmentEmail ,sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail} = require("../services/emailService");
 
 const projectService = {
   createProject: async ({ title, description, startDate, endDate, managerId,category }) => {
@@ -89,6 +90,14 @@ const projectService = {
         const updatedProject = await Project.findById(projectId).populate("teamLeads.teamLeadId");
 
         console.log("✅ Successfully updated project:", updatedProject);
+      
+         // **Send Email to Assigned Team Leads**
+         for (const lead of updatedProject.teamLeads) {
+          const leadUser = await User.findById(lead.teamLeadId);
+          if (leadUser) {
+              await sendTeamLeadAssignmentEmail(leadUser.username, leadUser.email, project.title);
+          }
+      }
 
         return {
             success: true,
@@ -148,6 +157,23 @@ const projectService = {
 
         await newTask.save();
 
+// Fetch Team Lead Details (assignedTo)
+const teamLead = await User.findById(assignedTo);
+if (!teamLead) {
+    return { success: false, message: "Assigned Team Lead not found.", task: newTask };
+}
+
+// Send email notification
+await sendTaskAssignedEmail({
+    email: teamLead.email,
+    teamLeadName: teamLead.username,
+    projectManager: user.username,
+    projectName: project.title,
+    taskTitle: title,
+    priority: priority || "Medium",
+    dueDate: dueDate ? new Date(dueDate).toDateString() : "No due date",
+});
+
         return {
             success: true,
             message: "Task assigned successfully",
@@ -193,6 +219,28 @@ const projectService = {
   
     await task.save();
   
+     // Fetch Team Member Details
+     const teamMember = await User.findById(task.assignedTo);
+     if (!teamMember) {
+         return {
+             success: true,
+             message: "Task approved, but team member not found for email notification.",
+             task,
+         };
+     }
+ 
+     // Send Email Notification
+     await sendTaskApprovalEmail({
+         email: teamMember.email,
+         teamMemberName: teamMember.username,
+         projectManager: user.username,
+         projectName: project.title,
+         taskTitle: task.title,
+         status: approved ? "Approved ✅" : "Rejected ❌",
+         remarks: remarks || "No additional remarks",
+     });
+
+
     return {
       success: true,
       message: "Task approved successfully!",
@@ -220,6 +268,26 @@ const projectService = {
   
     await task.save();
   
+  // Fetch Team Member Details
+  const teamMember = await User.findById(task.assignedTo);
+  if (!teamMember) {
+      return {
+          success: true,
+          message: "Task rejected, but team member not found for email notification.",
+          task,
+      };
+  }
+
+  // Send Email Notification
+  await sendTaskRejectionEmail({
+      email: teamMember.email,
+      teamMemberName: teamMember.username,
+      projectManager: user.username,
+      projectName: project.title,
+      taskTitle: task.title,
+      reason: reason || "No reason provided",
+  });
+    
     return {
       success: true,
       message: `Task rejected: ${reason}`,
@@ -246,6 +314,27 @@ const projectService = {
     });
   
     await task.save();
+
+    // Fetch Team Member Details
+    const teamMember = await User.findById(task.assignedTo);
+    if (!teamMember) {
+        return {
+            success: true,
+            message: "Modification requested, but team member not found for email notification.",
+            task,
+        };
+    }
+
+    // Send Email Notification
+    await sendTaskModificationEmail({
+        email: teamMember.email,
+        teamMemberName: teamMember.username,
+        projectManager: user.username,
+        projectName: project.title,
+        taskTitle: task.title,
+        feedback: feedback || "No additional feedback provided",
+    });
+
   
     return {
       success: true,
@@ -253,6 +342,7 @@ const projectService = {
       task,
     };
   },
+
   async deleteProject(user, projectId) {
     if (!user) throw new AuthenticationError("Not authenticated");
 
