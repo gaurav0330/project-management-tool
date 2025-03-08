@@ -33,6 +33,9 @@ import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
 import TeamDetails from './pages/TeamLead/Teamdetails';
 
+import CreateGroupPage from './pages/Chat/CreateGroup';
+import ChatPage from './pages/Chat/ChatPage';
+
 function App() {
   const { userRole } = useAuth();  // ✅ Get user role
 
@@ -41,11 +44,11 @@ function App() {
   return (
 
     <Router>
-     <Navbar />
+      <Navbar />
 
       {/* {!shouldHideNavbarFooter && <Navbar />} Show Navbar only if not hidden */}
       <div className="mt-16 main-content">
-      
+
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />
@@ -73,13 +76,13 @@ function App() {
           <Route path="/teammemberdashboard" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TeamMemberDashboardPage /></ProtectedRoute>} />
           <Route path="/teammembertask" element={<ProtectedRoute allowedRoles={["Team_Member"]}><MyTasksPage /></ProtectedRoute>} />
           <Route
-  path="/teammembertasksubmission/:projectId/:taskId"
-  element={
-    <ProtectedRoute allowedRoles={["Team_Member"]}>
-      <TaskSubmissionPage/>
-    </ProtectedRoute>
-  }
-/>
+            path="/teammembertasksubmission/:projectId/:taskId"
+            element={
+              <ProtectedRoute allowedRoles={["Team_Member"]}>
+                <TaskSubmissionPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Team Lead Only */}
           <Route path="/teamleaddashboard" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TeamLeadDashboard /></ProtectedRoute>} />
@@ -105,6 +108,11 @@ function App() {
           <Route path="/teamleadtaskm" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskManagementPage /></ProtectedRoute>} />
           <Route path="/teamleadteamtask" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><DisplayTeamTaskPage /></ProtectedRoute>} />
           <Route path="/teamleadtaskDis" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskDistributionPage /></ProtectedRoute>} />
+
+          {/* Chat Testing*/}
+          <Route path="/create-group" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><CreateGroupPage /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute allowedRoles={["Team_Lead", "Team_Member"]}><ChatPage /></ProtectedRoute>} />
+
         </Routes>
       </div>
     </Router>

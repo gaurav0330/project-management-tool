@@ -6,6 +6,7 @@ const teamTypeDefs = require("./teams");
 const memberTypeDefs = require("./member");
 const taskTypeDefs = require("./task");
 const analyticsTypeDefs = require("./analytics");
+const chatTypeDefs = require("./chat");
 
 const typeDefs = [
   userTypeDefs,
@@ -14,7 +15,8 @@ const typeDefs = [
   memberTypeDefs,
   projectManagerTypeDefs,
   taskTypeDefs,
-  analyticsTypeDefs
+  analyticsTypeDefs,
+  chatTypeDefs
 ];
 
 module.exports = typeDefs;

@@ -16,7 +16,7 @@ const GET_USER = gql`
       role
     }
   }
-`; 
+`;
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -84,88 +84,94 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
-  <div className="flex items-center justify-between h-16 px-6 mx-auto max-w-1xl">
-    {/* Logo on the left */}
-    <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-      <img src={logo} alt="Logo" className="w-auto h-10" /> {/* Logo image */}
-    </div>
+      <div className="flex items-center justify-between h-16 px-6 mx-auto max-w-1xl">
+        {/* Logo on the left */}
+        <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+          <img src={logo} alt="Logo" className="w-auto h-10" /> {/* Logo image */}
+        </div>
 
-    {/* Right Side - Show items based on authentication */}
-    <div className="flex items-center space-x-4">
-      {token ? (
-        <>
-          {/* Notifications */}
-          <button className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100">
-            <MdNotifications className="w-6 h-6" />
-            <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
-          </button>
+        {/* Right Side - Show items based on authentication */}
+        <div className="flex items-center space-x-4">
+          {token ? (
+            <>
+              {/* Notifications */}
+              <button className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100">
+                <MdNotifications className="w-6 h-6" />
+                <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
+              </button>
 
-          {/* Messages */}
-          <button className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100">
-            <MdMessage className="w-6 h-6" />
-            <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
-          </button>
-
-          {/* Go to Dashboard Button */}
-          <button
-            className="flex items-center gap-2 px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
-            onClick={handleDashboardRedirect}
-          >
-            <MdHome size={20} />
-          </button>
-
-          {/* Profile Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              className="flex items-center p-2 space-x-3 transition duration-200 rounded-lg hover:bg-gray-100"
-              onClick={() => ""}
-            >
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
-                <span className="text-sm font-medium text-blue-600">
-                  {loading ? "..." : user.username?.charAt(0).toUpperCase() || "U"}
-                </span>
-              </div>
-              <div className="hidden text-left md:block">
-                <p className="text-sm font-medium text-gray-700">{loading ? "Loading..." : user.username || "User"}</p>
-                <p className="text-xs text-gray-500">{loading ? "..." : user.role || "Member"}</p>
-              </div>
-            </button>
-
-            {/* Logout Dropdown */}
-            {isDropdownOpen && (
-              <div className="absolute right-0 w-40 p-2 mt-2 bg-white rounded-lg shadow-lg">
+              {/* Messages */}
+              {userRole !== "Project_Manager" && (
                 <button
-                  onClick={handleLogout}
-                  className="block w-full px-4 py-2 text-sm text-left text-red-600 transition duration-200 rounded-lg hover:bg-gray-100"
+                  className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100"
+                  onClick={() => navigate('/chat')}
                 >
-                  Logout
+                  <MdMessage size={20} />
                 </button>
-              </div>
-            )}
-          </div>
+              )}
 
-          {/* Logout Button at the rightmost end */}
-          <LogoutButton />
-        </>
-      ) : (
-        <>
-          <button
-            className="px-4 py-2 text-gray-700 transition duration-200 border border-gray-300 rounded-lg hover:bg-gray-100"
-            onClick={() => navigate("/login")}
-          >
-            Login
-          </button>
-          <button
-            className="px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
-            onClick={() => navigate("/signup")}
-          >
-            Sign Up
-          </button>
-        </>
-      )}
-    </div>
-  </div>
-</nav>
+
+
+              {/* Go to Dashboard Button */}
+              <button
+                className="flex items-center gap-2 px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
+                onClick={handleDashboardRedirect}
+              >
+                <MdHome size={20} />
+              </button>
+
+              {/* Profile Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  className="flex items-center p-2 space-x-3 transition duration-200 rounded-lg hover:bg-gray-100"
+                  onClick={() => ""}
+                >
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
+                    <span className="text-sm font-medium text-blue-600">
+                      {loading ? "..." : user.username?.charAt(0).toUpperCase() || "U"}
+                    </span>
+                  </div>
+                  <div className="hidden text-left md:block">
+                    <p className="text-sm font-medium text-gray-700">{loading ? "Loading..." : user.username || "User"}</p>
+                    <p className="text-xs text-gray-500">{loading ? "..." : user.role || "Member"}</p>
+                  </div>
+                </button>
+
+                {/* Logout Dropdown */}
+                {isDropdownOpen && (
+                  <div className="absolute right-0 w-40 p-2 mt-2 bg-white rounded-lg shadow-lg">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full px-4 py-2 text-sm text-left text-red-600 transition duration-200 rounded-lg hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Logout Button at the rightmost end */}
+              <LogoutButton />
+            </>
+          ) : (
+            <>
+              <button
+                className="px-4 py-2 text-gray-700 transition duration-200 border border-gray-300 rounded-lg hover:bg-gray-100"
+                onClick={() => navigate("/login")}
+              >
+                Login
+              </button>
+              <button
+                className="px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
+                onClick={() => navigate("/signup")}
+              >
+                Sign Up
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </nav>
 
 
   );
