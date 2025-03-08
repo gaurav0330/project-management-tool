@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
       setUserRole(storedUser.role);
+      console.log("User user name :", storedUser.name);
     }
   }, []);
 
