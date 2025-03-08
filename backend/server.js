@@ -2,36 +2,58 @@ const { ApolloServer } = require("apollo-server-express");
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-
+const http = require("http");
+const { Server } = require("socket.io"); // Import Server from socket.io
 const typeDefs = require("./graphql/typeDefs");
 const resolvers = require("./graphql/resolvers");
 const authMiddleware = require("./middleware/authmiddleware");
+const setupSocket = require("./socket"); // Import the setupSocket function
 
 dotenv.config();
 
 const app = express();
+// Create HTTP server
+const httpServer = http.createServer(app);
 
-const server = new ApolloServer({
+// Initialize Socket.io
+const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:5173", // Allow your frontend URL
+    methods: ["GET", "POST"], // Allow necessary HTTP methods
+    credentials: true // Allow credentials if needed
+  }
+});
+
+// Set up Socket.io using the setupSocket function
+setupSocket(io);
+
+const apolloServer = new ApolloServer({
   typeDefs,
   resolvers,
   context: async ({ req }) => {
     const authContext = await authMiddleware({ req });
-    console.log("Context in ApolloServer:", authContext); 
+    console.log("Context in ApolloServer:", authContext);
     return authContext;
   },
 });
 
-
 async function startServer() {
-  await server.start();
-  server.applyMiddleware({ app });
+  await apolloServer.start();
+  apolloServer.applyMiddleware({ app });
 
-  await mongoose.connect(process.env.MONGO_URI);
+  await mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
   console.log("✅ MongoDB Connected Successfully");
 
-  app.listen(5000, () => {
-    console.log("🚀 Server running on http://localhost:5000/graphql");
+  // Start the HTTP server
+  httpServer.listen(5000, () => {
+    console.log(`🚀 Server running at http://localhost:5000${apolloServer.graphqlPath}`);
+    console.log(`📡 Socket.io listening on ws://localhost:5000`);
   });
 }
 
 startServer();
+ 
