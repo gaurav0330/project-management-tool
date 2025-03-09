@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import React from "react";
 import { MdDashboard, MdSupervisorAccount, MdSettings,MdAnalytics, MdGroup, MdAssignmentTurnedIn, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
-import './SideBar.css'; // Import the CSS file for animations
+import './Sidebar.css'; // Import the CSS file for animations
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
