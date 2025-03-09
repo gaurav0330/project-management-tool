@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql, useMutation } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import AssignTasks from "./AssignTasks";
@@ -23,6 +23,13 @@ const GET_TASKS_BY_MANAGER = gql`
       remarks
       assignName
     }
+  }
+`;
+
+
+const DELETE_TASK = gql`
+  mutation DeleteTask($taskId: ID!) {
+    deleteTask(taskId: $taskId)
   }
 `;
  
@@ -50,7 +57,7 @@ const AssignedTasks = () => {
   const shouldSkipQuery = !managerId || !projectId;
 
   // Fetch tasks using query with variables
-  const { data, loading, error } = useQuery(GET_TASKS_BY_MANAGER, {
+  const { data, loading, error, refetch } = useQuery(GET_TASKS_BY_MANAGER, {
     variables: { managerId, projectId },
     skip: shouldSkipQuery,
     fetchPolicy: "network-only", // Ensure fresh data on every load
@@ -59,6 +66,27 @@ const AssignedTasks = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortPriority, setSortPriority] = useState("");
   const [sortStatus, setSortStatus] = useState("");
+
+  const [deleteTask] = useMutation(DELETE_TASK);
+
+// Function to handle task deletion
+const handleDeleteTask = async (taskId) => {
+  if (window.confirm("Are you sure you want to delete this task?")) {
+    try {
+      const { data } = await deleteTask({ variables: { taskId } });
+      if (data.deleteTask) {
+        alert("Task deleted successfully!");
+        refetch(); // Refresh task list after deletion
+      } else {
+        alert("Failed to delete task.");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      alert("An error occurred while deleting the task.");
+    }
+  }
+};
+
 
   if (loading) return <p className="mt-10 text-center">Loading tasks...</p>;
   if (error) {
@@ -186,7 +214,12 @@ const AssignedTasks = () => {
                     </td>
                     <td className="p-3">
                       <button className="mr-2 text-blue-600">✏️</button>
-                      <button className="text-red-600">🗑️</button>
+                      <button
+                        className="text-red-600"
+                        onClick={() => handleDeleteTask(task.id)}
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 ))

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql,useMutation } from "@apollo/client";
 import {jwtDecode} from "jwt-decode";
 import TaskTable from "../../components/TeamLeadComponent/TaskTable";
 import SearchBar from "../../components/TeamLeadComponent/SearchBar";
@@ -26,9 +26,40 @@ const GET_TASKS_BY_TEAM_LEAD = gql`
   }
 `;
 
+
+// GraphQL Mutation
+const DELETE_TASK = gql`
+  mutation DeleteTask($taskId: ID!) {
+    deleteTask(taskId: $taskId)
+  }
+`;
+
+// Use the DELETE_TASK mutation
+
+
+// Function to handle task deletion
+
+
 const TaskManagementPage = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [teamLeadId, setTeamLeadId] = useState(null);
+ const [deleteTask] = useMutation(DELETE_TASK);
+
+ const onHandleDeleteTask = async (taskId) => {
+  try {
+    const { data } = await deleteTask({ variables: { taskId } });
+
+    if (data.deleteTask) {
+      alert("Task deleted successfully!");
+      refetch();
+    } else {
+      alert("Failed to delete task.");
+    }
+  } catch (error) {
+    console.error("❌ Error deleting task:", error);
+  }
+};
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -38,10 +69,11 @@ const TaskManagementPage = ({ projectId }) => {
     }
   }, []);
 
-  const { loading, error, data } = useQuery(GET_TASKS_BY_TEAM_LEAD, {
+  const { loading, error, data,refetch } = useQuery(GET_TASKS_BY_TEAM_LEAD, {
     variables: { teamLeadId, projectId },
     skip: !teamLeadId,
   });
+
 
   const [tasks, setTasks] = useState([]);
 
@@ -72,6 +104,8 @@ const TaskManagementPage = ({ projectId }) => {
     setTasks(updatedTasks);
   };
 
+
+
   const handleCommentTask = (taskId) => {
     alert(`Comment on Task ID: ${taskId}`);
   };
@@ -89,7 +123,7 @@ const TaskManagementPage = ({ projectId }) => {
         <h2 className="text-xl font-semibold">Task Management</h2>
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       </div>
-      <TaskTable tasks={filteredTasks} onEdit={handleEditTask} onComment={handleCommentTask} />
+      <TaskTable tasks={filteredTasks} onEdit={handleEditTask} onComment={handleCommentTask}  handleDeleteTask={onHandleDeleteTask} />
     </div>
   );
 };
