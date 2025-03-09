@@ -18,6 +18,9 @@ const GET_PROJECT_BY_ID = gql`
       title
       description
       status
+      startDate
+      endDate
+      category
     }
   }
 `;
