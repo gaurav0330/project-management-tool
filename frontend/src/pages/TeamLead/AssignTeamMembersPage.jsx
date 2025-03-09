@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { Search, X } from "lucide-react";
-import { useNavigate,useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // GraphQL Queries & Mutations
 const GET_ALL_TEAM_MEMBERS = gql`
