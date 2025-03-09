@@ -5,6 +5,9 @@ import { Search, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TaskList from "../../components/tasks/TaskList";
 import TaskDetails from "../../components/tasks/TaskDetails";
+import TaskManagementPage from "./TaskManagementPage";
+import Loader from "../../components/Other/Loader";
+
 
 const GET_TASKS_BY_TEAM_LEAD = gql`
   query GetTasksByTeamLead($teamLeadId: ID!, $projectId: ID!) {
@@ -73,7 +76,7 @@ export default function TaskApprovalPage({ projectId }) {
   }, []);
 
   if (loading) return <p>Loading tasks...</p>;
-  if (error) return <p>Error loading tasks: {error.message}</p>;
+  if (error) return <TaskManagementPage projectId={projectId} />;
 
   const filteredTasks = data.getTasksByTeamLead.filter(
     (task) =>
