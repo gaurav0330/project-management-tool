@@ -55,7 +55,7 @@ export default function TeamDetails() {
         {activeComponent === "createtasks" ? (
           <AssignTasks projectId={projectId} teamId={teamId} />
         ) : activeComponent === "addmembers" ? (
-          <AssignTeamMembers />
+          <AssignTeamMembers projectId={projectId} teamId={teamId}/>
         ) : activeComponent === "taskDistribution" ? (
           <TaskDistributionPage projectId={projectId} />
         ) : activeComponent === "approvetasks" ? (
