@@ -70,7 +70,7 @@ export default function ProjectDashboard() {
       (statusFilter === "All" || project.status === statusFilter)
   );
  useEffect(() => {
-    document.title = "Project Manager Dashboard"; // 🔥 Update the title dynamically
+    document.title = "Project Manager Dashboard"; 
   }, []);
   return (
     <div className="flex min-h-screen bg-gray-100">
