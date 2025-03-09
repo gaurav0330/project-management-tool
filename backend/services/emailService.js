@@ -182,10 +182,11 @@ const sendTeamMemberAddedEmail = async ({ email, memberName, teamName, leadName 
 
   await sendEmail(email, subject, message);
 };
-
+ 
 
 // Export all functions
 module.exports = {
+  sendEmail,
   sendLoginEmail,
   sendTeamLeadAssignmentEmail,
   sendTaskAssignedEmail,

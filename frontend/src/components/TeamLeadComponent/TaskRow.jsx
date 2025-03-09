@@ -1,7 +1,8 @@
 import React from "react";
 import StatusBadge from "./StatusBadge";
+;
 
-const TaskRow = ({ task, onEdit, onComment }) => {
+const TaskRow = ({ task, onEdit, onComment, handleDeleteTask }) => {
   return (
     <tr className="border-b">
       <td className="py-3 px-4">{task.name}</td>
@@ -16,6 +17,12 @@ const TaskRow = ({ task, onEdit, onComment }) => {
       <td className="py-3 px-4 flex space-x-2">
         <button onClick={() => onComment(task.id)} className="text-gray-500 hover:text-gray-700">💬</button>
         <button onClick={() => onEdit(task.id)} className="text-gray-500 hover:text-gray-700">✏️</button>
+        <button
+          className="text-red-600"
+          onClick={() => handleDeleteTask(task.id)}
+        >
+          🗑️
+        </button>
       </td>
     </tr>
   );

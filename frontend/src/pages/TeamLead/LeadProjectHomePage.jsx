@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { FaCalendarAlt, FaFolder, FaClock, FaCheckCircle, FaTasks } from "react-icons/fa";
 import Footer from "../../components/Other/Footer2";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
+import SettingsPage from "../../pages/SettingsPage";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -67,7 +68,10 @@ export default function ProjectDashboard() {
         ) 
         : activeComponent === "myteams" ? (
           <MyTeams />
-        ) : activeComponent === "taskDistribution" ? (
+        ) : activeComponent === "setting" ? (
+          <SettingsPage projectId={projectId}/>
+        )
+         : activeComponent === "taskDistribution" ? (
           <TaskDistributionPage />
         ) 
         : activeComponent === "mytasks" ? (

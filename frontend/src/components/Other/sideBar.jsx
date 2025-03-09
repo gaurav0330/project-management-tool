@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import { MdDashboard, MdSupervisorAccount, MdAnalytics, MdGroup, MdAssignmentTurnedIn, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
-import './Sidebar.css'; // Import the CSS file for animations
+import { MdDashboard, MdSupervisorAccount, MdSettings,MdAnalytics, MdGroup, MdAssignmentTurnedIn, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
+import './SideBar.css'; // Import the CSS file for animations
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,6 +39,12 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "Timeline", icon: MdTimeline, component: "TimeLine" },
           { name: "Analytics", icon: MdAnalytics, component: "analytics" },
         ],
+      },
+      {
+        category:"Project Settings",
+        items:[
+          { name: "Settings", icon: MdSettings, component: "setting" },
+        ],
       }
     ],
     Team_Lead: [
@@ -57,6 +63,12 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "My Teams", icon: MdGroup, component: "myteams" },
         ],
       },
+      {
+        category:"Project Settings",
+        items:[
+          { name: "Settings", icon: MdSettings, component: "setting" },
+        ],
+      }
     ],
     Team_Member: [
       {
@@ -69,6 +81,12 @@ const Sidebar = ({ setActiveComponent }) => {
           { name: "My Tasks", icon: MdAssignment, component: "tasks" },
         ],
       },
+      {
+        category:"Project Settings",
+        items:[
+          { name: "Settings", icon: MdSettings, component: "setting" },
+        ],
+      }
     ],
   };
 

@@ -5,7 +5,7 @@ const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
 const { AuthenticationError } = require("apollo-server-express");
 const Team = require("../models/Teams");
-const { sendTeamLeadAssignmentEmail ,sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail} = require("../services/emailService");
+const { sendTeamLeadAssignmentEmail ,sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail,sendEmail} = require("../services/emailService");
 
 const projectService = {
   createProject: async ({ title, description, startDate, endDate, managerId,category }) => {
@@ -361,6 +361,18 @@ await sendTaskAssignedEmail({
     // Finally, delete the project
     await Project.findByIdAndDelete(projectId);
 
+     // ✅ **Send Email Notification**
+     const subject = `Project Deleted - ${project.name}`;
+     const message = `
+       Hello,\n\n
+       The project **"${project.name}"** has been permanently deleted by you.\n\n
+       If you did not initiate this action, please contact support immediately.\n\n
+       Best,\n
+       Project Management Team
+     `;
+     
+     await sendEmail(user.email, subject, message);
+
     return true; // Success
   },
 
@@ -404,9 +416,21 @@ await sendTaskAssignedEmail({
     // Save changes if modified
     if (modified) {
       await project.save();
+
+      const subject = `You Left the Project - ${project.name}`;
+      const message = `
+        Hello,\n\n
+        You have successfully left the project **"${project.name}"**.\n\n
+        If you did not request this action, please contact support immediately.\n\n
+        Best,\n
+        Project Management Team
+      `;
+
+      await sendEmail(user.email, subject, message);
       return true;
     }
 
+    
     throw new Error("User is not part of this project");
   },
   

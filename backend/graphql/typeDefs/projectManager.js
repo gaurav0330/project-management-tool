@@ -68,7 +68,7 @@ const projectTypeDefs = gql`
     rejectTaskByManager(taskId: ID!, reason: String!): TaskResponse!
     requestTaskModificationsByManager(taskId: ID!, feedback: String!): TaskResponse!
 
-     deleteProject(projectId: ID!): Boolean!  # Only Project Managers
+    deleteProject(projectId: ID!): Boolean!  # Only Project Managers
     leaveProject(projectId: ID!): Boolean!   # For Team Leads & Team Members
 
     deleteTask(taskId: ID!): Boolean!

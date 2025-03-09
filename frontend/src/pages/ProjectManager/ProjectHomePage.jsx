@@ -20,6 +20,7 @@ import TeamMembersList from "./TeamMemberList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import TaskStatusTimeline from "../../components/charts/TaskAssignment";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
+import SettingsPage from "../../pages/SettingsPage";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -80,6 +81,9 @@ export default function ProjectDashboard() {
           activeComponent === "TimeLine" ? (
             <TaskStatusTimeline projectId={projectId} />
           ) :
+          activeComponent === "setting" ? (
+            <SettingsPage projectId={projectId} />
+          ) :
           activeComponent === "analytics" ? (
             <AnalyticsDashboard projectId={projectId} />
           ) :
@@ -102,3 +106,4 @@ export default function ProjectDashboard() {
     </div>
   );
 }
+ 
