@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { useQuery, gql } from "@apollo/client";
 import { jwtDecode } from "jwt-decode"; // Install this if not already installed // Import Skeleton from ShadCN
 import FilterBar from "../../components/TeamMember/FilterBar";
@@ -69,7 +69,9 @@ export default function ProjectDashboard() {
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (statusFilter === "All" || project.status === statusFilter)
   );
-
+ useEffect(() => {
+    document.title = "Project Manager Dashboard"; // 🔥 Update the title dynamically
+  }, []);
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Main Content Area */}
