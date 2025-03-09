@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { useQuery, gql } from "@apollo/client"; // Apollo Client for GraphQL
 import { jwtDecode } from "jwt-decode"; // Safely decode JWT
 import ProjectCard from "../../components/Other/ProjectCard"; 
@@ -56,6 +56,10 @@ export default function TeamMemberDashboardPage() {
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (statusFilter === "All" || project.status === statusFilter)
   );
+
+   useEffect(() => {
+      document.title = "Team Member Dashboard"; // 🔥 Update the title dynamically
+    }, []);
 
   return (
     <div>

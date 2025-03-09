@@ -58,6 +58,10 @@ const TeamLeadDashboard = () => {
       (statusFilter === "All" || project.status === statusFilter)
   ) || [];
 
+  useEffect(() => {
+    document.title = "Team Lead Dashboard"; // 🔥 Update the title dynamically
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
   <div className="flex-1 h-full min-h-screen p-6 overflow-auto bg-gray-100">

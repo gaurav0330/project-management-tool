@@ -105,7 +105,6 @@ const TaskManagementPage = ({ projectId }) => {
   };
 
 
-
   const handleCommentTask = (taskId) => {
     alert(`Comment on Task ID: ${taskId}`);
   };
