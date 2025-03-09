@@ -26,7 +26,6 @@ const CreateTeam = ({ projectId }) => {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
 
   useEffect(() => {
-    console.log("🔍 Debug: Received projectId:", projectId);
     if (!projectId) {
       console.error("❌ Error: projectId is undefined or null!");
     }
@@ -39,7 +38,7 @@ const CreateTeam = ({ projectId }) => {
     setLoading(true);
 
     try {
-      console.log("🔍 Debug: Submitting with:", { projectId, teamName, description });
+   
 
       const { data } = await createTeam({
         variables: {
@@ -49,7 +48,6 @@ const CreateTeam = ({ projectId }) => {
         },
       });
 
-      console.log("✅ Mutation response:", data);
 
       if (data.createTeam.success) {
         setSnackbar({ open: true, message: "Team created successfully!", severity: "success" });

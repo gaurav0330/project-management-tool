@@ -14,8 +14,7 @@ getProjectsByLeadId: async (leadId) => {
  
  assignTeamMembers : async (projectId, teamMembers, user) => {
   try {
-      console.log("Received projectId:", projectId);
-      console.log("Received teamMembers:", teamMembers);
+      
 
       if (!user) {
           return { success: false, message: "Unauthorized: Please log in." };
@@ -56,7 +55,7 @@ getProjectsByLeadId: async (leadId) => {
           };
       });
 
-      console.log("✅ Formatted team members:", formattedTeamMembers);
+ 
 
       // Add team members to the project
       project.teamMembers.push(...formattedTeamMembers);
@@ -66,7 +65,6 @@ getProjectsByLeadId: async (leadId) => {
       const updatedProject = await Project.findById(projectId)
           .populate("teamMembers.teamMemberId");
 
-      console.log("✅ Successfully updated project:", updatedProject);
 
  // Fetch team member details for emails
  for (const member of formattedTeamMembers) {

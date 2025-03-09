@@ -25,7 +25,6 @@ const TeamMembersList = ({ projectId }) => {
 
   const { success, message, members } = data?.getMembersByProjectId || {};
 
-  console.log("Fetched Members:", members); // ✅ Debugging
 
   if (!success) return <p className="text-red-500">{message}</p>;
 

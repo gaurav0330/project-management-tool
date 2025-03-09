@@ -17,7 +17,6 @@ const authMiddleware = async ({ req }) => {
     const user = await User.findById(decoded.id).select("-password"); // ✅ Exclude password for security
     if (!user) return { user: null };
 
-    console.log("Authenticated User:", user); // 🔍 Debugging
     return { user };
   } catch (err) {
     console.error("Auth Middleware Error:", err.message); // 🔍 Log error

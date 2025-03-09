@@ -144,7 +144,6 @@ const resolvers = {
           .filter(task => ["Needs Revision", "Rejected", "Pending Approval"].includes(task.status))
           .map(async (task) => {
             const user = await User.findById(task.assignedTo); 
-            console.log(user);
             return {
               taskId: task._id,
               title: task.title,

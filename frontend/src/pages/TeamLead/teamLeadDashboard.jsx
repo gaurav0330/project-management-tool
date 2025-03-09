@@ -33,7 +33,7 @@ const TeamLeadDashboard = () => {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        // console.log("🔑 Decoded Token:", decoded); // Debugging
+  
         setLeadId(decoded.userId || decoded.id || decoded._id); // Use the correct field
       } catch (error) {
         console.error("❌ Invalid token:", error);
@@ -48,7 +48,6 @@ const TeamLeadDashboard = () => {
     fetchPolicy: "network-only", // Ensures fresh data is fetched
   });
 
-  // console.log("🔍 Apollo Query Response:", { data, loading, error });
   if (error) console.error("❌ GraphQL Error:", error);
 
   // ✅ Filter Projects Based on Search and Status

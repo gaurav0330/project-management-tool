@@ -53,7 +53,7 @@ const projectResolvers = {
       }
     
       try {
-        console.log(`🔍 Fetching leads for project ID: ${projectId}`);
+
     
         // Find the project
         const project = await Project.findById(projectId);
@@ -68,11 +68,10 @@ const projectResolvers = {
     
         // Extract team lead IDs
         const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
-        console.log("📌 Team Lead IDs:", teamLeadIds);
+        
     
         // Fetch all users in one query
         const users = await User.find({ _id: { $in: teamLeadIds } });
-        console.log("👥 Retrieved Users:", users);
     
         // Map leads with user details
         const teamLeads = project.teamLeads
@@ -97,7 +96,6 @@ const projectResolvers = {
           })
           .filter(Boolean); // Remove any null values
     
-        console.log("✅ Final Team Leads:", teamLeads);
     
         return {
           success: true,
@@ -121,7 +119,7 @@ const projectResolvers = {
       if (!user || user.role !== "Project_Manager") {
         throw new ApolloError("Unauthorized! Only Project Managers can create projects.", "FORBIDDEN");
       }
-  console.log(category);
+  
       const project = await projectService.createProject({
         title,
         description,
@@ -131,7 +129,7 @@ const projectResolvers = {
         managerId: user.id
       });
 
-      console.log(project);
+      
 
       return {
         ...project._doc,

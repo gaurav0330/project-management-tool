@@ -30,10 +30,7 @@ const taskService = {
     
  getTasksByManager : async (managerId, projectId) => {
     try {
-        console.log("Fetching tasks for Manager ID:", managerId);
-        if (projectId) {
-            console.log("Filtering by Project ID:", projectId);
-        }
+       
 
         const filter = { createdBy: managerId }; // Filter tasks by the manager who created them
 
@@ -41,13 +38,13 @@ const taskService = {
             filter.project = projectId; // If projectId is provided, filter tasks by project
         }
 
-        console.log("Applied Filter:", filter);
+    
 
         const tasks = await Task.find(filter)
             .populate("createdBy")
             .lean(); 
             
-        console.log("Retrieved Tasks:", tasks);
+    
 
         const userIds = tasks.map(task => task.assignedTo).filter(id => id); // Get unique user IDs
         const users = await User.find({ _id: { $in: userIds } }, "username").lean(); // Fetch usernames
@@ -76,9 +73,7 @@ const taskService = {
 
 getTasksByTeamLead: async (teamLeadId, memberId, projectId) => {
     try {
-        console.log("Fetching tasks created by Team Lead ID:", teamLeadId);
-        if (memberId) console.log("Filtering by Member ID:", memberId);
-        if (projectId) console.log("Filtering by Project ID:", projectId);
+
 
         // Build the filter query
         const filter = { createdBy: teamLeadId };
@@ -91,14 +86,14 @@ getTasksByTeamLead: async (teamLeadId, memberId, projectId) => {
             filter.project = projectId;
         }
 
-        console.log("Applied Filter:", filter);
+ 
 
         // Fetch tasks
         const tasks = await Task.find(filter)
             .populate("createdBy", "name") // Populate createdBy with name
             .lean();
 
-        console.log("Retrieved Tasks:", tasks);
+
 
         // Fetch usernames for assignedTo users
         const userIds = tasks.map(task => task.assignedTo).filter(id => id); // Get unique user IDs
@@ -133,9 +128,7 @@ getTasksByTeamLead: async (teamLeadId, memberId, projectId) => {
 
 getTasksForMember : async (memberId, projectLeadId, projectId) => {
     try {
-        console.log("Fetching tasks assigned to Member ID:", memberId);
-        if (projectLeadId) console.log("Filtering by Project Lead ID:", projectLeadId);
-        if (projectId) console.log("Filtering by Project ID:", projectId);
+
 
         // Base filter: tasks assigned to the given member
         const filter = { assignedTo: memberId };
@@ -154,7 +147,7 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
             filter.project = { $in: projectIds };
         }
 
-        console.log("Applied Filter:", filter);
+   
 
         // Fetch tasks with populated fields
         const tasks = await Task.find(filter)
@@ -162,7 +155,7 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
             .populate("assignedTo")  // Team Member assigned to the task
             .lean();
 
-        console.log("Retrieved Tasks:", tasks);
+
 
         // Format tasks to return only required fields
         return tasks.map(task => ({
@@ -186,9 +179,7 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
 
  getTasksForTeamLead : async (teamLeadId, projectManagerId,projectId) => {
     try {
-        console.log("Fetching tasks assigned to Team Lead ID:", teamLeadId);
-        if (projectId) console.log("Filtering by Project ID:", projectId);
-        if (projectManagerId) console.log("Filtering by Project Manager ID:", projectManagerId);
+
 
         // Base filter: Tasks assigned to the given Team Lead
         const filter = { assignedTo: teamLeadId };
@@ -203,14 +194,13 @@ getTasksForMember : async (memberId, projectLeadId, projectId) => {
             filter.createdBy = projectManagerId;
         }
 
-        console.log("Applied Filter:", filter);
+  
 
         // Fetch tasks with populated fields
         const tasks = await Task.find(filter)
             .populate("createdBy")   // The user who created the task (Project Manager)
             .lean();
 
-        console.log("Retrieved Tasks:", tasks);
 
         const userIds = tasks.map(task => task.assignedTo).filter(id => id); // Get unique user IDs
         const users = await User.find({ _id: { $in: userIds } }, "username").lean(); // Fetch usernames

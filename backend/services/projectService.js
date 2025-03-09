@@ -49,8 +49,7 @@ const projectService = {
 
   assignTeamLeads : async (projectId, teamLeads, user) => {
     try {
-        console.log("Received projectId:", projectId);
-        console.log("Received teamLeads:", teamLeads);
+
 
         if (!user) {
             return { success: false, message: "Unauthorized: Please log in." };
@@ -82,14 +81,13 @@ const projectService = {
             };
         });
 
-        console.log("✅ Formatted team leads:", formattedTeamLeads);
 
         project.teamLeads.push(...formattedTeamLeads);
         await project.save();
 
         const updatedProject = await Project.findById(projectId).populate("teamLeads.teamLeadId");
 
-        console.log("✅ Successfully updated project:", updatedProject);
+
       
          // **Send Email to Assigned Team Leads**
          for (const lead of updatedProject.teamLeads) {

@@ -32,7 +32,6 @@ const apolloServer = new ApolloServer({
   resolvers,
   context: async ({ req }) => {
     const authContext = await authMiddleware({ req });
-    console.log("Context in ApolloServer:", authContext);
     return authContext;
   },
 });

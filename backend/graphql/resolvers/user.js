@@ -39,10 +39,8 @@ const userResolvers = {
 
       getAllManagers: async () => {
         try{
-          console.log("Fetching managers..."); // Debugging
           const managerUsers = await User.find({ role: "Project_Manager" });
-  
-          console.log("Managers found:", managerUsers); // Debugging
+
           return managerUsers.map(manager => ({
             ...manager._doc,
             id: manager._id.toString(),
@@ -55,10 +53,10 @@ const userResolvers = {
       // Get all users with role "Team_Lead"
       getAllLeads: async () => {
         try {
-          console.log("Fetching leads..."); // Debugging
+     
           const leadUsers = await User.find({ role: "Team_Lead" });
   
-          console.log("Leads found:", leadUsers); // Debugging
+
           return leadUsers.map(lead => ({
             ...lead._doc,
             id: lead._id.toString(),
@@ -72,10 +70,10 @@ const userResolvers = {
       // Get all users with role "Team_Member"
       getAllTeamMembers: async () => {
         try {
-          console.log("Fetching team members..."); // Debugging
+     
           const teamMembers = await User.find({ role: "Team_Member" });
   
-          console.log("Team Members found:", teamMembers); // Debugging
+
           return teamMembers.map(member => ({
             ...member._doc,
             id: member._id.toString(),

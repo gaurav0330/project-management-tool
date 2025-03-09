@@ -9,7 +9,7 @@ const {sendTaskApprovalRequestEmail} = require("../services/emailService");
 const memberService = {
    getProjectsByMember : async (memberId) => {
     try {
-      console.log("Service received memberId:", memberId);
+
       
       if (!memberId) {
         throw new Error("memberId is required in service function");
@@ -50,7 +50,7 @@ const memberService = {
         },
       ]);
   
-      console.log("Projects found:", projects);
+
       return projects;
     } catch (error) {
       console.error("Error fetching projects for member:", error);

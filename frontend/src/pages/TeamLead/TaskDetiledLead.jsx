@@ -69,7 +69,6 @@ const TaskDetails = ({ selectedTask, taskStatus, isCompleted, handleStatusChange
 
   const handleMessageSubmit = (e) => {
     e.preventDefault();
-    console.log("Message sent:", message);
     setMessage("");
   };
 

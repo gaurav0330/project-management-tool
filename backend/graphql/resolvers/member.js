@@ -10,7 +10,6 @@ const memberResolvers = {
   Query: {
     getProjectsByMember: async (_, { memberId }) => {
       try {
-        console.log("Received memberId:", memberId);
 
         if (!memberId) {
           throw new Error("memberId is required");
@@ -54,7 +53,7 @@ const memberResolvers = {
         // Find all teams associated with the given projectId
         const teams = await Team.find( projectId );
     
-        console.log("Teams Found:", teams);
+
     
         if (!teams || teams.length === 0) {
           return {
@@ -72,8 +71,6 @@ const memberResolvers = {
           });
         });
     
-        console.log("Extracted Member IDs:", memberIds);
-    
         if (memberIds.length === 0) {
           return {
             success: false,
@@ -85,7 +82,6 @@ const memberResolvers = {
         // Find all users matching these member IDs
         const members = await User.find({ _id: { $in: memberIds } });
     
-        console.log("Fetched Members from User Collection:", members);
     
         return {
           success: true,
