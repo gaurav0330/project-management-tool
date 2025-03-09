@@ -3,6 +3,7 @@ const Team = require("../../models/Teams");
 const Project = require("../../models/Project");
 const mongoose  = require("mongoose");
 const {sendTeamMemberAddedEmail} = require("../../services/emailService");
+const User = require("../../models/User");
 
 
 const teamResolvers = {
