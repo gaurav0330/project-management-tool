@@ -9,7 +9,7 @@ import {
   MdMenu,
   MdClose,
 } from "react-icons/md";
-import "./SideBar.css"; // Import sidebar styles
+import "./Sidebar.css"; // Import sidebar styles
 
 const TeamSidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
