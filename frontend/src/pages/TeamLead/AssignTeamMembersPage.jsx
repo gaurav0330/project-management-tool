@@ -30,9 +30,8 @@ const ADD_MEMBERS_TO_TEAM = gql`
   }
 `;
 
-function AssignTeamMembers() {
+function AssignTeamMembers({projectId, teamId}) { 
   const navigate = useNavigate();
-  const {projectId,teamId } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [assignments, setAssignments] = useState([]);
 
