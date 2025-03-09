@@ -31,7 +31,7 @@ import TaskManagementPage from './pages/TeamLead/TaskManagementPage';
 import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
-import TeamDetails from './pages/TeamLead/Teamdetails';
+import TeamDetails from './pages/TeamLead/TeamDetails';
 
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
