@@ -1,9 +1,10 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL;
 // GraphQL API Endpoint
 const httpLink = createHttpLink({
-  uri: "https://project-management-tool-af4j.onrender.com/graphql", // Replace with your backend URL
+  uri: SOCKET_URL, // Replace with your backend URL
 });
 
 // Middleware to Attach JWT Token to Headers
