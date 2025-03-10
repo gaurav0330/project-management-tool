@@ -1,7 +1,7 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
-const SOCKET_URL = `${import.meta.env.VITE_SOCKET_URL}/graphql`; // Append /graphql
+const SOCKET_URL = import.meta.env.VITE_API_BASE; // Append /graphql
 // GraphQL API Endpoint
 const httpLink = createHttpLink({
   uri: SOCKET_URL, // Replace with your backend URL

@@ -1,5 +1,7 @@
 {
-    "rewrites": [
-      { "source": "/(.*)", "destination": "/" }
-    ]
-  }
+  "rewrites": [
+    { "source": "/graphql", "destination": "https://backend-proxy.gauravjikar070806.workers.dev/graphql" },
+    { "source": "/ws", "destination": "https://backend-proxy.gauravjikar070806.workers.dev/ws" },
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
