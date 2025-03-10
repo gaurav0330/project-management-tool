@@ -8,6 +8,7 @@ const typeDefs = require("./graphql/typeDefs");
 const resolvers = require("./graphql/resolvers");
 const authMiddleware = require("./middleware/authmiddleware");
 const setupSocket = require("./socket"); // Import the setupSocket function
+const cors = require("cors");
 
 dotenv.config();
 
