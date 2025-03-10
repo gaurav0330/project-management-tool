@@ -12,13 +12,17 @@ const setupSocket = require("./socket"); // Import the setupSocket function
 dotenv.config();
 
 const app = express();
+
+
+const FRONTEND_URL = process.env.FRONTEND_URL;
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 // Create HTTP server
 const httpServer = http.createServer(app);
 
 // Initialize Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Allow your frontend URL
+    origin: FRONTEND_URL, // Allow your frontend URL
     methods: ["GET", "POST"], // Allow necessary HTTP methods
     credentials: true // Allow credentials if needed
   }
