@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import Logo from "../../../components/authComponent/Logo";
 import IllustrationSection from "../../../components/authComponent/IllustrationSection";
 
+const API_KEY = "YOUR_QUICKEMAIL_API_KEY";
+
 function SignUpPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -12,8 +14,8 @@ function SignUpPage() {
     email: "",
     password: "",
     role: "Project_Manager",
- // Default role
   });
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const [signup, { loading, error }] = useMutation(SIGNUP_MUTATION, {
     onCompleted: (data) => {
@@ -26,19 +28,36 @@ function SignUpPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
+  const verifyEmail = async (email) => {
     try {
-      const { data } = await signup({ variables: formData });
-      localStorage.setItem("token", data.signup.token);
-      navigate("/dashboard");
-    } catch (err) {
-      console.error("Signup Error:", err);
-      alert(err.message); // Display the error from the backend
+      const response = await fetch(
+        `https://api.quickemailverification.com/v1/verify?email=${email}&apikey=&apikey=${process.env.REACT_APP_QUICK_EMAIL_API_KEY}`
+      );
+      const data = await response.json();
+
+      // Check if email is valid and not disposable
+      return data.result === "valid" && data.disposable === "false";
+    } catch (error) {
+      console.error("Email verification failed:", error);
+      return false; // Fail-safe mechanism
     }
   };
-  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const isValidEmail = await verifyEmail(formData.email);
+    if (!isValidEmail) {
+      setErrorMessage("Invalid or temporary email. Please use a valid email.");
+      return;
+    }
+
+    try {
+      await signup({ variables: formData });
+    } catch (err) {
+      console.error("Signup Error:", err);
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
@@ -88,18 +107,16 @@ function SignUpPage() {
                 required
                 className="w-full p-2 mb-2 border rounded"
               />
-             <select
-  name="role"
-  value={formData.role}
-  onChange={handleChange}
-  className="w-full p-2 mb-4 border rounded"
->
-  <option value="Project_Manager">Project Manager</option>
-  <option value="Team_Lead">Team Lead</option>
-  <option value="Team_Member">Team Member</option>
-</select>
-
-
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full p-2 mb-4 border rounded"
+              >
+                <option value="Project_Manager">Project Manager</option>
+                <option value="Team_Lead">Team Lead</option>
+                <option value="Team_Member">Team Member</option>
+              </select>
 
               <button
                 type="submit"
@@ -111,6 +128,7 @@ function SignUpPage() {
             </form>
 
             {error && <p className="mt-2 text-red-500">{error.message}</p>}
+            {errorMessage && <p className="mt-2 text-red-500">{errorMessage}</p>}
 
             <p className="mt-6 text-center text-gray-500">
               Already have an account?{" "}
