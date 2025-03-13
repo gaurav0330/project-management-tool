@@ -49,11 +49,11 @@ function SignUpPage() {
     e.preventDefault();
     
 
-    const isValidEmail = await verifyEmail(formData.email);
-    if (!isValidEmail) {
-      setErrorMessage("Invalid or temporary email. Please use a valid email.");
-      return;
-    }
+    // const isValidEmail = await verifyEmail(formData.email);
+    // if (!isValidEmail) {
+    //   setErrorMessage("Invalid or temporary email. Please use a valid email.");
+    //   return;
+    // }
 
     try {
       await signup({ variables: formData });
