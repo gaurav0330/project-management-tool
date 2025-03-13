@@ -31,7 +31,7 @@ function SignUpPage() {
   const verifyEmail = async (email) => {
     try {
       const response = await fetch(
-        `https://api.quickemailverification.com/v1/verify?email=${email}&apikey=&apikey=${process.env.REACT_APP_QUICK_EMAIL_API_KEY}`
+        `https://api.quickemailverification.com/v1/verify?email=${email}&apikey=${process.env.REACT_APP_QUICK_EMAIL_API_KEY}`
       );
       const data = await response.json();
 
@@ -47,6 +47,7 @@ function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
 
     const isValidEmail = await verifyEmail(formData.email);
     if (!isValidEmail) {
