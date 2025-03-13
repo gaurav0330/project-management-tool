@@ -38,7 +38,10 @@ const verifyEmail = async (email) => {
       }
   
       // Check for valid format, MX record, and non-disposable email
-      return data.format_valid && data.mx_found && !data.disposable;
+      if(data.format_valid && data.mx_found && !data.disposable){
+        return true
+      };
+
     } catch (error) {
       console.error("Maileroo API Error:", error.message || error);
       return false; // If Maileroo API fails, treat it as an invalid email
