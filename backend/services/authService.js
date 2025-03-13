@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { sendLoginEmail } = require("../services/emailService");
-
+const axios = require("axios");
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -13,7 +13,46 @@ const generateToken = (user) => {
     );
 };
 
+const verifyEmail = async (email) => {
+    const apiKey = process.env.MAILEROO_API_KEY;
+  
+    try {
+      const response = await axios.post(
+        "https://verify.maileroo.net/check",
+        {
+          api_key: apiKey,
+          email_address: email,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      const { success, data } = response.data;
+  
+      if (!success) throw new Error("Email verification failed");
+  
+      // Check for valid format, MX record, and non-disposable email
+      if (!data.format_valid || !data.mx_found || data.disposable) {
+        throw new Error("Invalid or temporary email");
+      }
+  
+      return true; // Email is valid
+    } catch (error) {
+      console.error("Maileroo API Error:", error);
+      throw new Error("Email verification failed");
+    }
+  };
+
 const signup = async (username, email, password, role) => {
+
+    const emailVerificationResponse = await verifyEmail(email);
+
+    if (!emailVerificationResponse.data.mx_found || emailVerificationResponse.data.disposable) {
+      throw new Error("Invalid or temporary email. Please use a valid email.");
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) throw new Error("User already exists");
 
@@ -28,6 +67,7 @@ const signup = async (username, email, password, role) => {
 };
 
 const login = async (email, password) => {
+
     const user = await User.findOne({ email });
     if (!user) throw new Error("User not found");
 
