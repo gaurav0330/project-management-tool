@@ -32,7 +32,7 @@ const verifyEmail = async (email) => {
   
       const { success, data } = response.data || {};
   
-      if (!success || !data) throw new Error("Email verification failed");
+      if (!success || !data) throw new Error("Invalid response from Maileroo API");
   
       // Check for valid format, MX record, and non-disposable email
       if (!data.format_valid || !data.mx_found || data.disposable) {
@@ -49,7 +49,7 @@ const verifyEmail = async (email) => {
 
 const signup = async (username, email, password, role) => {
 
-    const emailVerificationResponse = await verifyEmail(email);
+     await verifyEmail(email);
 
     if (!emailVerificationResponse.data.mx_found || emailVerificationResponse.data.disposable) {
       throw new Error("Invalid or temporary email. Please use a valid email.");
