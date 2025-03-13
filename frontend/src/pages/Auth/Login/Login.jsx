@@ -15,8 +15,8 @@ function LoginPage() {
   const [redirectPath, setRedirectPath] = useState(null);
 
   const [formData, setFormData] = useState({
-    email: "@gmail.com",
-    password: "111111",
+    email: "",
+    password: "",
   });
 
   const [login, { loading, error }] = useMutation(LOGIN_MUTATION, {

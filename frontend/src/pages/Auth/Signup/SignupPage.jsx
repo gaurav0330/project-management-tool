@@ -9,8 +9,8 @@ function SignUpPage() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
-    email: "@gmail.com",
-    password: "111111",
+    email: "",
+    password: "",
     role: "Project_Manager",
  // Default role
   });
@@ -28,12 +28,17 @@ function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
     try {
-      await signup({ variables: formData });
+      const { data } = await signup({ variables: formData });
+      localStorage.setItem("token", data.signup.token);
+      navigate("/");
     } catch (err) {
       console.error("Signup Error:", err);
+      alert(err.message); // Display the error from the backend
     }
   };
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
