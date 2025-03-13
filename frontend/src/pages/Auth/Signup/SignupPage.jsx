@@ -36,7 +36,9 @@ function SignUpPage() {
       const data = await response.json();
 
       // Check if email is valid and not disposable
-      return data.result === "valid" && data.disposable === "false";
+       if(data.result === "valid" && data.disposable === "false"){
+        return true;
+      }
     } catch (error) {
       console.error("Email verification failed:", error);
       return false; // Fail-safe mechanism
