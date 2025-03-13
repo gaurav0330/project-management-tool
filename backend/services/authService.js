@@ -49,11 +49,7 @@ const verifyEmail = async (email) => {
 
 const signup = async (username, email, password, role) => {
 
-     await verifyEmail(email);
-
-    if (!emailVerificationResponse.data.mx_found || emailVerificationResponse.data.disposable) {
-      throw new Error("Invalid or temporary email. Please use a valid email.");
-    }
+    await verifyEmail(email);
     const existingUser = await User.findOne({ email });
     if (existingUser) throw new Error("User already exists");
 
