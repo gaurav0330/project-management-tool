@@ -20,6 +20,22 @@ function CreateProject() {
   const [createProject, { loading, error }] = useMutation(CREATE_PROJECT_MUTATION);
 
   const handleCreateProject = async () => {
+    const today = new Date().toISOString().split("T")[0]; // Get today's date in YYYY-MM-DD format
+
+    if (!startDate || startDate < today) {
+      setSnackbarMessage("Start date cannot be in the past!");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    if (!endDate || endDate < startDate) {
+      setSnackbarMessage("End date must be after the start date!");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      return;
+    }
+
     try {
       const { data } = await createProject({
         variables: {
@@ -45,6 +61,7 @@ function CreateProject() {
     }
   };
 
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}
       className="min-h-screen p-8 bg-gray-50 rounded-3xl">
@@ -69,8 +86,13 @@ function CreateProject() {
               <label className="block mb-1 text-sm font-medium text-gray-700">Start Date</label>
               <div className="relative">
                 <Calendar className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]} // Restrict past dates
+                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md"
+                />
               </div>
             </div>
 
@@ -78,8 +100,13 @@ function CreateProject() {
               <label className="block mb-1 text-sm font-medium text-gray-700">End Date</label>
               <div className="relative">
                 <Calendar className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md" />
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  min={startDate || new Date().toISOString().split("T")[0]} // Ensure end date is not before start date
+                  className="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-md"
+                />
               </div>
             </div>
           </div>
