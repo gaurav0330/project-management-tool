@@ -30,9 +30,9 @@ const verifyEmail = async (email) => {
         }
       );
   
-      const { success, data } = response.data;
+      const { success, data } = response.data || {};
   
-      if (!success) throw new Error("Email verification failed");
+      if (!success || !data) throw new Error("Email verification failed");
   
       // Check for valid format, MX record, and non-disposable email
       if (!data.format_valid || !data.mx_found || data.disposable) {
@@ -41,10 +41,11 @@ const verifyEmail = async (email) => {
   
       return true; // Email is valid
     } catch (error) {
-      console.error("Maileroo API Error:", error);
+      console.error("Maileroo API Error:", error.message || error);
       throw new Error("Email verification failed");
     }
   };
+  
 
 const signup = async (username, email, password, role) => {
 
