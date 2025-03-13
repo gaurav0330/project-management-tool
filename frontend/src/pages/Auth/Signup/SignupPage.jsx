@@ -28,17 +28,12 @@ function SignUpPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
     try {
-      const { data } = await signup({ variables: formData });
-      localStorage.setItem("token", data.signup.token);
-      navigate("/");
+      await signup({ variables: formData });
     } catch (err) {
       console.error("Signup Error:", err);
-      alert(err.message); // Display the error from the backend
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
