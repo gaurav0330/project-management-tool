@@ -133,15 +133,15 @@ export default function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <FaMapMarkerAlt className="text-primary-500 mt-1 flex-shrink-0" />
-                <span className="text-black text-sm">1234 Innovation Drive, Tech Valley, CA 94043</span>
+                <span className="text-black text-sm"> INDIA || BHARAT </span>
               </li>
               <li className="flex items-center space-x-3">
                 <FaEnvelope className="text-primary-500 flex-shrink-0" />
-                <a href="mailto:contact@projectflow.com" className="text-black hover:text-gray-700 text-sm transition-colors duration-300">contact@projectflow.com</a>
+                <a href="mailto:contact@projectflow.com" className="text-black hover:text-gray-700 text-sm transition-colors duration-300">gauravjikar070806@gmail.com</a>
               </li>
               <li className="flex items-center space-x-3">
                 <FaPhone className="text-primary-500 flex-shrink-0" />
-                <a href="tel:+11234567890" className="text-black hover:text-gray-700 text-sm transition-colors duration-300">(123) 456-7890</a>
+                <a href="tel:+11234567890" className="text-black hover:text-gray-700 text-sm transition-colors duration-300">+91 9175333055</a>
               </li>
             </ul>
           </div>
