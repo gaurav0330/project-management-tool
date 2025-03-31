@@ -64,7 +64,7 @@ export default function Footer() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              ProjectFlow
+              YOJANDESK
               <span className="absolute -bottom-1 left-0 w-1/2 h-1 bg-primary-500"></span>
             </motion.h3>
             <p className="text-black mb-4 text-sm leading-relaxed">
