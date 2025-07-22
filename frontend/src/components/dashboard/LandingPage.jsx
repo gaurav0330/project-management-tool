@@ -48,7 +48,7 @@ export default function TrelloSection() {
   };
 
   return (
-    <section className="section-padding bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
+    <section className="py-16 bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
       <div className="section-container">
         <div className="flex flex-col items-center justify-between lg:flex-row gap-12">
           {/* Left Section */}
@@ -154,7 +154,7 @@ export function FeaturesSection() {
   ];
 
   return (
-    <section className="section-padding bg-bg-primary-light dark:bg-bg-primary-dark transition-colors duration-300">
+    <section className="section-padding py-16 bg-bg-primary-light dark:bg-bg-primary-dark transition-colors duration-300">
       <div className="section-container">
         <motion.div
           className="text-center mb-16"
@@ -235,7 +235,7 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section className="section-padding bg-bg-accent-light dark:bg-bg-accent-dark transition-colors duration-300">
+    <section className="section-padding py-16 bg-bg-accent-light dark:bg-bg-accent-dark transition-colors duration-300">
       <div className="section-container">
         <motion.div
           className="text-center mb-16"

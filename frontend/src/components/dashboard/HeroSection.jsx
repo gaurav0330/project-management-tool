@@ -7,7 +7,7 @@ const HeroSection = () => {
   const { isDark } = useTheme();
 
   return (
-    <section className="relative section-padding overflow-hidden bg-gradient-to-br from-brand-primary-600 via-brand-primary-700 to-brand-secondary-600 dark:from-bg-secondary-dark dark:via-bg-primary-dark dark:to-bg-accent-dark text-white dark:text-txt-primary-dark transition-colors duration-300">
+    <section className="relative section-padding py-16 overflow-hidden bg-gradient-to-br from-brand-primary-600 via-brand-primary-700 to-brand-secondary-600 dark:from-bg-secondary-dark dark:via-bg-primary-dark dark:to-bg-accent-dark text-white dark:text-txt-primary-dark transition-colors duration-300">
       {/* Background decorative elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-300/10 dark:bg-brand-primary-500/10 rounded-full blur-3xl"></div>
