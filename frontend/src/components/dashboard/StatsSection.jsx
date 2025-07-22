@@ -13,7 +13,7 @@ const StatsSection = () => {
   ];
 
   return (
-    <section className="section-padding bg-bg-primary-light dark:bg-bg-primary-dark border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
+    <section className="section-padding py-16 bg-bg-primary-light dark:bg-bg-primary-dark border-b border-gray-200 dark:border-gray-700 transition-colors duration-300">
       <div className="section-container">
         {/* ✅ Optional section title */}
         <motion.div
