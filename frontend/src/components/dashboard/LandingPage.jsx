@@ -1,8 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import landingImage from "../../assets/landing.png";
+import landingImage from "../../assets/landing_img1.jpg";
 import taskImg from "../../assets/task.jpg";
-import colImg from "../../assets/shakehand.jpg";
+import colImg from "../../assets/Team Collaboration.jpg";
 import intImg from "../../assets/int.jpg";
 import { FaQuoteLeft } from "react-icons/fa";
 import { FaTasks, FaUsers, FaPlug } from "react-icons/fa";
