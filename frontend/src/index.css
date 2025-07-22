@@ -1,3 +1,156 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ✅ Modern CSS Custom Properties */
+@layer base {
+  :root {
+    /* Light mode variables */
+    --bg-primary-light: #ffffff;
+    --bg-secondary-light: #f8fafc;
+    --bg-accent-light: #f1f5f9;
+    --txt-primary-light: #1e293b;
+    --txt-secondary-light: #64748b;
+    --heading-primary-light: #0f172a;
+    --heading-accent-light: #3b82f6;
+    --interactive-primary-light: #3b82f6;
+    --interactive-hover-light: #2563eb;
+  }
+  
+  .dark {
+    --bg-primary-light: #0f172a;
+    --bg-secondary-light: #1e293b;
+    --bg-accent-light: #334155;
+    --txt-primary-light: #f8fafc;
+    --txt-secondary-light: #cbd5e1;
+    --heading-primary-light: #ffffff;
+    --heading-accent-light: #60a5fa;
+    --interactive-primary-light: #60a5fa;
+    --interactive-hover-light: #3b82f6;
+  }
+  
+  html {
+    @apply font-body;
+  }
+  
+  body {
+    background-color: var(--bg-primary-light);
+    color: var(--txt-primary-light);
+    @apply transition-colors duration-300;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold;
+    color: var(--heading-primary-light);
+  }
+}
+
+/* ✅ Modern Component Classes */
+@layer components {
+  /* Modern Button Variants */
+  .btn-primary {
+    @apply font-button bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 hover:from-brand-primary-600 hover:to-brand-primary-700 text-white font-medium py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200;
+  }
+  
+  .btn-secondary {
+    background-color: var(--bg-accent-light);
+    color: var(--txt-primary-light);
+    @apply font-button border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 font-medium py-3 px-8 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200;
+  }
+  
+  .btn-outline {
+    border: 2px solid var(--interactive-primary-light);
+    color: var(--interactive-primary-light);
+    @apply font-button hover:text-white font-medium py-3 px-8 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200;
+  }
+  .btn-outline:hover {
+    background-color: var(--interactive-primary-light);
+  }
+  
+  /* Modern Card Component */
+  .card {
+    background-color: var(--bg-primary-light);
+    @apply border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg hover:shadow-xl p-8 transition-all duration-300 backdrop-blur-sm;
+  }
+  
+  /* Modern Typography */
+  .heading-xl {
+    @apply font-heading text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-brand-primary-600 via-brand-secondary-600 to-brand-accent-500 bg-clip-text text-transparent leading-tight;
+  }
+  
+  .heading-lg {
+    color: var(--heading-primary-light);
+    @apply font-heading text-3xl md:text-5xl font-bold;
+  }
+  
+  .heading-accent {
+    color: var(--heading-accent-light);
+    @apply font-heading text-2xl md:text-3xl font-bold;
+  }
+  
+  .text-body {
+    color: var(--txt-primary-light);
+    @apply font-body leading-relaxed;
+  }
+  
+  .text-muted {
+    color: var(--txt-secondary-light);
+    @apply font-body;
+  }
+  
+  /* Modern Layout Classes */
+  .section-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .section-padding {
+    @apply py-20 lg:py-32;
+  }
+  
+  .page-bg {
+    background: linear-gradient(135deg, var(--bg-secondary-light) 0%, var(--bg-primary-light) 100%);
+    @apply min-h-screen transition-all duration-500;
+  }
+  
+  /* Modern Glassmorphism Effect */
+  .glass {
+    @apply backdrop-blur-md bg-white/10 dark:bg-gray-800/10 border border-white/20 dark:border-gray-700/20 rounded-2xl shadow-2xl;
+  }
+  
+  /* Modern Gradient Backgrounds */
+  .gradient-primary {
+    @apply bg-gradient-to-br from-brand-primary-500 via-brand-primary-600 to-brand-secondary-600;
+  }
+  
+  .gradient-secondary {
+    @apply bg-gradient-to-br from-brand-secondary-500 via-brand-secondary-600 to-brand-accent-500;
+  }
+}
+
+/* ✅ Modern Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ✅ Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--interactive-primary-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--interactive-hover-light);
+}

@@ -4,20 +4,23 @@ import "./index.css";
 import App from "./App.jsx";
 import { ApolloProvider } from "@apollo/client";
 import client from "./apolloClient";
-import { AuthProvider } from "./components/authContext";  // ✅ Import AuthProvider
+import { AuthProvider } from "./components/authContext";
+import { ThemeProvider } from "./contexts/ThemeContext.jsx"; // ✅ Import ThemeProvider
 
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
   createRoot(rootElement).render(
     <React.StrictMode>
-      <AuthProvider>  {/* ✅ Wrap everything inside AuthProvider */}
-        <ApolloProvider client={client}>
-          <App />
-        </ApolloProvider>
-      </AuthProvider>
+      <ThemeProvider> {/* ✅ Wrap with ThemeProvider as outermost */}
+        <AuthProvider> {/* ✅ AuthProvider stays inside */}
+          <ApolloProvider client={client}>
+            <App />
+          </ApolloProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </React.StrictMode>
   );
 } else {
-  console.error("⚠️ Root element not found. Make sure your HTML file has a `<div id='root'></div>`.");
+  console.error("Refresh the page.");
 }

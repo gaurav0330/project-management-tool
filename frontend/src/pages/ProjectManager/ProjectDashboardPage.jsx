@@ -124,7 +124,6 @@ export default function ProjectDashboard() {
             )}
           </>
         )}
-        <Footer />
       </div>
     </div>
   );
