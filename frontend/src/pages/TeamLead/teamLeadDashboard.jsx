@@ -96,8 +96,6 @@ const TeamLeadDashboard = () => {
     )}
   </div>
 
-  {/* Footer at bottom */}
-  <Footer />
 </div>
 
   );

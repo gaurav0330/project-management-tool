@@ -98,10 +98,8 @@ export default function ProjectDashboard() {
         )}
                 </div>
       </div>
-
-      {/* Footer */}
       <div>
-      {/* <Footer /> */}
+ 
     </div>
     </div>
   );

@@ -1,180 +1,206 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { MdSearch, MdHome, MdNotifications, MdMessage, MdHelp } from "react-icons/md";
-import { jwtDecode } from "jwt-decode";
-import { gql, useQuery } from "@apollo/client"; // Import GraphQL query hook
-import logo from '../../assets/logo.png';
-import Alert from '@mui/material/Alert';
+import { Link, useNavigate } from "react-router-dom";
+import {
+  MdSearch,
+  MdHome,
+  MdNotifications,
+  MdMessage,
+} from "react-icons/md";
+import { FaBars, FaTimes } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode"; // ✅ Fixed import with curly braces
+import { useQuery, gql } from "@apollo/client";
+import logo from "../../assets/logo.png";
+import ThemeToggle from "../ThemeToggle";
 import LogoutButton from "./Logout";
 
 const GET_USER = gql`
   query GetUser($userId: ID!) {
     getUser(userId: $userId) {
-      id
-      username
-      email
-      role
+      id username role
     }
   }
 `;
 
-const Navbar = () => {
+export default function Navbar() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     if (token) {
       try {
-        const decodedToken = jwtDecode(token);
-        setUserId(decodedToken.id); // Extract userId from token
-        setUserRole(decodedToken.role); // Extract user role from token
+        const { id, role } = jwtDecode(token);
+        setUserId(id);
+        setUserRole(role);
       } catch (error) {
-        console.error("Invalid token:", error);
+        console.error("Token decode error:", error);
       }
     }
   }, [token]);
 
-  // Fetch user details from backend
-  const { data, loading, error } = useQuery(GET_USER, {
+  const { data, loading } = useQuery(GET_USER, {
     variables: { userId },
-    skip: !userId, // Skip query if userId is not available
+    skip: !userId,
   });
-
   const user = data?.getUser || {};
 
-  // const handleLogout = () => {
-  //   if (<Alert> </Alert>) {
-  //     localStorage.removeItem("token");
-  //     navigate("/login");
-  //   }
-  // };
-
-  const handleDashboardRedirect = () => {
-    if (userRole) {
-      switch (userRole) {
-        case 'Project_Manager':
-          navigate('/projectDashboard');
-          break;
-        case 'Team_Lead':
-          navigate('/teamleaddashboard'); // Redirect to Team Lead dashboard
-          break;
-        case 'Team_Member':
-          navigate('/teammemberdashboard'); // Redirect to Team Member dashboard
-          break;
-        default:
-          navigate('/'); // Default dashboard
-          break;
-      }
+  const goDashboard = () => {
+    switch (userRole) {
+      case "Project_Manager": 
+        navigate("/projectDashboard");
+        break;
+      case "Team_Lead":      
+        navigate("/teamleaddashboard");
+        break;
+      case "Team_Member":    
+        navigate("/teammemberdashboard");
+        break;
+      default:               
+        navigate("/");
+        break;
     }
   };
 
+  // close mobile menu on resize
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    if (!mobileOpen) return;
+    const handler = () => setMobileOpen(false);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [mobileOpen]);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
-      <div className="flex items-center justify-between h-16 px-6 mx-auto max-w-1xl">
-        {/* Logo on the left */}
-        <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-          <img src={logo} alt="Logo" className="w-auto h-10" /> {/* Logo image */}
+    <nav className="fixed top-0 inset-x-0 z-50 bg-bg-primary-light dark:bg-bg-primary-dark shadow transition-colors">
+      <div className="section-container flex items-center justify-between h-16">
+        {/* Logo */}
+        <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
+          <img src={logo} alt="Logo" className="h-8" />
         </div>
 
-        {/* Right Side - Show items based on authentication */}
-        <div className="flex items-center space-x-4">
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center space-x-4">
           {token ? (
             <>
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100">
-                <MdNotifications className="w-6 h-6" />
-                <span className="absolute w-2 h-2 bg-red-500 rounded-full top-1 right-1"></span>
+              <button className="p-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition">
+                <MdNotifications size={20} className="text-txt-primary-light dark:text-txt-primary-dark" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              {/* Messages */}
+              {/* Messages - Hide for Project Manager */}
               {userRole !== "Project_Manager" && (
                 <button
-                  className="relative p-2 text-gray-600 transition duration-200 rounded-lg hover:bg-gray-100"
-                  onClick={() => navigate('/chat')}
+                  className="p-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition"
+                  onClick={() => navigate("/chat")}
                 >
-                  <MdMessage size={20} />
+                  <MdMessage size={20} className="text-txt-primary-light dark:text-txt-primary-dark" />
                 </button>
               )}
 
-
-
-              {/* Go to Dashboard Button */}
+              {/* Dashboard Button */}
               <button
-                className="flex items-center gap-2 px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
-                onClick={handleDashboardRedirect}
+                className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 text-white rounded-md transition"
+                onClick={goDashboard}
               >
                 <MdHome size={20} />
               </button>
 
-              {/* Profile Dropdown */}
+              {/* User Profile */}
               <div className="relative" ref={dropdownRef}>
-                <button
-                  className="flex items-center p-2 space-x-3 transition duration-200 rounded-lg hover:bg-gray-100"
-                  onClick={() => ""}
-                >
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full">
-                    <span className="text-sm font-medium text-blue-600">
-                      {loading ? "..." : user.username?.charAt(0).toUpperCase() || "U"}
-                    </span>
+                <button className="flex items-center p-2 space-x-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition">
+                  <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center">
+                    {loading ? "…" : (user.username?.charAt(0).toUpperCase() || "U")}
                   </div>
-                  <div className="hidden text-left md:block">
-                    <p className="text-sm font-medium text-gray-700">{loading ? "Loading..." : user.username || "User"}</p>
-                    <p className="text-xs text-gray-500">{loading ? "..." : user.role || "Member"}</p>
+                  <div className="text-left hidden lg:block">
+                    <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
+                      {loading ? "Loading..." : user.username || "User"}
+                    </p>
+                    <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+                      {loading ? "..." : user.role || "Member"}
+                    </p>
                   </div>
                 </button>
-
-                {/* Logout Dropdown */}
-                {isDropdownOpen && (
-                  <div className="absolute right-0 w-40 p-2 mt-2 bg-white rounded-lg shadow-lg">
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-4 py-2 text-sm text-left text-red-600 transition duration-200 rounded-lg hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
               </div>
 
-              {/* Logout Button at the rightmost end */}
               <LogoutButton />
+              <ThemeToggle />
             </>
           ) : (
             <>
-              <button
-                className="px-4 py-2 text-gray-700 transition duration-200 border border-gray-300 rounded-lg hover:bg-gray-100"
-                onClick={() => navigate("/login")}
+              <Link 
+                to="/login" 
+                className="px-4 py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
               >
                 Login
-              </button>
-              <button
-                className="px-4 py-2 text-white transition duration-200 bg-blue-600 rounded-lg hover:bg-blue-700"
-                onClick={() => navigate("/signup")}
-              >
+              </Link>
+              <Link to="/signup" className="btn-primary">
                 Sign Up
-              </button>
+              </Link>
+              <ThemeToggle />
             </>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <div className="md:hidden flex items-center space-x-2">
+          <ThemeToggle />
+          <button 
+            onClick={() => setMobileOpen(prev => !prev)} 
+            className="p-2 text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
+          >
+            {mobileOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg">
+          <div className="flex flex-col space-y-2 p-4">
+            {token ? (
+              <>
+                <button 
+                  onClick={goDashboard} 
+                  className="text-left py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                >
+                  Dashboard
+                </button>
+                {userRole !== "Project_Manager" && (
+                  <button 
+                    onClick={() => navigate("/chat")} 
+                    className="text-left py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                  >
+                    Chat
+                  </button>
+                )}
+                <div className="pt-2">
+                  <LogoutButton />
+                </div>
+              </>
+            ) : (
+              <>
+                <Link 
+                  to="/login" 
+                  className="py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/signup" 
+                  className="py-2 text-brand-primary-500 hover:text-brand-primary-600 transition"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
-
-
   );
-};
-
-export default Navbar;
+}

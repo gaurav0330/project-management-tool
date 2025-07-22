@@ -89,7 +89,6 @@ export default function TeamMemberDashboardPage() {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

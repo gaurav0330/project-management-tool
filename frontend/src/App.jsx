@@ -3,13 +3,13 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import './index.css';
 import Navbar from './components/Other/NavBar';
 import Footer from './components/Other/Footer';
-import ProtectedRoute from './components/protectedRoute';  // ✅ Import ProtectedRoute
-import { useAuth } from './components/authContext';  // ✅ Import Auth Context
+import ProtectedRoute from './components/protectedRoute';
+import { useAuth } from './components/authContext';
+import { useTheme } from './contexts/ThemeContext'; // ✅ Import theme context
 
 import Dashboard from './pages/Home/Dashboard';
 import SignUpPage from './pages/Auth/Signup/SignupPage';
 import LoginPage from './pages/Auth/Login/Login';
-// ✅ Unauthorized page
 
 // Project Manager Pages
 import ProjectDashboard from './pages/ProjectManager/ProjectDashboardPage';
@@ -31,34 +31,73 @@ import TaskManagementPage from './pages/TeamLead/TaskManagementPage';
 import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
-import TeamDetails from './pages/TeamLead/Teamdetails';
+import TeamDetails from './pages/TeamLead/TeamDetails';
 
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
 
-function App() {
-  const { userRole } = useAuth();  // ✅ Get user role
+// ✅ AppContent component with theme integration
+function AppContent() {
+  const { userRole } = useAuth();
+  const { isDark, theme } = useTheme(); // ✅ Get theme state
+  const location = useLocation();
 
+  // ✅ Define routes where Footer should be hidden
+  const hideFooterRoutes = [
+    "/login", 
+    "/signup",
+    "/projectDashboard",
+    "/teammemberdashboard",
+    "/teamleaddashboard",
+  ];
 
-  const hideNavbarFooterRoutes = ["/login", "/signup"];
+  // ✅ Define routes where container padding should be applied
+  const containerRoutes = [
+    "/projectDashboard",
+    "/createproject",
+    "/assigntask",
+    "/taskapproval",
+    "/teammemberdashboard",
+    "/teammembertask",
+    "/teamleaddashboard",
+    "/teamleadtaskm",
+    "/teamleadteamtask",
+    "/teamleadtaskDis",
+    "/create-group",
+    "/chat"
+  ];
+
+  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
+  const shouldUseContainer = containerRoutes.some(route => location.pathname.startsWith(route));
+
   return (
-
-    <Router>
+    <div className="page-bg min-h-screen"> {/* ✅ Theme-aware background */}
       <Navbar />
-
-      {/* {!shouldHideNavbarFooter && <Navbar />} Show Navbar only if not hidden */}
-      <div className="mt-16 main-content">
-
+      
+      <main className={`mt-16 main-content ${shouldUseContainer ? 'section-container section-padding' : ''}`}>
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
-          {/* <Route path="/" element={< />} /> */}
 
-          {/* Project Manager Only */}
-          <Route path="/projectDashboard" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><ProjectDashboard /></ProtectedRoute>} />
-          <Route path="/createproject" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><CreateProjectPage /></ProtectedRoute>} />
+          {/* 🔵 Project Manager Only Routes */}
+          <Route 
+            path="/projectDashboard" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <ProjectDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/createproject" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <CreateProjectPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path="/assignLead/:projectId"
             element={
@@ -67,14 +106,56 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/projectHome/:projectId" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><ProjectHomePage /></ProtectedRoute>} />
-          <Route path="/assigntask" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><AssignTaskPage /></ProtectedRoute>} />
-          <Route path="/taskapproval" element={<ProtectedRoute allowedRoles={["Project_Manager"]}><TaskApprovalPage /></ProtectedRoute>} />
+          <Route 
+            path="/projectHome/:projectId" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <ProjectHomePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/assigntask" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <AssignTaskPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/taskapproval" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <TaskApprovalPage />
+              </ProtectedRoute>
+            } 
+          />
 
-          {/* Team Member Only */}
-          <Route path="/teamMember/project/:projectId" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TeamMemberHome /></ProtectedRoute>} />
-          <Route path="/teammemberdashboard" element={<ProtectedRoute allowedRoles={["Team_Member"]}><TeamMemberDashboardPage /></ProtectedRoute>} />
-          <Route path="/teammembertask" element={<ProtectedRoute allowedRoles={["Team_Member"]}><MyTasksPage /></ProtectedRoute>} />
+          {/* 🟠 Team Member Only Routes */}
+          <Route 
+            path="/teamMember/project/:projectId" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Member"]}>
+                <TeamMemberHome />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teammemberdashboard" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Member"]}>
+                <TeamMemberDashboardPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teammembertask" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Member"]}>
+                <MyTasksPage />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path="/teammembertasksubmission/:projectId/:taskId"
             element={
@@ -84,15 +165,20 @@ function App() {
             }
           />
 
-          {/* Team Lead Only */}
-          <Route path="/teamleaddashboard" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TeamLeadDashboard /></ProtectedRoute>} />
+          {/* 🟡 Team Lead Only Routes */}
+          <Route 
+            path="/teamleaddashboard" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <TeamLeadDashboard />
+              </ProtectedRoute>
+            } 
+          />
           <Route
             path="/teamLead/project/:projectId"
             element={
               <ProtectedRoute allowedRoles={["Team_Lead"]}>
-                <>
-                  <LeadProjectHome />
-                </>
+                <LeadProjectHome />
               </ProtectedRoute>
             }
           />
@@ -104,22 +190,64 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route 
+            path="/teamleadtaskm" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <TaskManagementPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teamleadteamtask" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <DisplayTeamTaskPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teamleadtaskDis" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <TaskDistributionPage />
+              </ProtectedRoute>
+            } 
+          />
 
-          <Route path="/teamleadtaskm" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskManagementPage /></ProtectedRoute>} />
-          <Route path="/teamleadteamtask" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><DisplayTeamTaskPage /></ProtectedRoute>} />
-          <Route path="/teamleadtaskDis" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><TaskDistributionPage /></ProtectedRoute>} />
-
-          {/* Chat Testing*/}
-          <Route path="/create-group" element={<ProtectedRoute allowedRoles={["Team_Lead"]}><CreateGroupPage /></ProtectedRoute>} />
-          <Route path="/chat" element={<ProtectedRoute allowedRoles={["Team_Lead", "Team_Member"]}><ChatPage /></ProtectedRoute>} />
-
+          {/* 💬 Chat Routes */}
+          <Route 
+            path="/create-group" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <CreateGroupPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/chat" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead", "Team_Member"]}>
+                <ChatPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
-      </div>
+      </main>
+      
+      {/* ✅ Conditionally render Footer */}
+      {!shouldHideFooter && <Footer />}
+    </div>
+  );
+}
+
+// ✅ Main App component
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
 
 export default App;
-
-
-//HIl hfsgh
