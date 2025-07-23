@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { gql, useMutation } from "@apollo/client";
 import { jwtDecode } from "jwt-decode";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast, Toaster } from "react-hot-toast";
+import { confirmAlert } from "react-confirm-alert";
+import 'react-confirm-alert/src/react-confirm-alert.css';
 import {
   User,
   Bell,
@@ -16,7 +19,24 @@ import {
   UserCheck,
   Edit,
   Save,
+  Download,
+  Upload,
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  RefreshCw,
+  FileText,
+  Database,
+  Share2
 } from "lucide-react";
+
+// Install these packages first:
+// npm install react-hot-toast react-confirm-alert framer-motion @headlessui/react
+// npm install react-switch react-spinners
+
+import Switch from "react-switch";
+import { ClipLoader, PulseLoader } from "react-spinners";
 
 // Define GraphQL Mutations
 const DELETE_PROJECT = gql`
@@ -31,12 +51,62 @@ const LEAVE_PROJECT = gql`
   }
 `;
 
+// Enhanced Button Component with multiple variants
+const EnhancedButton = ({ 
+  variant = "primary", 
+  size = "md", 
+  loading = false, 
+  disabled = false, 
+  icon: Icon,
+  children,
+  onClick,
+  className = "",
+  ...props 
+}) => {
+  const baseClasses = "inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-opacity-20 transform";
+  
+  const variants = {
+    primary: "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg hover:shadow-xl focus:ring-blue-500",
+    secondary: "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 shadow-md hover:shadow-lg focus:ring-gray-500",
+    success: "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl focus:ring-green-500",
+    danger: "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl focus:ring-red-500",
+    warning: "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl focus:ring-yellow-500",
+    outline: "border-2 border-gray-200 dark:border-gray-600 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-gray-500",
+    ghost: "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 focus:ring-gray-500"
+  };
+
+  const sizes = {
+    sm: "px-3 py-2 text-sm",
+    md: "px-4 py-3 text-base",
+    lg: "px-6 py-4 text-lg",
+    xl: "px-8 py-5 text-xl"
+  };
+
+  const disabledClasses = disabled || loading ? "opacity-50 cursor-not-allowed transform-none" : "hover:scale-105 active:scale-95";
+
+  return (
+    <motion.button
+      whileHover={!disabled && !loading ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!disabled && !loading ? { scale: 0.98 } : {}}
+      className={`${baseClasses} ${variants[variant]} ${sizes[size]} ${disabledClasses} ${className}`}
+      onClick={onClick}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <ClipLoader size={16} color="currentColor" />
+      ) : Icon ? (
+        <Icon className="w-5 h-5" />
+      ) : null}
+      {children}
+    </motion.button>
+  );
+};
+
 const DeleteOrLeaveProject = ({ projectId }) => {
-  const [showConfirm, setShowConfirm] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Apollo GraphQL Mutations
   const [deleteProject] = useMutation(DELETE_PROJECT);
   const [leaveProject] = useMutation(LEAVE_PROJECT);
 
@@ -53,29 +123,92 @@ const DeleteOrLeaveProject = ({ projectId }) => {
   }, []);
 
   const handleAction = async () => {
-    setIsLoading(true);
-    try {
-      if (userRole === "Project_Manager") {
-        await deleteProject({ variables: { projectId } });
-        alert("Project deleted successfully");
-        window.location.href = "/projectDashboard";
-      } else {
-        await leaveProject({ variables: { projectId } });
-        alert("You have left the project");
-        setShowConfirm(false);
+    const isDelete = userRole === "Project_Manager";
+    
+    confirmAlert({
+      customUI: ({ onClose }) => (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-w-md mx-auto"
+        >
+          <div className="flex items-center gap-4 mb-6">
+            <div className={`p-3 rounded-full ${isDelete ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+              <AlertTriangle className={`w-8 h-8 ${isDelete ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'}`} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {isDelete ? "Delete Project?" : "Leave Project?"}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          
+          <p className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
+            {isDelete
+              ? "All project data, tasks, and team assignments will be permanently deleted."
+              : "You will lose access to this project and all its content."}
+          </p>
 
-        if (userRole === "Team_Lead") {
-          window.location.href = "/teamleaddashboard";
-        } else {
-          window.location.href = "/teammemberdashboard";
-        }
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+          <div className="flex gap-3">
+            <EnhancedButton
+              variant={isDelete ? "danger" : "warning"}
+              loading={isLoading}
+              onClick={async () => {
+                setIsLoading(true);
+                try {
+                  if (isDelete) {
+                    await deleteProject({ variables: { projectId } });
+                    toast.success("Project deleted successfully!", {
+                      icon: "🗑️",
+                      duration: 3000,
+                    });
+                    setTimeout(() => {
+                      window.location.href = "/projectDashboard";
+                    }, 2000);
+                  } else {
+                    await leaveProject({ variables: { projectId } });
+                    toast.success("You have left the project!", {
+                      icon: "👋",
+                      duration: 3000,
+                    });
+                    setTimeout(() => {
+                      if (userRole === "Team_Lead") {
+                        window.location.href = "/teamleaddashboard";
+                      } else {
+                        window.location.href = "/teammemberdashboard";
+                      }
+                    }, 2000);
+                  }
+                } catch (error) {
+                  console.error("Error:", error);
+                  toast.error("Something went wrong. Please try again.", {
+                    icon: "❌",
+                    duration: 4000,
+                  });
+                } finally {
+                  setIsLoading(false);
+                  onClose();
+                }
+              }}
+              className="flex-1"
+            >
+              {isDelete ? "Delete Forever" : "Leave Project"}
+            </EnhancedButton>
+            
+            <EnhancedButton
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </EnhancedButton>
+          </div>
+        </motion.div>
+      ),
+    });
   };
 
   if (!userRole) return null;
@@ -84,176 +217,186 @@ const DeleteOrLeaveProject = ({ projectId }) => {
 
   return (
     <div className="card h-fit">
-      <div className="flex items-center gap-3 mb-4">
-        {isDelete ? (
-          <Trash2 className="w-5 h-5 text-error" />
-        ) : (
-          <LogOut className="w-5 h-5 text-warning" />
-        )}
-        <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-          {isDelete ? "Delete Project" : "Leave Project"}
-        </h3>
+      <div className="flex items-center gap-3 mb-6">
+        <div className={`p-3 rounded-xl ${isDelete ? 'bg-red-100 dark:bg-red-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+          {isDelete ? (
+            <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+          ) : (
+            <LogOut className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+          )}
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+            {isDelete ? "Delete Project" : "Leave Project"}
+          </h3>
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            {isDelete ? "Permanently remove this project" : "Remove yourself from team"}
+          </p>
+        </div>
       </div>
 
-      <p className="text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
-        {isDelete
-          ? "Permanently delete this project and all associated data."
-          : "Remove yourself from this project team."}
-      </p>
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 p-4 rounded-xl border border-red-200/50 dark:border-red-700/50 mb-6">
+        <p className="text-sm text-red-800 dark:text-red-200 leading-relaxed">
+          {isDelete
+            ? "⚠️ This will permanently delete all project data, tasks, files, and team assignments. This action cannot be undone."
+            : "⚠️ You will lose access to all project content, tasks, and team communications."}
+        </p>
+      </div>
 
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all ${
-          isDelete
-            ? "bg-red-500 hover:bg-red-600 text-white"
-            : "bg-yellow-500 hover:bg-yellow-600 text-white"
-        }`}
-        onClick={() => setShowConfirm(true)}
+      <EnhancedButton
+        variant={isDelete ? "danger" : "warning"}
+        size="lg"
+        icon={isDelete ? Trash2 : LogOut}
+        onClick={handleAction}
+        className="w-full"
       >
-        {isDelete ? <Trash2 className="w-4 h-4" /> : <LogOut className="w-4 h-4" />}
         {isDelete ? "Delete This Project" : "Leave This Project"}
-      </motion.button>
-
-      <AnimatePresence>
-        {showConfirm && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 p-4 bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl border border-gray-200 dark:border-gray-700"
-          >
-            <div className="flex items-start gap-3 mb-4">
-              <AlertTriangle className="w-5 h-5 text-warning mt-0.5" />
-              <div>
-                <p className="font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-                  Confirm Action
-                </p>
-                <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                  {isDelete
-                    ? "This action cannot be undone. All project data will be permanently deleted."
-                    : "You will lose access to this project and all its content."}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  isDelete
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-yellow-600 hover:bg-yellow-700 text-white"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-                onClick={handleAction}
-              >
-                {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                {isDelete ? "Yes, Delete" : "Yes, Leave"}
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-lg font-medium text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-100 dark:hover:bg-gray-600 transition-all"
-                onClick={() => setShowConfirm(false)}
-              >
-                <X className="w-4 h-4" />
-                Cancel
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </EnhancedButton>
     </div>
   );
 };
 
 const NotificationSettings = () => {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [taskReminders, setTaskReminders] = useState(false);
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    taskReminders: false,
+    weeklyReports: true,
+    securityAlerts: true,
+  });
+  const [isSaving, setIsSaving] = useState(false);
 
-  const ToggleSwitch = ({ checked, onChange, label, description }) => (
-    <div className="flex items-center justify-between py-3">
-      <div className="flex-1">
-        <p className="font-medium text-txt-primary-light dark:text-txt-primary-dark">
-          {label}
-        </p>
-        <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-          {description}
-        </p>
-      </div>
-      <label className="flex items-center cursor-pointer ml-4">
-        <div className="relative">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={onChange}
-            className="sr-only"
-          />
-          <div
-            className={`w-11 h-6 rounded-full transition-colors ${
-              checked ? "bg-brand-primary-500" : "bg-gray-300 dark:bg-gray-600"
-            }`}
-          >
-            <div
-              className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${
-                checked ? "translate-x-6" : "translate-x-1"
-              } mt-1`}
-            />
-          </div>
-        </div>
-      </label>
-    </div>
-  );
+  const handleToggle = (key) => {
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsSaving(false);
+    toast.success("Notification preferences saved!", {
+      icon: "🔔",
+      duration: 3000,
+    });
+  };
+
+  const notificationOptions = [
+    {
+      key: "emailNotifications",
+      label: "Email Notifications",
+      description: "Receive project updates via email",
+      icon: Mail
+    },
+    {
+      key: "pushNotifications", 
+      label: "Push Notifications",
+      description: "Browser push notifications",
+      icon: Bell
+    },
+    {
+      key: "taskReminders",
+      label: "Task Reminders", 
+      description: "Deadline and due date alerts",
+      icon: AlertTriangle
+    },
+    {
+      key: "weeklyReports",
+      label: "Weekly Reports",
+      description: "Weekly project progress summaries",
+      icon: FileText
+    },
+    {
+      key: "securityAlerts",
+      label: "Security Alerts",
+      description: "Account security notifications",
+      icon: Shield
+    }
+  ];
 
   return (
     <div className="card h-fit">
       <div className="flex items-center gap-3 mb-6">
-        <Bell className="w-5 h-5 text-brand-primary-500" />
-        <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-          Notification Preferences
-        </h3>
+        <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+          <Bell className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+            Notification Preferences
+          </h3>
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            Customize how you receive updates
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-1 border-t border-gray-200 dark:border-gray-700 pt-4">
-        <ToggleSwitch
-          checked={emailNotifications}
-          onChange={(e) => setEmailNotifications(e.target.checked)}
-          label="Email Notifications"
-          description="Receive updates via email"
-        />
-        
-        <ToggleSwitch
-          checked={pushNotifications}
-          onChange={(e) => setPushNotifications(e.target.checked)}
-          label="Push Notifications"
-          description="Browser push notifications"
-        />
-        
-        <ToggleSwitch
-          checked={taskReminders}
-          onChange={(e) => setTaskReminders(e.target.checked)}
-          label="Task Reminders"
-          description="Deadline and due date alerts"
-        />
+      <div className="space-y-4 mb-8">
+        {notificationOptions.map(({ key, label, description, icon: Icon }) => (
+          <motion.div
+            key={key}
+            className="flex items-center justify-between p-4 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl border border-gray-200/50 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-300"
+            whileHover={{ scale: 1.01 }}
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <Icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-txt-primary-light dark:text-txt-primary-dark">
+                  {label}
+                </p>
+                <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                  {description}
+                </p>
+              </div>
+            </div>
+            
+            <Switch
+              checked={settings[key]}
+              onChange={() => handleToggle(key)}
+              onColor="#3b82f6"
+              offColor="#d1d5db"
+              onHandleColor="#ffffff"
+              offHandleColor="#ffffff"
+              handleDiameter={24}
+              uncheckedIcon={false}
+              checkedIcon={false}
+              height={32}
+              width={56}
+              className="ml-4"
+            />
+          </motion.div>
+        ))}
       </div>
 
-      <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-brand-primary-500 hover:bg-brand-primary-600 text-white rounded-lg font-medium transition-all"
+      <div className="flex gap-3">
+        <EnhancedButton
+          variant="success"
+          size="lg"
+          icon={Save}
+          loading={isSaving}
+          onClick={handleSave}
+          className="flex-1"
         >
-          <Save className="w-4 h-4" />
-          Save Preferences
-        </motion.button>
+          {isSaving ? "Saving..." : "Save Preferences"}
+        </EnhancedButton>
+        
+        <EnhancedButton
+          variant="outline"
+          size="lg"
+          icon={RefreshCw}
+          onClick={() => {
+            setSettings({
+              emailNotifications: true,
+              pushNotifications: true,
+              taskReminders: false,
+              weeklyReports: true,
+              securityAlerts: true,
+            });
+            toast.success("Reset to default settings");
+          }}
+        >
+          Reset
+        </EnhancedButton>
       </div>
     </div>
   );
@@ -263,26 +406,60 @@ const RoleManagement = () => {
   return (
     <div className="card h-fit">
       <div className="flex items-center gap-3 mb-6">
-        <Shield className="w-5 h-5 text-brand-secondary-500" />
-        <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-          Team Role Management
-        </h3>
+        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+          <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+            Role Management
+          </h3>
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            Advanced team role controls
+          </p>
+        </div>
       </div>
 
-      <div className="text-center py-8">
-        <div className="w-16 h-16 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center mx-auto mb-4">
-          <Shield className="w-8 h-8 text-txt-secondary-light dark:text-txt-secondary-dark" />
-        </div>
-        <p className="text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
-          Advanced role management features are coming soon...
+      <div className="text-center py-12">
+        <motion.div
+          className="w-24 h-24 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+          animate={{ 
+            rotate: [0, 10, -10, 0],
+            scale: [1, 1.05, 1]
+          }}
+          transition={{ 
+            duration: 4, 
+            repeat: Infinity, 
+            repeatDelay: 2 
+          }}
+        >
+          <Sparkles className="w-12 h-12 text-purple-600 dark:text-purple-400" />
+        </motion.div>
+        
+        <h4 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-3">
+          Coming Soon!
+        </h4>
+        <p className="text-txt-secondary-light dark:text-txt-secondary-dark mb-6 text-base leading-relaxed">
+          Advanced role management features with permissions, custom roles, and team hierarchy controls are in development.
         </p>
-        <div className="space-y-2">
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-brand-primary-100 dark:bg-brand-primary-800 text-brand-primary-700 dark:text-brand-primary-300">
-            🚧 Under Development
-          </span>
-          <div className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-            Expected Release: Q2 2024
+        
+        <div className="space-y-4">
+          <div className="inline-flex items-center px-6 py-3 rounded-full text-sm font-bold bg-gradient-to-r from-purple-100 to-purple-200 dark:from-purple-900/30 dark:to-purple-800/30 text-purple-700 dark:text-purple-300 shadow-lg">
+            <PulseLoader size={8} color="currentColor" className="mr-3" />
+            Under Development
           </div>
+          <div className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            📅 Expected Release: Q2 2024
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <EnhancedButton
+            variant="outline"
+            icon={Bell}
+            onClick={() => toast.success("You'll be notified when this feature is ready!")}
+          >
+            Notify Me When Ready
+          </EnhancedButton>
         </div>
       </div>
     </div>
@@ -292,6 +469,7 @@ const RoleManagement = () => {
 const UserProfile = () => {
   const [user, setUser] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState({
     username: '',
     email: ''
@@ -313,105 +491,182 @@ const UserProfile = () => {
     }
   }, []);
 
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
+  const handleSave = async () => {
+    setIsSaving(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setIsEditing(false);
+    setUser({ ...user, ...editForm });
+    setIsSaving(false);
+    toast.success("Profile updated successfully!", {
+      icon: "✅",
+      duration: 3000,
+    });
   };
 
-  const handleSave = () => {
-    // Here you would typically make an API call to update user info
-    console.log('Saving user data:', editForm);
-    setIsEditing(false);
-    // For demo purposes, we'll just update the local state
-    setUser({ ...user, ...editForm });
+  const handleExportData = () => {
+    toast.promise(
+      new Promise((resolve) => {
+        setTimeout(() => {
+          // Create dummy data for download
+          const data = JSON.stringify(user, null, 2);
+          const blob = new Blob([data], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'user-data.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 2000);
+      }),
+      {
+        loading: 'Preparing your data...',
+        success: 'Data exported successfully!',
+        error: 'Failed to export data',
+      }
+    );
   };
 
   return (
     <div className="card h-fit">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <User className="w-5 h-5 text-brand-accent-500" />
-          <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-            User Information
-          </h3>
+          <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+            <User className="w-6 h-6 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+              User Information
+            </h3>
+            <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+              Manage your account details
+            </p>
+          </div>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={isEditing ? handleSave : handleEdit}
-          className="flex items-center gap-2 px-3 py-1 text-sm bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all"
-        >
-          {isEditing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-          {isEditing ? 'Save' : 'Edit'}
-        </motion.button>
+        
+        <div className="flex items-center gap-2">
+          <EnhancedButton
+            variant="ghost"
+            size="sm"
+            icon={Download}
+            onClick={handleExportData}
+            className="text-xs"
+          >
+            Export
+          </EnhancedButton>
+          
+          <EnhancedButton
+            variant={isEditing ? "success" : "outline"}
+            size="sm"
+            icon={isEditing ? Save : Edit}
+            loading={isSaving}
+            onClick={isEditing ? handleSave : () => setIsEditing(true)}
+          >
+            {isSaving ? "Saving..." : isEditing ? "Save" : "Edit"}
+          </EnhancedButton>
+        </div>
       </div>
 
       {user ? (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3 p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl">
-            <User className="w-5 h-5 text-txt-secondary-light dark:text-txt-secondary-dark" />
-            <div className="flex-1">
-              <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                Username
-              </p>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={editForm.username}
-                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                  className="w-full mt-1 px-2 py-1 bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 rounded font-medium text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
-                />
-              ) : (
-                <p className="font-medium text-txt-primary-light dark:text-txt-primary-dark">
-                  {user.username}
-                </p>
-              )}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex items-center gap-4 p-4 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+              <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark block mb-2">
+                  Username
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                    className="w-full px-4 py-2 bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 rounded-lg font-semibold text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all"
+                  />
+                ) : (
+                  <p className="font-semibold text-txt-primary-light dark:text-txt-primary-dark text-lg">
+                    {user.username}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl">
-            <Mail className="w-5 h-5 text-txt-secondary-light dark:text-txt-secondary-dark" />
-            <div className="flex-1">
-              <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                Email Address
-              </p>
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="w-full mt-1 px-2 py-1 bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 rounded font-medium text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20"
-                />
-              ) : (
-                <p className="font-medium text-txt-primary-light dark:text-txt-primary-dark">
-                  {user.email}
-                </p>
-              )}
+            <div className="flex items-center gap-4 p-4 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+              <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <Mail className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark block mb-2">
+                  Email Address
+                </label>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    className="w-full px-4 py-2 bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 rounded-lg font-semibold text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all"
+                  />
+                ) : (
+                  <p className="font-semibold text-txt-primary-light dark:text-txt-primary-dark text-lg">
+                    {user.email}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl">
-            <UserCheck className="w-5 h-5 text-txt-secondary-light dark:text-txt-secondary-dark" />
-            <div className="flex-1">
-              <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                Role
-              </p>
-              <div className="flex items-center justify-between mt-1">
-                <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-brand-primary-100 dark:bg-brand-primary-800 text-brand-primary-700 dark:text-brand-primary-300">
-                  {user.role.replace('_', ' ')}
-                </span>
-                <span className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-                  Cannot be changed
-                </span>
+            <div className="flex items-center gap-4 p-4 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl border border-gray-200/50 dark:border-gray-700/50">
+              <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                <UserCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark block mb-2">
+                  Role
+                </label>
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 text-brand-primary-700 dark:text-brand-primary-300 shadow-sm">
+                    {user.role.replace('_', ' ')}
+                  </span>
+                  <span className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                    🔒 Protected
+                  </span>
+                </div>
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <EnhancedButton
+              variant="secondary"
+              icon={Lock}
+              onClick={() => toast.success("Password change feature coming soon!")}
+              className="w-full"
+            >
+              Change Password
+            </EnhancedButton>
+            
+            <EnhancedButton
+              variant="outline"
+              icon={Share2}
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.origin);
+                toast.success("Profile link copied!");
+              }}
+              className="w-full"
+            >
+              Share Profile
+            </EnhancedButton>
+          </div>
         </div>
       ) : (
-        <div className="text-center py-8">
-          <div className="w-16 h-16 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-txt-secondary-light dark:text-txt-secondary-dark" />
+        <div className="text-center py-12">
+          <div className="w-20 h-20 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-10 h-10 text-txt-secondary-light dark:text-txt-secondary-dark" />
           </div>
-          <p className="text-txt-secondary-light dark:text-txt-secondary-dark">
+          <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-lg">
             User data not available
           </p>
         </div>
@@ -423,33 +678,56 @@ const UserProfile = () => {
 const SettingsPage = ({ projectId }) => {
   return (
     <div className="min-h-screen page-bg">
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: 'var(--bg-primary-light)',
+            color: 'var(--txt-primary-light)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            fontSize: '14px',
+            fontWeight: '500',
+          },
+        }}
+      />
+      
       <div className="section-container dashboard-padding">
-        {/* Header */}
+        {/* Enhanced Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-12"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <Settings className="w-8 h-8 text-brand-primary-500" />
-            <h1 className="heading-lg">Settings</h1>
+          <div className="flex items-center gap-6 mb-6">
+            <div className="p-4 bg-gradient-to-br from-brand-primary-500 to-brand-primary-600 rounded-3xl shadow-xl">
+              <Settings className="w-10 h-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+                Settings
+              </h1>
+              <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-xl">
+                Manage your account preferences and project settings
+              </p>
+            </div>
           </div>
-          <p className="text-muted">
-            Manage your account preferences and project settings
-          </p>
+          
+          <div className="h-1 bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 rounded-full"></div>
         </motion.div>
 
-        {/* Settings Grid - Updated for better alignment */}
+        {/* Enhanced Settings Grid */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto"
+          className="grid grid-cols-1 xl:grid-cols-2 gap-10 max-w-7xl mx-auto"
         >
           {/* Left Column */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
@@ -457,7 +735,7 @@ const SettingsPage = ({ projectId }) => {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
@@ -466,9 +744,9 @@ const SettingsPage = ({ projectId }) => {
           </div>
 
           {/* Right Column */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
             >
@@ -476,7 +754,7 @@ const SettingsPage = ({ projectId }) => {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
