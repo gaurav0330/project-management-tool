@@ -107,6 +107,11 @@
     @apply py-10 lg:py-20;
   }
   
+  /* ✅ NEW: Dashboard-specific padding */
+  .dashboard-padding {
+    @apply pt-4 pb-4 px-2 sm:px-2 lg:px-2;
+  }
+  
   .page-bg {
     background: linear-gradient(135deg, var(--bg-secondary-light) 0%, var(--bg-primary-light) 100%);
     @apply min-h-screen transition-all duration-500;
