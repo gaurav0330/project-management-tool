@@ -1,159 +1,338 @@
-import { useState, useEffect } from "react";
-import React from "react";
-import { MdDashboard, MdSupervisorAccount, MdSettings,MdAnalytics, MdGroup, MdAssignmentTurnedIn, MdAssignment, MdPeople, MdInsights, MdBarChart, MdFolderOpen, MdDescription, MdTimeline, MdMenu, MdClose } from "react-icons/md";
-import './SideBar.css'; // Import the CSS file for animations
+import React, { useState, useEffect } from "react";
+import {
+  Home, FolderKanban, Users, BarChart3, Settings, ChevronDown, ChevronRight,
+  Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle, 
+  TrendingUp, Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft
+} from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "../../../lib/utils";
 
 const Sidebar = ({ setActiveComponent }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [userRole, setUserRole] = useState(null);
-  const [activeItem, setActiveItem] = useState(null); // Track active item
+  const [userRole, setRole] = useState(null);
+  const [activeItem, setActiveItem] = useState("");
+  const [expandedSections, setExpandedSections] = useState({});
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser?.role) {
-      setUserRole(storedUser.role);
-    }
+    const stored = JSON.parse(localStorage.getItem("user"));
+    if (stored?.role) setRole(stored.role);
   }, []);
 
-  const roleBasedMenu = {
+  const toggleSection = (sectionTitle) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionTitle]: !prev[sectionTitle]
+    }));
+  };
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    setExpandedSections({});
+  };
+
+  const shouldShowFull = !isCollapsed || isHovering;
+
+  const MENU = {
     Project_Manager: [
       {
-        category: "Overview",
-        items: [{ name: "Home", icon: MdDashboard, component: "dashboard" }],
+        title: "Overview",
+        icon: Home,
+        links: [{ txt: "Dashboard", icon: Home, comp: "dashboard" }],
       },
       {
-        category: "Project Management",
-        items: [
-          { name: "Project Home", icon: MdDashboard, component: "projectHome" },
-          { name: "Manage Lead", icon: MdSupervisorAccount, component: "managelead" },
-          { name: "Manage Task", icon: MdAssignment, component: "assignedTasks" },
-          { name: "Manage Team", icon: MdGroup, component: "manageteam" },
-          { name: "Create Tasks", icon: MdAssignment, component: "tasks" },
-          { name: "Members", icon: MdAssignment, component: "members" },
-          { name: "Approve Task", icon: MdAssignment, component: "approvetask" },
-        ],
-  
-      },{
-        category:"Analytics Section",
-        items:[
-          { name: "Timeline", icon: MdTimeline, component: "TimeLine" },
-          { name: "Analytics", icon: MdAnalytics, component: "analytics" },
+        title: "Project Management",
+        icon: FolderKanban,
+        links: [
+          { txt: "Project Home", icon: Briefcase, comp: "projectHome" },
+          { txt: "Manage Lead", icon: UserCog, comp: "managelead" },
+          { txt: "Manage Tasks", icon: ClipboardList, comp: "assignedTasks" },
+          { txt: "Manage Team", icon: Users, comp: "manageteam" },
+          { txt: "Create Tasks", icon: Target, comp: "tasks" },
+          { txt: "Members", icon: User, comp: "members" },
+          { txt: "Approve Tasks", icon: CheckCircle, comp: "approvetask" },
         ],
       },
       {
-        category:"Project Settings",
-        items:[
-          { name: "Settings", icon: MdSettings, component: "setting" },
+        title: "Analytics & Reports",
+        icon: BarChart3,
+        links: [
+          { txt: "Timeline", icon: Calendar, comp: "TimeLine" },
+          { txt: "Analytics", icon: TrendingUp, comp: "analytics" },
         ],
-      }
+      },
+      {
+        title: "Project Settings",
+        icon: Settings,
+        links: [{ txt: "Settings", icon: Shield, comp: "setting" }],
+      },
     ],
     Team_Lead: [
       {
-        category: "My Tasks",
-        items: [
-          { name: "Project Home", icon: MdDashboard, component: "projectHome" },
-          { name: "My Tasks", icon: MdAssignment, component: "mytasks" },
-          { name: "Task Submit", icon: MdAssignment, component: "approvetask" },
+        title: "Overview",
+        icon: Home,
+        links: [{ txt: "Project Home", icon: Briefcase, comp: "projectHome" }],
+      },
+      {
+        title: "My Tasks",
+        icon: ClipboardList,
+        links: [
+          { txt: "My Tasks", icon: Target, comp: "mytasks" },
+          { txt: "Task Submit", icon: CheckCircle, comp: "approvetask" },
         ],
       },
       {
-        category: "Manage Team",
-        items: [
-          { name: "Create Team", icon: MdFolderOpen, component: "createteam" },
-          { name: "My Teams", icon: MdGroup, component: "myteams" },
+        title: "Team Management",
+        icon: Users,
+        links: [
+          { txt: "Create Team", icon: UserPlus, comp: "createteam" },
+          { txt: "My Teams", icon: Users, comp: "myteams" },
         ],
       },
       {
-        category:"Project Settings",
-        items:[
-          { name: "Settings", icon: MdSettings, component: "setting" },
-        ],
-      }
+        title: "Project Settings",
+        icon: Settings,
+        links: [{ txt: "Settings", icon: Shield, comp: "setting" }],
+      },
     ],
     Team_Member: [
       {
-        category: "Overview",
-        items: [{ name: "Dashboard", icon: MdDashboard, component: "overview" }],
+        title: "Overview",
+        icon: Home,
+        links: [{ txt: "Dashboard", icon: Database, comp: "overview" }],
       },
       {
-        category: "Tasks",
-        items: [
-          { name: "My Tasks", icon: MdAssignment, component: "tasks" },
-        ],
+        title: "My Tasks",
+        icon: ClipboardList,
+        links: [{ txt: "My Tasks", icon: Target, comp: "tasks" }],
       },
       {
-        category:"Project Settings",
-        items:[
-          { name: "Settings", icon: MdSettings, component: "setting" },
-        ],
-      }
+        title: "Project Settings",
+        icon: Settings,
+        links: [{ txt: "Settings", icon: Shield, comp: "setting" }],
+      },
     ],
   };
 
-  const sidebarMenu = roleBasedMenu[userRole] || [];
+  const sections = MENU[userRole] || [];
 
-  return (
-    <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed z-50 p-2 text-white transition duration-300 rounded-md top-4 left-4 bg-navy-600 lg:hidden hover:bg-navy-700"
-      >
-        {isOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
-      </button>
-
-      <div
-        className={`fixed top-0 left-0 h-full bg-light-gray shadow-lg border border-gray-300 transition-transform duration-300 ease-in-out transform 
-          ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
-          w-64 z-40 flex flex-col rounded-lg`}
-      >
-        <div className="flex items-center justify-center flex-shrink-0 h-16 rounded-t-lg bg-navy-600">
-          <h1 className="text-xl font-bold text-white">Project Manager</h1>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          <nav className="px-4 py-4">
-            {sidebarMenu.length > 0 ? (
-              sidebarMenu.map((category, categoryIndex) => (
-                <div key={categoryIndex} className="mb-6">
-                  <h2 className="p-2 px-4 mb-3 text-xs font-semibold tracking-wider text-gray-600 uppercase bg-gray-200 rounded-md">
-                    {category.category}
-                  </h2>
-                  <div className="space-y-3"> {/* Increased spacing between buttons */}
-                    {category.items.map((item, itemIndex) => (
-                      <button
-                        key={itemIndex}
-                        onClick={() => {
-                          setActiveComponent(item.component);
-                          setActiveItem(item.name); // Set active item
-                          setIsOpen(false); // Close sidebar on mobile
-                        }}
-                        className={`flex items-center w-full px-4 py-3 text-sm text-gray-600 border border-black transition-transform duration-200 rounded-lg 
-                          ${activeItem === item.name ? 'bg-blue-200' : 'hover:bg-blue-100'} 
-                          hover:shadow-lg transform hover:scale-105`} // 3D effect on hover
-                      >
-                        <div className="flex items-center justify-center w-8 h-8 mr-3 rounded-full bg-blue-50">
-                          {React.createElement(item.icon, { className: "w-5 h-5 text-blue-600" })}
-                        </div>
-                        <span className="font-medium">{item.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {categoryIndex < sidebarMenu.length - 1 && <hr className="my-4 border-gray-300" />} {/* Divider */}
-                </div>
-              ))
-            ) : (
-              <p className="px-4 py-2 text-gray-500">Loading menu...</p>
-            )}
-          </nav>
+  const MenuBlock = () => (
+    <aside 
+      className={cn(
+        "flex h-full flex-col backdrop-blur-md border-r transition-all duration-300",
+        "bg-bg-secondary-light dark:bg-bg-secondary-dark",
+        "border-gray-200/30 dark:border-gray-700/30",
+        shouldShowFull ? "w-64" : "w-16"
+      )}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {/* Header */}
+      <div className="h-16 flex items-center justify-center border-b border-gray-200/20 dark:border-gray-700/20 bg-bg-primary-light dark:bg-bg-primary-dark px-3">
+        <div className={cn(
+          "flex items-center transition-all duration-300",
+          shouldShowFull ? "gap-2.5" : "justify-center"
+        )}>
+          <div className="w-7 h-7 bg-brand-primary-600 rounded-lg flex items-center justify-center shadow-sm">
+            <Briefcase className="w-3.5 h-3.5 text-white" />
+          </div>
+          {shouldShowFull && (
+            <h1 className="font-heading text-base font-semibold text-heading-primary-light dark:text-heading-primary-dark tracking-tight">
+              YojanaDesk
+            </h1>
+          )}
         </div>
       </div>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Collapse Toggle Button */}
+      <div className="px-3 py-2 border-b border-gray-200/10 dark:border-gray-700/10">
+        <Button
+          onClick={toggleCollapse}
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "transition-all duration-300 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark text-txt-primary-light dark:text-txt-primary-dark",
+            shouldShowFull ? "w-full justify-start gap-2" : "w-10 h-10 p-0 justify-center"
+          )}
+        >
+          {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          {shouldShowFull && (
+            <span className="text-xs font-medium">
+              {isCollapsed ? "Expand" : "Collapse"}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* Scrollable nav */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+        {sections.map(({ title, icon: SectionIcon, links }, i) => (
+          <div key={i} className="space-y-1">
+            {/* Section Header - Clickable */}
+            {shouldShowFull ? (
+              <Button
+                onClick={() => toggleSection(title)}
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-all duration-300",
+                  "bg-bg-primary-light dark:bg-bg-primary-dark",
+                  "hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark",
+                  "text-txt-primary-light dark:text-txt-primary-dark",
+                  "border border-gray-200/20 dark:border-gray-700/20"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-md bg-brand-primary-50 dark:bg-brand-primary-900/20 flex items-center justify-center">
+                    <SectionIcon className="w-3.5 h-3.5 text-brand-primary-600 dark:text-brand-primary-400" />
+                  </div>
+                  <span className="font-medium tracking-wide uppercase">{title}</span>
+                </div>
+                {expandedSections[title] ? (
+                  <ChevronDown className="h-3.5 w-3.5 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                ) : (
+                  <ChevronRight className="h-3.5 w-3.5 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                )}
+              </Button>
+            ) : (
+              // Collapsed state - show only icon
+              <div className="flex justify-center mb-3">
+                <div 
+                  className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-all duration-300"
+                  title={title}
+                >
+                  <SectionIcon className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" />
+                </div>
+              </div>
+            )}
+
+            {/* Collapsible Links */}
+            {shouldShowFull && expandedSections[title] && (
+              <div className="ml-3 space-y-1 border-l border-gray-300/30 dark:border-gray-600/30 pl-3 py-1">
+                {links.map(({ txt, icon: Icon, comp }) => (
+                  <Button
+                    key={txt}
+                    onClick={() => {
+                      setActiveComponent(comp);
+                      setActiveItem(txt);
+                      setIsOpen(false);
+                    }}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-300",
+                      activeItem === txt
+                        ? "bg-brand-primary-600 text-white shadow-lg font-medium"
+                        : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium tracking-wide">{txt}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Show collapsed menu items as icons only */}
+            {!shouldShowFull && (
+              <div className="space-y-2">
+                {links.map(({ txt, icon: Icon, comp }) => (
+                  <div key={txt} className="flex justify-center">
+                    <Button
+                      onClick={() => {
+                        setActiveComponent(comp);
+                        setActiveItem(txt);
+                        setIsOpen(false);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-10 h-10 p-0 rounded-lg transition-all duration-300",
+                        activeItem === txt
+                          ? "bg-brand-primary-600 text-white shadow-lg"
+                          : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                      )}
+                      title={txt}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Subtle Separator */}
+            {shouldShowFull && i !== sections.length - 1 && (
+              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
+            )}
+          </div>
+        ))}
+
+        {sections.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-10 h-10 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center mb-3">
+              <Settings className="w-5 h-5 text-txt-secondary-light dark:text-txt-secondary-dark" />
+            </div>
+            {shouldShowFull && (
+              <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark font-medium">Loading menu...</p>
+            )}
+          </div>
+        )}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-gray-200/10 dark:border-gray-700/10 bg-bg-primary-light dark:bg-bg-primary-dark">
+        <div className={cn(
+          "flex items-center rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200/20 dark:border-gray-700/20 transition-all duration-300",
+          shouldShowFull ? "gap-3 px-3 py-2.5" : "justify-center p-2.5"
+        )}>
+          <div className="w-7 h-7 bg-gradient-to-br from-brand-accent-500 to-brand-accent-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+            <User className="w-3.5 h-3.5 text-white" />
+          </div>
+          {shouldShowFull && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-txt-primary-light dark:text-txt-primary-dark truncate tracking-wide">
+                {userRole?.replace('_', ' ') || 'User'}
+              </p>
+              <p className="text-[10px] text-txt-secondary-light dark:text-txt-secondary-dark font-medium">Online</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+
+  return (
+    <>
+      {/* Mobile toggle button */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            size="icon"
+            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl backdrop-blur-sm"
+          >
+            <Menu size={18} />
+          </Button>
+        </SheetTrigger>
+
+        <SheetContent side="left" className="p-0 w-64 border-r border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark backdrop-blur-md">
+          <div 
+            onMouseEnter={() => setIsHovering(true)}
+            onMouseLeave={() => setIsHovering(false)}
+          >
+            <MenuBlock />
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop sidebar */}
+      <div className={cn(
+        "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
+        shouldShowFull ? "w-64" : "w-16"
+      )}>
+        <MenuBlock />
+      </div>
     </>
   );
 };
