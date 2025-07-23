@@ -49,7 +49,8 @@ function AppContent() {
     "/projectDashboard",
     "/teammemberdashboard",
     "/teamleaddashboard",
-    "/projectHome"
+    "/projectHome",
+    "/teamLead"
   ];
 
   // ✅ Define routes where container padding should be applied
