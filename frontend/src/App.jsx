@@ -49,6 +49,7 @@ function AppContent() {
     "/projectDashboard",
     "/teammemberdashboard",
     "/teamleaddashboard",
+    "/projectHome"
   ];
 
   // ✅ Define routes where container padding should be applied
@@ -67,14 +68,14 @@ function AppContent() {
     "/chat"
   ];
 
-  const shouldHideFooter = hideFooterRoutes.includes(location.pathname);
+  const shouldHideFooter = hideFooterRoutes.some(route => location.pathname.startsWith(route));
   const shouldUseContainer = containerRoutes.some(route => location.pathname.startsWith(route));
 
   return (
     <div className="page-bg min-h-screen"> {/* ✅ Theme-aware background */}
       <Navbar />
       
-      <main className={`mt-16 main-content ${shouldUseContainer ? 'section-container section-padding' : ''}`}>
+     <main className={`mt-16 main-content ${shouldUseContainer ? 'px-24 sm:px-24 md:px-24 section-padding' : ''}`}>
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />
