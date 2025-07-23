@@ -5,9 +5,68 @@
     <link rel="icon" type="image/svg+xml" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YojanaDesk</title>
+    
+    <!-- ✅ Prevent theme flash by setting dark class immediately -->
+    <script>
+      // Check for saved theme preference or default to 'light' mode
+      (function() {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    
+    <!-- ✅ Optional: Add loading styles to prevent flash -->
+    <style>
+      /* Prevent flash of unstyled content */
+      html {
+        background-color: #ffffff;
+        transition: background-color 0.3s ease;
+      }
+      
+      html.dark {
+        background-color: #0f172a;
+      }
+      
+      /* Loading spinner (optional) */
+      .loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #3b82f6;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 9999;
+      }
+      
+      html.dark .loading {
+        border-color: #374151;
+        border-top-color: #60a5fa;
+      }
+      
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      
+      /* Hide loading when React is ready */
+      .app-loaded .loading {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- ✅ Optional: Loading spinner while React loads -->
+      <div class="loading"></div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
