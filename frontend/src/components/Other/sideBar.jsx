@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "../../../lib/utils";
 
-const Sidebar = ({ setActiveComponent }) => {
+const Sidebar = ({ setActiveComponent, onStateChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setRole] = useState(null);
   const [activeItem, setActiveItem] = useState("");
@@ -21,6 +21,13 @@ const Sidebar = ({ setActiveComponent }) => {
     const stored = JSON.parse(localStorage.getItem("user"));
     if (stored?.role) setRole(stored.role);
   }, []);
+
+  // Notify parent component of state changes
+  useEffect(() => {
+    if (onStateChange) {
+      onStateChange(isCollapsed, isHovering);
+    }
+  }, [isCollapsed, isHovering, onStateChange]);
 
   const toggleSection = (sectionTitle) => {
     setExpandedSections(prev => ({
@@ -317,12 +324,7 @@ const Sidebar = ({ setActiveComponent }) => {
         </SheetTrigger>
 
         <SheetContent side="left" className="p-0 w-64 border-r border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark backdrop-blur-md">
-          <div 
-            onMouseEnter={() => setIsHovering(true)}
-            onMouseLeave={() => setIsHovering(false)}
-          >
-            <MenuBlock />
-          </div>
+          <MenuBlock />
         </SheetContent>
       </Sheet>
 
