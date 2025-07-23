@@ -24,6 +24,46 @@ const ProjectCard = ({ project }) => {
     }
   }
 
+  // ✅ Enhanced Date Formatting Function
+  const formatDate = (dateInput) => {
+    try {
+      let date;
+      
+      // Handle different date formats
+      if (typeof dateInput === 'string') {
+        // If it's already an ISO string, use it directly
+        if (dateInput.includes('T') || dateInput.includes('-')) {
+          date = new Date(dateInput);
+        } else {
+          // If it's a string of numbers, treat as timestamp
+          const timestamp = parseInt(dateInput);
+          date = new Date(timestamp);
+        }
+      } else if (typeof dateInput === 'number') {
+        // Handle Unix timestamp (check if it needs conversion)
+        const timestamp = dateInput.toString().length === 10 ? dateInput * 1000 : dateInput;
+        date = new Date(timestamp);
+      } else {
+        date = new Date(dateInput);
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+
+      // Format as DD/MM/YYYY
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return 'Invalid Date';
+    }
+  };
+
   const handleNavigation = () => {
     if (role === "Team_Lead") {
       navigate(`/teamLead/project/${project.id}`);
@@ -63,13 +103,13 @@ const ProjectCard = ({ project }) => {
         <div className="flex items-center gap-2">
           <FaCalendarAlt className="text-green-500" />
           <span>
-            <strong>Start:</strong> {project.startDate.split("T")[0]}
+            <strong>Start:</strong> {formatDate(project.startDate)}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <FaClock className="text-red-500" />
           <span>
-            <strong>End:</strong> {project.endDate.split("T")[0]}
+            <strong>End:</strong> {formatDate(project.endDate)}
           </span>
         </div>
         <div className="flex items-center gap-2 sm:col-span-2">
