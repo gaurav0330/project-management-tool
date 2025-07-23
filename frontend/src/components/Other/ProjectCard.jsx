@@ -1,12 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FaCalendarAlt, FaFolder, FaClock, FaArrowRight, FaStar } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaFolder,
+  FaClock,
+  FaArrowRight,
+  FaStar,
+} from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import { motion } from "framer-motion";
 
 const ProjectCard = ({ project }) => {
   const navigate = useNavigate();
-
   let role = null;
   const token = localStorage.getItem("token");
 
@@ -31,51 +36,58 @@ const ProjectCard = ({ project }) => {
 
   return (
     <motion.div
-      className="relative p-8 transition-transform duration-300 bg-white shadow-xl rounded-3xl hover:shadow-2xl hover:scale-105"
-      initial={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300"
     >
-      {/* Title & Category */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-2xl font-bold text-gray-900">{project.title}</h3>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h3 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark mb-1 line-clamp-1">
+            {project.title}
+          </h3>
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark line-clamp-2">
+            {project.description}
+          </p>
+        </div>
         {project.category && (
-          <span className="flex items-center gap-2 px-4 py-2 text-lg font-semibold text-blue-700 bg-blue-200 rounded-full">
-            <FaFolder className="text-blue-600" />
+          <div className="ml-2 shrink-0 px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-sm font-semibold flex items-center gap-2">
+            <FaFolder size={14} />
             {project.category}
-          </span>
+          </div>
         )}
       </div>
 
-      {/* Project Description */}
-      <p className="mt-4 text-lg text-gray-700 line-clamp-3">{project.description}</p>
-
-      {/* Date Section */}
-      <div className="mt-6 space-y-3 text-base text-gray-700">
-        <p className="flex items-center gap-3">
-          <FaCalendarAlt className="text-green-600" />
-          <span className="font-semibold">Start Date:</span> {project.startDate.split("T")[0]}
-        </p>
-        <p className="flex items-center gap-3">
-          <FaClock className="text-red-600" />
-          <span className="font-semibold">End Date:</span> {project.endDate.split("T")[0]}  
-        </p>
-        <p className="flex items-center gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-body text-txt-primary-light dark:text-txt-primary-dark mb-6">
+        <div className="flex items-center gap-2">
+          <FaCalendarAlt className="text-green-500" />
+          <span>
+            <strong>Start:</strong> {project.startDate.split("T")[0]}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <FaClock className="text-red-500" />
+          <span>
+            <strong>End:</strong> {project.endDate.split("T")[0]}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 sm:col-span-2">
           <FaStar className="text-yellow-500" />
-          <span className="font-semibold">Priority:</span> {project.priority || 'Normal'}
-        </p>
+          <span>
+            <strong>Priority:</strong> {project.priority || "Normal"}
+          </span>
+        </div>
       </div>
 
-      {/* View Project Button */}
       <button
         onClick={handleNavigation}
-        className="flex items-center justify-center w-full px-6 py-3 mt-8 text-lg font-bold text-white transition-colors duration-300 bg-blue-600 rounded-full hover:bg-blue-700"
+        className="w-full flex items-center justify-center gap-2 px-5 py-3 text-white font-button font-medium text-sm rounded-full bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 hover:from-brand-primary-600 hover:to-brand-secondary-600 transition-all shadow-md hover:shadow-lg"
       >
-        View Project <FaArrowRight className="ml-3" />
+        View Project
+        <FaArrowRight size={14} />
       </button>
-
-      {/* Decorative Border at Bottom */}
-      </motion.div>
+    </motion.div>
   );
 };
 
