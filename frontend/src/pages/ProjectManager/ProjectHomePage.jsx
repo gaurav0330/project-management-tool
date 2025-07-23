@@ -54,7 +54,7 @@ export default function ProjectDashboard() {
   
     >
       {/* Sidebar */}
-      <div className="w-64 h-full min-h-screen bg-white shadow-lg ">
+      <div className="h-full min-h-screen bg-white shadow-lg ">
         <Sidebar setActiveComponent={setActiveComponent} />
       </div>
 
