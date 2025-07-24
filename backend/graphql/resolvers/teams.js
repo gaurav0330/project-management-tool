@@ -15,8 +15,26 @@ const teamResolvers = {
         } catch (error) {
           throw new Error(error.message);
         }
-     }
-  },
+     },
+   getTeamById: async (_, { id }) => {
+  const team = await Team.findById(id).populate({
+    path: "members.teamMemberId",
+    select: "username email",
+  });
+  if (!team) return null;
+
+  return {
+    id: team.id,
+    projectId: team.projectId,
+    leadId: team.leadId,
+    teamName: team.teamName,
+    description: team.description,
+    createdAt: team.createdAt,
+    members: team.members || [],
+  };
+},
+ 
+},
 
   Mutation: {
     createTeam: async (_, { projectId, teamName, description }, { user }) => {

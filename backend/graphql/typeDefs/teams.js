@@ -35,6 +35,7 @@ const teamTypeDefs = gql`
 
   type Query {
     getTeamsByProjectAndLead(projectId: ID!, leadId: ID!): [Team!]
+     getTeamById(id: ID!): Team
   }
 
   type Mutation {
