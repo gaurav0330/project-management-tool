@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { Search, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// GraphQL Queries & Mutations
+// 🚀 GraphQL operations
 const GET_ALL_TEAM_MEMBERS = gql`
   query GetAllTeamMembers {
     getAllTeamMembers {
@@ -22,7 +22,7 @@ const ADD_MEMBERS_TO_TEAM = gql`
       team {
         id
         members {
-          teamMemberId 
+          teamMemberId
           memberRole
         }
       }
@@ -30,127 +30,151 @@ const ADD_MEMBERS_TO_TEAM = gql`
   }
 `;
 
-function AssignTeamMembers({projectId, teamId}) {
+function AssignTeamMembers({ projectId, teamId }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [assignments, setAssignments] = useState([]);
 
-  // Fetch available members
   const { loading, error, data } = useQuery(GET_ALL_TEAM_MEMBERS);
-  const [addMemberToTeam] = useMutation(ADD_MEMBERS_TO_TEAM);
+  const [addMemberToTeam, { loading: saving }] = useMutation(ADD_MEMBERS_TO_TEAM);
 
-  // Handle search input
-  const handleSearch = (event) => {
-    setSearchQuery(event.target.value.toLowerCase());
-  };
+  const handleSearch = (e) => setSearchQuery(e.target.value.toLowerCase());
 
-  // Filter members based on search query and exclude already assigned members
-  const availableMembers = data?.getAllTeamMembers?.filter(
-    (member) =>
-      !assignments.some((assigned) => assigned.teamMemberId === member.id) &&
-      member.email.toLowerCase().includes(searchQuery)
-  );
+  const availableMembers = useMemo(() => {
+    return data?.getAllTeamMembers?.filter(
+      (member) =>
+        !assignments.find((a) => a.teamMemberId === member.id) &&
+        member.email.toLowerCase().includes(searchQuery)
+    ) || [];
+  }, [data, assignments, searchQuery]);
 
-  // Assign a team member
   const handleAssign = (member) => {
-    if (!assignments.some((assigned) => assigned.teamMemberId === member.id)) {
-      setAssignments([...assignments, { teamMemberId: member.id, memberRole: member.role || "Member" }]);
+    if (!assignments.find((m) => m.teamMemberId === member.id)) {
+      setAssignments([
+        ...assignments,
+        {
+          teamMemberId: member.id,
+          memberRole: member.role || "Member",
+          email: member.email,
+        },
+      ]);
     }
   };
 
-  // Remove an assigned member
   const handleRemove = (id) => {
-    setAssignments(assignments.filter((member) => member.teamMemberId !== id));
+    setAssignments(assignments.filter((m) => m.teamMemberId !== id));
   };
 
-  // Save Assignments
   const handleSaveAssignments = async () => {
+    if (assignments.length === 0) {
+      alert("Please assign at least one member.");
+      return;
+    }
     try {
-      const response = await addMemberToTeam({
-        variables: { teamId, teamMembers: assignments },
+      const { data } = await addMemberToTeam({
+        variables: {
+          teamId,
+          teamMembers: assignments.map(({ teamMemberId, memberRole }) => ({ teamMemberId, memberRole })),
+        },
       });
 
-      if (response.data.addMemberToTeam.success) {
-        alert("Members assigned successfully! You are ready to Create Tasks");
+      if (data.addMemberToTeam.success) {
+        alert("Members added successfully!");
+        navigate(-1); // Back to previous page or replace with project page
       } else {
-        alert("Failed: " + response.data.addMemberToTeam.message);
+        alert("Failed: " + data.addMemberToTeam.message);
       }
-    } catch (error) {
-      console.error("Error assigning members:", error);
-      alert("An error occurred while assigning members.");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong.");
     }
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50 flex justify-center items-center">
-      <div className="max-w-3xl w-full bg-white p-6 rounded-lg shadow-md">
-        {/* Header */}
+    <div className="page-bg min-h-screen py-10 px-6 flex justify-center items-start">
+      <div className="card w-full max-w-4xl">
+        {/* 🚀 Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Assign Team Members</h2>
+          <h2 className="text-2xl heading-accent">Assign Team Members</h2>
           <button
             onClick={handleSaveAssignments}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            className="btn-primary px-6 py-2"
+            disabled={saving}
           >
-            Save
+            {saving ? "Saving…" : "Save"}
           </button>
         </div>
 
-        {/* Search Input */}
-        <div className="relative mb-4">
+        {/* 🔎 Search */}
+        <div className="relative mb-6">
           <input
             type="text"
             placeholder="Search by email..."
             value={searchQuery}
             onChange={handleSearch}
-            className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+            className="w-full block px-4 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark placeholder-txt-secondary-light dark:placeholder-txt-secondary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500"
           />
-          <Search className="absolute right-3 top-2.5 w-5 h-5 text-gray-400" />
+          <Search className="absolute right-4 top-3 w-5 h-5 text-txt-muted" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 👥 Members Panels */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Available Members */}
           <div>
-            <h3 className="mb-3 text-sm font-medium text-gray-700">Available Members</h3>
-            {loading ? (
-              <p>Loading...</p>
-            ) : error ? (
-              <p className="text-red-500">Error fetching members</p>
-            ) : (
-              <div className="space-y-2 h-48 overflow-y-auto border rounded-md p-2">
-                {availableMembers.length === 0 ? (
-                  <p className="text-gray-500">No members found</p>
-                ) : (
-                  availableMembers.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-2 bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
-                      onClick={() => handleAssign(member)}
-                    >
-                      <p className="text-sm font-medium text-gray-900">{member.email} ({member.role})</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+            <h3 className="text-md font-medium text-heading-primary-light dark:text-heading-primary-dark mb-3">
+              Available Members
+            </h3>
+            <div className="border rounded-xl h-60 overflow-y-auto space-y-2 p-3 bg-bg-accent-light dark:bg-bg-accent-dark">
+              {loading ? (
+                <p className="text-muted">Loading...</p>
+              ) : error ? (
+                <p className="text-error font-medium">Error loading users.</p>
+              ) : availableMembers.length === 0 ? (
+                <p className="text-muted">No users available.</p>
+              ) : (
+                availableMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    onClick={() => handleAssign(member)}
+                    className="cursor-pointer flex justify-between items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-lg hover:bg-brand-primary-50 dark:hover:bg-brand-primary-900 transition"
+                  >
+                    <span className="text-sm">
+                      <span className="font-medium">{member.email}</span>{" "}
+                      <span className="text-muted">({member.role})</span>
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Assigned Members */}
           <div>
-            <h3 className="mb-3 text-sm font-medium text-gray-700">Assigned Members</h3>
-            {assignments.length === 0 ? (
-              <p className="text-gray-500">No members assigned yet.</p>
-            ) : (
-              <div className="space-y-2 h-48 overflow-y-auto border rounded-md p-2">
-                {assignments.map((member) => (
-                  <div key={member.teamMemberId} className="flex items-center justify-between p-2 bg-green-100 rounded-lg">
-                    <p className="text-sm font-medium text-gray-900">Member ID: {member.teamMemberId} ({member.memberRole})</p>
-                    <button onClick={() => handleRemove(member.teamMemberId)}>
-                      <X className="w-5 h-5 text-red-500 transition hover:text-red-700" />
-                    </button>
+            <h3 className="text-md font-medium text-heading-primary-light dark:text-heading-primary-dark mb-3">
+              Assigned Members
+            </h3>
+            <div className="border rounded-xl h-60 overflow-y-auto space-y-2 p-3 bg-bg-accent-light dark:bg-bg-accent-dark">
+              {assignments.length === 0 ? (
+                <p className="text-muted">No members assigned yet.</p>
+              ) : (
+                assignments.map((member) => (
+                  <div
+                    key={member.teamMemberId}
+                    className="flex justify-between items-center bg-green-100 dark:bg-green-900/40 text-sm px-3 py-2 rounded-md"
+                  >
+                    <span>
+                      <span className="font-medium">{member.email}</span>{" "}
+                      <span className="text-muted">({member.memberRole})</span>
+                    </span>
+                    <X
+                      size={18}
+                      onClick={() => handleRemove(member.teamMemberId)}
+                      className="cursor-pointer text-error hover:text-red-800 transition"
+                    />
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>
