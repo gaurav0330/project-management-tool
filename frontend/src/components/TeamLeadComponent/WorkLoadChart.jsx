@@ -3,23 +3,27 @@ import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import "chart.js/auto";
 
-// Register required components
+// Register chart components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const WorkloadChart = ({ data }) => {
+const WorkloadChart = ({ data = [] }) => {
+  const colors = [
+    "#6366f1", // brand-primary-500
+    "#f59e0b", // warning-500
+    "#10b981", // success-500
+    "#ef4444", // error-500
+    "#3b82f6", // info-500
+    "#a855f7", // brand-secondary-500
+    "#f43f5e", // pink-500 (backup if many users)
+  ];
+
   const chartData = {
     labels: data.map((d) => d.name),
     datasets: [
       {
         data: data.map((d) => d.tasks),
-        backgroundColor: [
-          "#4F46E5", // Indigo
-          "#F59E0B", // Amber
-          "#10B981", // Green
-          "#EF4444", // Red
-          "#3B82F6", // Blue
-        ],
-        hoverOffset: 10, // 3D hover effect
+        backgroundColor: colors,
+        hoverOffset: 10,
         borderWidth: 3,
         borderColor: "#fff",
       },
@@ -27,22 +31,35 @@ const WorkloadChart = ({ data }) => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-white to-gray-100 shadow-lg rounded-2xl p-6 transform transition duration-300 hover:scale-105 hover:shadow-2xl">
-      <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">
-        Workload Distribution
-      </h3>
-      <div className="relative">
+    <div className="card w-full">
+      {/* Chart Header */}
+      <div className="text-center mb-4">
+        <h2 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark tracking-tight">
+          Workload Distribution
+        </h2>
+        <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+          Visual breakdown of task assignments by member
+        </p>
+      </div>
+
+      {/* Chart */}
+      <div className="relative max-w-sm mx-auto">
         <Pie
           data={chartData}
           options={{
             responsive: true,
+            maintainAspectRatio: true,
             plugins: {
               legend: {
                 display: true,
                 position: "bottom",
                 labels: {
-                  color: "#374151",
-                  font: { size: 14, weight: "bold" },
+                  color: "var(--txt-secondary-light)",
+                  font: {
+                    size: 13,
+                    family: "Inter, sans-serif",
+                    weight: "500",
+                  },
                 },
               },
               tooltip: {
@@ -62,22 +79,31 @@ const WorkloadChart = ({ data }) => {
         />
       </div>
 
-      {/* Numerical Data Display */}
-      <div className="mt-4 text-center">
-        <h4 className="text-md font-semibold text-gray-700 mb-2">
+      {/* Task Breakdown List */}
+      <div className="mt-8 px-2">
+        <h4 className="text-sm font-semibold text-heading-accent mb-3 px-1">
           Task Breakdown
         </h4>
-        <ul className="text-sm space-y-2">
-          {data.map((user, index) => (
-            <li
-              key={index}
-              className="flex justify-between bg-gray-200 rounded-lg p-2 shadow-sm hover:bg-gray-300 transition"
-            >
-              <span className="font-medium">{user.name}</span>
-              <span className="text-gray-700 font-bold">{user.tasks} tasks</span>
-            </li>
-          ))}
-        </ul>
+
+        {data.length === 0 ? (
+          <p className="text-muted text-sm text-center">No data available</p>
+        ) : (
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {data.map((user, index) => (
+              <li
+                key={index}
+                className="flex items-center justify-between border border-gray-200 dark:border-gray-700 bg-bg-accent-light dark:bg-bg-accent-dark transition-all p-3 rounded-lg shadow-sm hover:shadow-md"
+              >
+                <span className="truncate font-medium text-txt-primary-light dark:text-txt-primary-dark">
+                  {user.name}
+                </span>
+                <span className="text-sm font-semibold text-brand-primary-600 dark:text-brand-primary-400">
+                  {user.tasks} tasks
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

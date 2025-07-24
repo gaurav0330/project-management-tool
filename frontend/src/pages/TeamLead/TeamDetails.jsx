@@ -49,7 +49,6 @@ export default function TeamDetails() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
   // Fetch team data
   const { loading: teamLoading, error: teamError, data: teamData } = useQuery(GET_TEAM_BY_ID, {
     variables: { id: teamId }
