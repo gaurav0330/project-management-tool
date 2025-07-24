@@ -28,49 +28,55 @@ const taskService = {
         }
     },
     
- getTasksByManager : async (managerId, projectId) => {
-    try {
-        console.log("Fetching tasks for Manager ID:", managerId);
-        if (projectId) {
-            console.log("Filtering by Project ID:", projectId);
-        }
+getTasksByTeamLead : async (teamLeadId, memberId, projectId) => {
+  try {
+    console.log("Fetching tasks created by Team Lead ID:", teamLeadId);
+    if (memberId) console.log("Filtering by Member ID:", memberId);
+    if (projectId) console.log("Filtering by Project ID:", projectId);
 
-        const filter = { createdBy: managerId }; // Filter tasks by the manager who created them
+    // Build the filter query
+    const filter = { createdBy: teamLeadId };
 
-        if (projectId) {
-            filter.project = projectId; // If projectId is provided, filter tasks by project
-        }
+    if (memberId) filter.assignedTo = memberId;
+    if (projectId) filter.project = projectId;
 
-        console.log("Applied Filter:", filter);
+    console.log("Applied Filter:", filter);
 
-        const tasks = await Task.find(filter)
-            .populate("createdBy")
-            .lean(); 
-            
-        console.log("Retrieved Tasks:", tasks);
+    // Fetch tasks matching filter
+    const tasks = await Task.find(filter)
+      .populate("createdBy", "username") // Populate creator's username (optional)
+      .lean();
 
-        const userIds = tasks.map(task => task.assignedTo).filter(id => id); // Get unique user IDs
-        const users = await User.find({ _id: { $in: userIds } }, "username").lean(); // Fetch usernames
+    console.log(`Retrieved ${tasks.length} Tasks`);
 
-        const userMap = users.reduce((acc, user) => {
-            acc[user._id.toString()] = user.username;
-            return acc;
-        }, {});
+    // Extract unique assignedTo user IDs from tasks (exclude null/undefined)
+    const userIds = [...new Set(tasks.map(task => task.assignedTo).filter(Boolean))];
 
-        return tasks.map(task => ({
-            ...task,
-            dueDate: task.dueDate ? task.dueDate.toISOString() : null,
-            createdAt: task.createdAt ? task.createdAt.toISOString() : null,
-            updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
-            id: task._id.toString(),
-            createdBy: task.createdBy._id.toString(),  // Convert createdBy to string
-            assignedTo: task.assignedTo ? task.assignedTo._id.toString() : null  ,
-            assignName: task.assignedTo ? userMap[task.assignedTo.toString()] || "Unknown" : null, // Get username
-        }));
-    } catch (error) {
-        console.error("Error fetching tasks:", error);
-        throw new Error(`Error fetching tasks: ${error.message}`);
-    }
+    // Fetch users from database by IDs, only need username field
+    const users = await User.find({ _id: { $in: userIds } }, "username").lean();
+
+    // Map userId -> username for easy lookup
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id.toString()] = user.username;
+      return acc;
+    }, {});
+
+    // Format and return tasks with assignName filled from userMap
+    return tasks.map(task => ({
+      ...task,
+      id: task._id.toString(),
+      // Convert ISO strings for dates if they exist
+      dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+      createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+      updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
+      createdBy: task.createdBy._id.toString(),
+      assignedTo: task.assignedTo ? task.assignedTo.toString() : null,
+      assignName: task.assignedTo ? (userMap[task.assignedTo.toString()] || "Unknown") : null,
+    }));
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw new Error(`Error fetching tasks: ${error.message}`);
+  }
 },
 
 

@@ -352,7 +352,7 @@ const TaskManagementPage = ({ projectId }) => {
               </p>
             </div>
             
-            {/* <motion.button
+            <motion.button
               onClick={() => showNotification("info", "Add task functionality to be implemented")}
               className="btn-primary flex items-center gap-2"
               whileHover={{ scale: 1.02 }}
@@ -360,7 +360,7 @@ const TaskManagementPage = ({ projectId }) => {
             >
               <FaPlus className="w-4 h-4" />
               Add New Task
-            </motion.button> */}
+            </motion.button>
           </div>
         </motion.div>
 
