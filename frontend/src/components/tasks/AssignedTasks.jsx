@@ -7,7 +7,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { 
   Search, 
   Plus, 
-  Filter, 
   Edit, 
   Trash2, 
   Clock, 
@@ -16,13 +15,13 @@ import {
   AlertCircle,
   CheckCircle,
   Calendar,
-  ArrowUpDown,
   FileText,
   Loader,
   RefreshCw
 } from "lucide-react";
+import CreateTaskModal from "./CreateTasksModal"; // Import the modal
 
-// GraphQL Query
+// GraphQL Queries and Mutations
 const GET_TASKS_BY_MANAGER = gql`
   query GetTasksByManager($managerId: ID!, $projectId: ID!) {
     getTasksByManager(managerId: $managerId, projectId: $projectId) {
@@ -71,21 +70,25 @@ const AssignedTasks = () => {
 
   const shouldSkipQuery = !managerId || !projectId;
 
-  const { data, loading, error, refetch } = useQuery(GET_TASKS_BY_MANAGER, {
-    variables: { managerId, projectId },
-    skip: shouldSkipQuery,
-    fetchPolicy: "network-only",
-  });
-
+  // State management
   const [searchTerm, setSearchTerm] = useState("");
   const [sortPriority, setSortPriority] = useState("");
   const [sortStatus, setSortStatus] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [notification, setNotification] = useState({ show: false, type: "", message: "" });
+  const [showCreateModal, setShowCreateModal] = useState(false); // Add create modal state
+
+  // GraphQL operations
+  const { data, loading, error, refetch } = useQuery(GET_TASKS_BY_MANAGER, {
+    variables: { managerId, projectId },
+    skip: shouldSkipQuery,
+    fetchPolicy: "network-only",
+  });
 
   const [deleteTask, { loading: deleting }] = useMutation(DELETE_TASK);
 
+  // Helper functions
   const showNotification = (type, message) => {
     setNotification({ show: true, type, message });
     setTimeout(() => setNotification({ show: false, type: "", message: "" }), 4000);
@@ -112,6 +115,11 @@ const AssignedTasks = () => {
       setShowDeleteModal(false);
       setTaskToDelete(null);
     }
+  };
+
+  const handleTaskCreated = () => {
+    showNotification("success", "Task created successfully!");
+    refetch(); // Refresh the tasks list
   };
 
   const getPriorityColor = (priority) => {
@@ -202,6 +210,17 @@ const AssignedTasks = () => {
 
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
+      {/* Create Task Modal */}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateTaskModal
+            isOpen={showCreateModal}
+            onClose={() => setShowCreateModal(false)}
+            onSuccess={handleTaskCreated}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {showDeleteModal && (
@@ -295,7 +314,7 @@ const AssignedTasks = () => {
             </div>
             
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => setShowCreateModal(true)}
               className="btn-primary flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
