@@ -22,8 +22,6 @@ const GET_TEAM_BY_ID = gql`
       teamName
       description
       createdAt
-      memberCount
-      taskCount
     }
   }
 `;
@@ -38,7 +36,9 @@ export default function TeamDetails() {
   const [isHovering, setIsHovering] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  const { loading, error, data } = useQuery(GET_TEAM_BY_ID, { variables: { id: teamId } });
+
+  const { loading, error, data } = useQuery(GET_TEAM_BY_ID, { variables: { id: String(teamId) },
+ });
   const teamData = data?.getTeamById;
 
   // Handle window resize

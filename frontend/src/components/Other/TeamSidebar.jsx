@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
 import {
-  LayoutDashboard,
-  Users,
-  ClipboardEdit,
+  House,
+  UsersFour,
+  ClipboardText,
   ListChecks,
-  BarChart2,
-  Menu,
-  X,
+  ChartBar,
   UserPlus,
-  SplitSquareVertical,
-} from "lucide-react";
+  ArrowsLeftRight,
+  CaretDown,
+  CaretUp,
+  List,
+  X,
+} from "phosphor-react"; // Install: npm i phosphor-react
 import {
-  Sheet, SheetContent, SheetTrigger,
+  Sheet,
+  SheetContent,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "../../../lib/utils";
@@ -19,26 +23,26 @@ import { cn } from "../../../lib/utils";
 const TEAM_MENU = [
   {
     title: "Project Overview",
-    icon: LayoutDashboard,
+    icon: House,
     items: [
-      { label: "Project Home", icon: LayoutDashboard, component: "projectHome" },
+      { label: "Project Home", icon: House, component: "projectHome" },
     ],
   },
   {
     title: "Task Management",
-    icon: ClipboardEdit,
+    icon: ClipboardText,
     items: [
-      { label: "Create Tasks", icon: ClipboardEdit, component: "createtasks" },
+      { label: "Create Tasks", icon: ClipboardText, component: "createtasks" },
       { label: "Manage Tasks", icon: ListChecks, component: "managetasks" },
-      { label: "Approve Tasks", icon: BarChart2, component: "approvetasks" },
+      { label: "Approve Tasks", icon: ChartBar, component: "approvetasks" },
     ],
   },
   {
     title: "Team & Reports",
-    icon: Users,
+    icon: UsersFour,
     items: [
       { label: "Add Members", icon: UserPlus, component: "addmembers" },
-      { label: "Task Distribution", icon: SplitSquareVertical, component: "taskDistribution" },
+      { label: "Task Distribution", icon: ArrowsLeftRight, component: "taskDistribution" },
     ],
   },
 ];
@@ -50,17 +54,12 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
   const [isHovering, setIsHovering] = useState(false);
   const [expandedSections, setExpandedSections] = useState({});
 
-  // Sidebar visibility logic (hover/collapse)
   const shouldShowFull = !isCollapsed || isHovering;
 
-  // Notify parent component when sidebar state changes
   useEffect(() => {
-    if (onStateChange) {
-      onStateChange(isCollapsed, isHovering);
-    }
+    if (onStateChange) onStateChange(isCollapsed, isHovering);
   }, [isCollapsed, isHovering, onStateChange]);
 
-  // Expand/collapse section logic
   const toggleSection = (title) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -68,13 +67,8 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
     }));
   };
 
-  const handleMouseEnter = () => {
-    setIsHovering(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovering(false);
-  };
+  const handleMouseEnter = () => setIsHovering(true);
+  const handleMouseLeave = () => setIsHovering(false);
 
   const SidebarMenu = (
     <aside
@@ -89,9 +83,14 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-center border-b border-gray-200/20 dark:border-gray-700/20 bg-bg-primary-light dark:bg-bg-primary-dark px-3">
-        <div className={cn("flex items-center transition-all duration-300", shouldShowFull ? "gap-2.5" : "justify-center")}>
+        <div
+          className={cn(
+            "flex items-center transition-all duration-300",
+            shouldShowFull ? "gap-2.5" : "justify-center"
+          )}
+        >
           <div className="w-7 h-7 bg-brand-primary-600 rounded-lg flex items-center justify-center shadow-sm">
-            <LayoutDashboard className="w-4 h-4 text-white" />
+            <House className="w-4 h-4 text-white" weight="fill" />
           </div>
           {shouldShowFull && (
             <h1 className="font-heading text-base font-semibold text-heading-primary-light dark:text-heading-primary-dark">
@@ -101,7 +100,7 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
         </div>
       </div>
 
-      {/* Collapse Toggle Button */}
+      {/* Collapse Toggle */}
       <div className="px-3 py-2 border-b border-gray-200/10 dark:border-gray-700/10">
         <Button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -112,38 +111,31 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
             shouldShowFull ? "w-full justify-start gap-2" : "w-10 h-10 p-0 justify-center"
           )}
         >
-          {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
-          {shouldShowFull && (
-            <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>
-          )}
+          {isCollapsed ? <List className="h-5 w-5" /> : <X className="h-5 w-5" />}
+          {shouldShowFull && <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>}
         </Button>
       </div>
 
-      {/* Sidebar Sections */}
+      {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
-        {TEAM_MENU.map(({ title, icon: SectionIcon, items }, i) => (
-          <div key={i} className="space-y-1">
-            {/* Expandable Section Header */}
+        {TEAM_MENU.map(({ title, icon: SectionIcon, items }, index) => (
+          <div key={index} className="space-y-1">
             {shouldShowFull ? (
               <Button
                 onClick={() => toggleSection(title)}
                 variant="ghost"
-                className={cn(
-                  "w-full justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-all duration-300",
-                  "bg-bg-primary-light dark:bg-bg-primary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark",
-                  "text-txt-primary-light dark:text-txt-primary-dark border border-gray-200/20 dark:border-gray-700/20"
-                )}
+                className="w-full justify-between px-3 py-2.5 text-xs font-medium rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark"
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-6 h-6 rounded-md bg-brand-primary-50 dark:bg-brand-primary-900/20 flex items-center justify-center">
-                    <SectionIcon className="w-4 h-4 text-brand-primary-600 dark:text-brand-primary-400" />
+                    <SectionIcon className="w-4 h-4 text-brand-primary-600 dark:text-brand-primary-400" weight="duotone" />
                   </div>
                   <span className="font-medium tracking-wide uppercase">{title}</span>
                 </div>
                 {expandedSections[title] ? (
-                  <X className="h-4 w-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                  <CaretUp className="w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
                 ) : (
-                  <Menu className="h-4 w-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                  <CaretDown className="w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
                 )}
               </Button>
             ) : (
@@ -152,15 +144,15 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                   className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark"
                   title={title}
                 >
-                  <SectionIcon className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" />
+                  <SectionIcon className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" weight="fill" />
                 </div>
               </div>
             )}
 
             {/* Expanded Links */}
             {shouldShowFull && expandedSections[title] && (
-              <div className="ml-3 space-y-1 border-l border-gray-300/30 dark:border-gray-600/30 pl-3 py-1">
-                {items.map((item, j) => (
+              <div className="ml-3 border-l border-gray-300/30 dark:border-gray-600/30 pl-3 py-1 space-y-1">
+                {items.map((item) => (
                   <Button
                     key={item.label}
                     onClick={() => {
@@ -172,18 +164,23 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                     className={cn(
                       "w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-300",
                       activeItem === item.label
-                        ? "bg-brand-primary-600 text-white shadow-lg font-medium"
+                        ? "bg-brand-primary-600 text-white shadow-md font-medium"
                         : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
                     )}
                   >
-                    <item.icon className="h-4 w-4 flex-shrink-0" />
-                    <span className="font-medium tracking-wide">{item.label}</span>
+                    <item.icon className="h-4 w-4 flex-shrink-0" weight="duotone" />
+                    <span className="tracking-wide">{item.label}</span>
                   </Button>
                 ))}
               </div>
             )}
 
-            {/* Collapsed Section: icons only */}
+            {/* Divider between sections */}
+            {shouldShowFull && index !== TEAM_MENU.length - 1 && (
+              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
+            )}
+
+            {/* Collapsed icon-only view */}
             {!shouldShowFull && (
               <div className="space-y-2">
                 {items.map((item) => (
@@ -196,24 +193,19 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                       }}
                       variant="ghost"
                       size="sm"
+                      title={item.label}
                       className={cn(
                         "w-10 h-10 p-0 rounded-lg transition-all duration-300",
                         activeItem === item.label
-                          ? "bg-brand-primary-600 text-white shadow-lg"
-                          : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                          ? "bg-brand-primary-600 text-white shadow-md"
+                          : "hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark text-txt-secondary-light dark:text-txt-secondary-dark"
                       )}
-                      title={item.label}
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-4 w-4" weight="fill" />
                     </Button>
                   </div>
                 ))}
               </div>
-            )}
-
-            {/* Divider */}
-            {shouldShowFull && i !== TEAM_MENU.length - 1 && (
-              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
             )}
           </div>
         ))}
@@ -221,18 +213,16 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
     </aside>
   );
 
-  // Main Render
   return (
     <>
-      {/* Mobile Drawer */}
+      {/* Mobile sidebar drawer */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
           <Button
             size="icon"
-            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl"
-            aria-label="Open sidebar"
+            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white border-none rounded-xl"
           >
-            <Menu size={20} />
+            <List size={20} />
           </Button>
         </SheetTrigger>
         <SheetContent
@@ -242,11 +232,14 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
           {SidebarMenu}
         </SheetContent>
       </Sheet>
-      {/* Desktop Fixed Sidebar */}
-      <div className={cn(
-        "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
-        shouldShowFull ? "w-64" : "w-16"
-      )}>
+
+      {/* Desktop sidebar */}
+      <div
+        className={cn(
+          "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
+          shouldShowFull ? "w-64" : "w-16"
+        )}
+      >
         {SidebarMenu}
       </div>
     </>
