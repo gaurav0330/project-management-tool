@@ -183,6 +183,65 @@ const MyTeams = () => {
           </div>
         </motion.div>
 
+  {/* Team Stats */}
+        {teams.length > 0 && (
+          <motion.div
+            className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
+              Team Overview
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-brand-primary-50 dark:bg-brand-primary-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaUsers className="w-8 h-8 text-brand-primary-600 dark:text-brand-primary-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-brand-primary-700 dark:text-brand-primary-300">
+                      {teams.length}
+                    </p>
+                    <p className="font-body text-sm text-brand-primary-600 dark:text-brand-primary-400">
+                      Total Teams
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaCalendarAlt className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-green-700 dark:text-green-300">
+                      {teams.filter(team => {
+                        const createdDate = new Date(team.createdAt);
+                        const lastWeek = new Date();
+                        lastWeek.setDate(lastWeek.getDate() - 7);
+                        return createdDate >= lastWeek;
+                      }).length}
+                    </p>
+                    <p className="font-body text-sm text-green-600 dark:text-green-400">
+                      Created This Week
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaUsers className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      {teams.length > 0 ? Math.ceil(teams.length * 2.5) : 0}
+                    </p>
+                    <p className="font-body text-sm text-purple-600 dark:text-purple-400">
+                      Est. Team Members
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
         {/* Search and Controls Bar */}
         <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6 mb-8"
@@ -328,66 +387,6 @@ const MyTeams = () => {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Team Stats */}
-        {teams.length > 0 && (
-          <motion.div
-            className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
-              Team Overview
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-brand-primary-50 dark:bg-brand-primary-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaUsers className="w-8 h-8 text-brand-primary-600 dark:text-brand-primary-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-brand-primary-700 dark:text-brand-primary-300">
-                      {teams.length}
-                    </p>
-                    <p className="font-body text-sm text-brand-primary-600 dark:text-brand-primary-400">
-                      Total Teams
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaCalendarAlt className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-green-700 dark:text-green-300">
-                      {teams.filter(team => {
-                        const createdDate = new Date(team.createdAt);
-                        const lastWeek = new Date();
-                        lastWeek.setDate(lastWeek.getDate() - 7);
-                        return createdDate >= lastWeek;
-                      }).length}
-                    </p>
-                    <p className="font-body text-sm text-green-600 dark:text-green-400">
-                      Created This Week
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaUsers className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-purple-700 dark:text-purple-300">
-                      {teams.length > 0 ? Math.ceil(teams.length * 2.5) : 0}
-                    </p>
-                    <p className="font-body text-sm text-purple-600 dark:text-purple-400">
-                      Est. Team Members
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

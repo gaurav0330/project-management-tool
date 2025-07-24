@@ -260,6 +260,72 @@ export default function TaskSubmissionPage({ projectId }) {
           </div>
         </motion.div>
 
+        {/* Task Statistics */}
+        <motion.div
+          className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
+            Task Overview
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[
+              {
+                title: "Total Tasks",
+                value: data?.getTasksForLead?.length || 0,
+                icon: FaTasks,
+                color: "blue",
+                gradient: "from-blue-500 to-blue-600"
+              },
+              {
+                title: "Pending",
+                value: data?.getTasksForLead?.filter(t => t.status === "Pending").length || 0,
+                icon: FaClock,
+                color: "gray",
+                gradient: "from-gray-500 to-gray-600"
+              },
+              {
+                title: "In Progress",
+                value: data?.getTasksForLead?.filter(t => t.status === "In Progress").length || 0,
+                icon: FaFlag,
+                color: "yellow",
+                gradient: "from-yellow-500 to-orange-500"
+              },
+              {
+                title: "Completed",
+                value: data?.getTasksForLead?.filter(t => t.status === "Done").length || 0,
+                icon: FaCheckCircle,
+                color: "green",
+                gradient: "from-green-500 to-emerald-500"
+              }
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.title}
+                className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-4 hover:shadow-lg transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="text-white text-lg" />
+                  </div>
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+                      {stat.value}
+                    </p>
+                    <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                      {stat.title}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
         {/* Search and Filter Bar */}
         <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6 mb-8"
@@ -384,72 +450,6 @@ export default function TaskSubmissionPage({ projectId }) {
           </motion.div>
         </div>
 
-        {/* Task Statistics */}
-        <motion.div
-          className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
-            Task Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              {
-                title: "Total Tasks",
-                value: data?.getTasksForLead?.length || 0,
-                icon: FaTasks,
-                color: "blue",
-                gradient: "from-blue-500 to-blue-600"
-              },
-              {
-                title: "Pending",
-                value: data?.getTasksForLead?.filter(t => t.status === "Pending").length || 0,
-                icon: FaClock,
-                color: "gray",
-                gradient: "from-gray-500 to-gray-600"
-              },
-              {
-                title: "In Progress",
-                value: data?.getTasksForLead?.filter(t => t.status === "In Progress").length || 0,
-                icon: FaFlag,
-                color: "yellow",
-                gradient: "from-yellow-500 to-orange-500"
-              },
-              {
-                title: "Completed",
-                value: data?.getTasksForLead?.filter(t => t.status === "Done").length || 0,
-                icon: FaCheckCircle,
-                color: "green",
-                gradient: "from-green-500 to-emerald-500"
-              }
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.title}
-                className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-4 hover:shadow-lg transition-all duration-300"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center shadow-lg`}>
-                    <stat.icon className="text-white text-lg" />
-                  </div>
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
-                      {stat.value}
-                    </p>
-                    <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                      {stat.title}
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </div>
   );
