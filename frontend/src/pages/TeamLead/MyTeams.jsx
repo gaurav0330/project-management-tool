@@ -1,10 +1,23 @@
 import React, { useState } from "react";
 import { useQuery } from "@apollo/client";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaPlus } from "react-icons/fa";
+import { useTheme } from "../../contexts/ThemeContext";
+import { motion, AnimatePresence } from "framer-motion";
 import { gql } from "@apollo/client";
 import { jwtDecode } from "jwt-decode";
 import TeamCard from "../../components/Other/TeamCard";
+import { 
+  FaPlus, 
+  FaSearch, 
+  FaUsers, 
+  FaCalendarAlt,
+  FaFilter,
+  FaSortAmountDown,
+  FaTh,
+  FaList,
+  FaExclamationTriangle,
+  FaSpinner
+} from "react-icons/fa";
 
 // GraphQL Query
 const GET_TEAMS_BY_PROJECT_AND_LEAD = gql`
@@ -35,47 +48,346 @@ export const getTokenLeadId = () => {
 const MyTeams = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const leadId = getTokenLeadId();
+  
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [viewMode, setViewMode] = useState("grid"); // grid or list
+  const [showFilters, setShowFilters] = useState(false);
 
-  const { loading, error, data } = useQuery(GET_TEAMS_BY_PROJECT_AND_LEAD, {
+  const { loading, error, data, refetch } = useQuery(GET_TEAMS_BY_PROJECT_AND_LEAD, {
     variables: { projectId, leadId },
     skip: !projectId || !leadId,
+    fetchPolicy: "cache-and-network",
   });
 
-  if (loading) return <div className="py-6 text-center text-gray-500">Loading teams...</div>;
-  if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
+  // Filter and sort teams
+  const processedTeams = React.useMemo(() => {
+    if (!data?.getTeamsByProjectAndLead) return [];
+    
+    let filteredTeams = data.getTeamsByProjectAndLead.filter((team) =>
+      team.teamName.toLowerCase().includes(search.toLowerCase()) ||
+      team.description?.toLowerCase().includes(search.toLowerCase())
+    );
 
-  const teams = data?.getTeamsByProjectAndLead || [];
+    // Sort teams
+    filteredTeams.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case "oldest":
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case "name":
+          return a.teamName.localeCompare(b.teamName);
+        default:
+          return 0;
+      }
+    });
+
+    return filteredTeams;
+  }, [data, search, sortBy]);
+
+  const handleCreateTeam = () => {
+    navigate(`/project/${projectId}/create-team`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <motion.div
+            className="flex flex-col items-center gap-4"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="relative">
+              <FaSpinner className="w-8 h-8 text-brand-primary-500 animate-spin" />
+              <div className="absolute inset-0 w-8 h-8 border-2 border-brand-primary-200 dark:border-brand-primary-800 rounded-full animate-pulse"></div>
+            </div>
+            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">
+              Loading your teams...
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <motion.div
+            className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-red-200 dark:border-red-800 p-8 max-w-md text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaExclamationTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="font-heading text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+              Error Loading Teams
+            </h3>
+            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
+              {error.message}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="btn-primary"
+            >
+              Try Again
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  const teams = processedTeams;
 
   return (
-    <div className="min-h-screen p-6 bg-gray-100">
-      <div className="max-w-6xl p-6 mx-auto bg-white shadow-lg rounded-xl">
+    <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Teams</h2>
-          <button className="flex items-center gap-2 px-4 py-2 text-white transition bg-blue-600 rounded-lg hover:bg-blue-700">
-            <FaPlus /> Create Team
-          </button>
-        </div>
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h1 className="font-heading text-3xl font-bold text-heading-primary-light dark:text-heading-primary-dark mb-2 flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-brand-primary-500 to-brand-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <FaUsers className="w-5 h-5 text-white" />
+                </div>
+                My Teams
+              </h1>
+              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">
+                Manage and organize your project teams
+              </p>
+            </div>
+            
+            <motion.button
+              onClick={handleCreateTeam}
+              className="btn-primary flex items-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FaPlus className="w-4 h-4" />
+              Create Team
+            </motion.button>
+          </div>
+        </motion.div>
 
-        {/* Search Input */}
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="Search teams..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        {/* Search and Controls Bar */}
+        <motion.div
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6 mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+              <input
+                type="text"
+                placeholder="Search teams by name or description..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 text-txt-primary-light dark:text-txt-primary-dark font-body transition-all duration-200"
+              />
+            </div>
 
-        {/* Teams Grid */}
-        {teams
-  .filter((team) => team.teamName.toLowerCase().includes(search.toLowerCase()))
-  .map((team) => (
-    <TeamCard key={team.id} team={team} projectId={projectId} navigate={navigate} />
-  ))}
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 text-txt-primary-light dark:text-txt-primary-dark font-body transition-all duration-200"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="name">Name A-Z</option>
+            </select>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-1 border border-gray-200 dark:border-gray-600">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === "grid"
+                    ? "bg-brand-primary-500 text-white shadow-md"
+                    : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                }`}
+              >
+                <FaTh className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === "list"
+                    ? "bg-brand-primary-500 text-white shadow-md"
+                    : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                }`}
+              >
+                <FaList className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Results Info */}
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200/20 dark:border-gray-700/20">
+            <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+              {teams.length} team{teams.length !== 1 ? 's' : ''} found
+              {search && ` for "${search}"`}
+            </p>
+            <div className="flex items-center gap-2">
+              <FaSortAmountDown className="w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+              <span className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                Sorted by {sortBy === "newest" ? "Date (Newest)" : sortBy === "oldest" ? "Date (Oldest)" : "Name"}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Teams Content */}
+        <AnimatePresence mode="wait">
+          {teams.length > 0 ? (
+            <motion.div
+              key="teams-content"
+              className={`grid gap-6 ${
+                viewMode === "grid" 
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+                  : "grid-cols-1"
+              }`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              layout
+            >
+              {teams.map((team, index) => (
+                <motion.div
+                  key={team.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  layout
+                >
+                  <TeamCard 
+                    team={team} 
+                    projectId={projectId} 
+                    navigate={navigate}
+                    viewMode={viewMode}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty-state"
+              className="text-center py-16"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-12 max-w-md mx-auto">
+                <div className="w-20 h-20 bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaUsers className="w-10 h-10 text-brand-primary-500" />
+                </div>
+                <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-3">
+                  {search ? "No Teams Found" : "No Teams Yet"}
+                </h3>
+                <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
+                  {search 
+                    ? `No teams match your search "${search}". Try adjusting your search terms.`
+                    : "You haven't created any teams yet. Start building your first team to collaborate effectively."
+                  }
+                </p>
+                {!search && (
+                  <motion.button
+                    onClick={handleCreateTeam}
+                    className="btn-primary flex items-center gap-2 mx-auto"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <FaPlus className="w-4 h-4" />
+                    Create Your First Team
+                  </motion.button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Team Stats */}
+        {teams.length > 0 && (
+          <motion.div
+            className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
+              Team Overview
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-brand-primary-50 dark:bg-brand-primary-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaUsers className="w-8 h-8 text-brand-primary-600 dark:text-brand-primary-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-brand-primary-700 dark:text-brand-primary-300">
+                      {teams.length}
+                    </p>
+                    <p className="font-body text-sm text-brand-primary-600 dark:text-brand-primary-400">
+                      Total Teams
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaCalendarAlt className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-green-700 dark:text-green-300">
+                      {teams.filter(team => {
+                        const createdDate = new Date(team.createdAt);
+                        const lastWeek = new Date();
+                        lastWeek.setDate(lastWeek.getDate() - 7);
+                        return createdDate >= lastWeek;
+                      }).length}
+                    </p>
+                    <p className="font-body text-sm text-green-600 dark:text-green-400">
+                      Created This Week
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <FaUsers className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-purple-700 dark:text-purple-300">
+                      {teams.length > 0 ? Math.ceil(teams.length * 2.5) : 0}
+                    </p>
+                    <p className="font-body text-sm text-purple-600 dark:text-purple-400">
+                      Est. Team Members
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );
