@@ -1,99 +1,254 @@
-import { useState } from "react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
-  MdDashboard,
-  MdPeople,
-  MdAssignment,
-  MdTimeline,
-  MdBarChart,
-  MdMenu,
-  MdClose,
-} from "react-icons/md";
-import "./SideBar.css"; // Import sidebar styles
+  LayoutDashboard,
+  Users,
+  ClipboardEdit,
+  ListChecks,
+  BarChart2,
+  Menu,
+  X,
+  UserPlus,
+  SplitSquareVertical,
+} from "lucide-react";
+import {
+  Sheet, SheetContent, SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { cn } from "../../../lib/utils";
 
-const TeamSidebar = ({ setActiveComponent }) => {
+const TEAM_MENU = [
+  {
+    title: "Project Overview",
+    icon: LayoutDashboard,
+    items: [
+      { label: "Project Home", icon: LayoutDashboard, component: "projectHome" },
+    ],
+  },
+  {
+    title: "Task Management",
+    icon: ClipboardEdit,
+    items: [
+      { label: "Create Tasks", icon: ClipboardEdit, component: "createtasks" },
+      { label: "Manage Tasks", icon: ListChecks, component: "managetasks" },
+      { label: "Approve Tasks", icon: BarChart2, component: "approvetasks" },
+    ],
+  },
+  {
+    title: "Team & Reports",
+    icon: Users,
+    items: [
+      { label: "Add Members", icon: UserPlus, component: "addmembers" },
+      { label: "Task Distribution", icon: SplitSquareVertical, component: "taskDistribution" },
+    ],
+  },
+];
+
+const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState(null); // Track active item
+  const [activeItem, setActiveItem] = useState("");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({});
 
-  // Organized sidebar menu with categories
-  const sidebarMenu = [
-    {
-      category: "Project Overview",
-      items: [{ name: "Project Home", icon: MdDashboard, component: "projectHome" }],
-    },
-    {
-      category: "Task Management",
-      items: [
-        { name: "Create Tasks", icon: MdAssignment, component: "createtasks" },
-        { name: "Manage Tasks", icon: MdTimeline, component: "managetasks" },
-        { name: "Approve Tasks", icon: MdBarChart, component: "approvetasks" },
-      ],
-    },
-    {
-      category: "Team & Reports",
-      items: [
-        { name: "Add Members", icon: MdPeople, component: "addmembers" },
-        { name: "Task Distribution", icon: MdBarChart, component: "taskDistribution" },
-      ],
-    },
-  ];
+  // Sidebar visibility logic (hover/collapse)
+  const shouldShowFull = !isCollapsed || isHovering;
 
-  return (
-    <>
-      {/* Mobile Menu Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed z-50 p-2 text-white transition duration-300 bg-gray-800 rounded-md top-4 left-4 lg:hidden hover:bg-gray-900"
-      >
-        {isOpen ? <MdClose size={24} /> : <MdMenu size={24} />}
-      </button>
+  // Notify parent component when sidebar state changes
+  useEffect(() => {
+    if (onStateChange) {
+      onStateChange(isCollapsed, isHovering);
+    }
+  }, [isCollapsed, isHovering, onStateChange]);
 
-      {/* Sidebar Panel */}
-      <div
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg border border-gray-300 transition-transform duration-300 ease-in-out transform 
-          ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
-          w-64 z-40 flex flex-col rounded-lg`}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-center h-16 bg-gray-800 rounded-t-lg">
-          <h1 className="text-xl font-bold text-white">Team Dashboard</h1>
+  // Expand/collapse section logic
+  const toggleSection = (title) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+  };
+
+  const SidebarMenu = (
+    <aside
+      className={cn(
+        "flex h-full flex-col border-r transition-all duration-300 backdrop-blur-md",
+        "bg-bg-secondary-light dark:bg-bg-secondary-dark",
+        "border-gray-200/30 dark:border-gray-700/30",
+        shouldShowFull ? "w-64" : "w-16"
+      )}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Header */}
+      <div className="h-16 flex items-center justify-center border-b border-gray-200/20 dark:border-gray-700/20 bg-bg-primary-light dark:bg-bg-primary-dark px-3">
+        <div className={cn("flex items-center transition-all duration-300", shouldShowFull ? "gap-2.5" : "justify-center")}>
+          <div className="w-7 h-7 bg-brand-primary-600 rounded-lg flex items-center justify-center shadow-sm">
+            <LayoutDashboard className="w-4 h-4 text-white" />
+          </div>
+          {shouldShowFull && (
+            <h1 className="font-heading text-base font-semibold text-heading-primary-light dark:text-heading-primary-dark">
+              Team Dashboard
+            </h1>
+          )}
         </div>
-
-        {/* Sidebar Navigation */}
-        <nav className="flex-1 px-4 py-4 overflow-y-auto">
-          {sidebarMenu.map((category, categoryIndex) => (
-            <div key={categoryIndex} className="mb-6">
-              <h2 className="p-2 px-4 mb-3 text-xs font-semibold tracking-wider text-gray-600 uppercase bg-gray-200 rounded-md">
-                {category.category}
-              </h2>
-              <div className="space-y-3">
-                {category.items.map((item, itemIndex) => (
-                  <button
-                    key={itemIndex}
-                    onClick={() => {
-                      setActiveComponent(item.component);
-                      setActiveItem(item.name); // Highlight active item
-                      setIsOpen(false); // Close sidebar on mobile
-                    }}
-                    className={`flex items-center w-full px-4 py-3 text-gray-600 transition-transform duration-200 transform border border-gray-300 rounded-lg 
-                      ${activeItem === item.name ? "bg-blue-200" : "hover:bg-blue-100"} 
-                      hover:shadow-lg hover:scale-105`}
-                  >
-                    <div className="flex items-center justify-center w-8 h-8 mr-3 rounded-full bg-blue-50">
-                      {React.createElement(item.icon, { className: "w-5 h-5 text-blue-600" })}
-                    </div>
-                    <span className="font-medium">{item.name}</span>
-                  </button>
-                ))}
-              </div>
-              {categoryIndex < sidebarMenu.length - 1 && <hr className="my-4 border-gray-300" />}
-            </div>
-          ))}
-        </nav>
       </div>
 
-      {/* Mobile Overlay (Closes Sidebar when clicked) */}
-      {isOpen && <div className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden" onClick={() => setIsOpen(false)} />}
+      {/* Collapse Toggle Button */}
+      <div className="px-3 py-2 border-b border-gray-200/10 dark:border-gray-700/10">
+        <Button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "transition-all duration-300 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark text-txt-primary-light dark:text-txt-primary-dark",
+            shouldShowFull ? "w-full justify-start gap-2" : "w-10 h-10 p-0 justify-center"
+          )}
+        >
+          {isCollapsed ? <Menu className="h-5 w-5" /> : <X className="h-5 w-5" />}
+          {shouldShowFull && (
+            <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>
+          )}
+        </Button>
+      </div>
+
+      {/* Sidebar Sections */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-2">
+        {TEAM_MENU.map(({ title, icon: SectionIcon, items }, i) => (
+          <div key={i} className="space-y-1">
+            {/* Expandable Section Header */}
+            {shouldShowFull ? (
+              <Button
+                onClick={() => toggleSection(title)}
+                variant="ghost"
+                className={cn(
+                  "w-full justify-between px-3 py-2.5 text-xs font-medium rounded-lg transition-all duration-300",
+                  "bg-bg-primary-light dark:bg-bg-primary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark",
+                  "text-txt-primary-light dark:text-txt-primary-dark border border-gray-200/20 dark:border-gray-700/20"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-6 h-6 rounded-md bg-brand-primary-50 dark:bg-brand-primary-900/20 flex items-center justify-center">
+                    <SectionIcon className="w-4 h-4 text-brand-primary-600 dark:text-brand-primary-400" />
+                  </div>
+                  <span className="font-medium tracking-wide uppercase">{title}</span>
+                </div>
+                {expandedSections[title] ? (
+                  <X className="h-4 w-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                ) : (
+                  <Menu className="h-4 w-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                )}
+              </Button>
+            ) : (
+              <div className="flex justify-center mb-3">
+                <div
+                  className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark"
+                  title={title}
+                >
+                  <SectionIcon className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" />
+                </div>
+              </div>
+            )}
+
+            {/* Expanded Links */}
+            {shouldShowFull && expandedSections[title] && (
+              <div className="ml-3 space-y-1 border-l border-gray-300/30 dark:border-gray-600/30 pl-3 py-1">
+                {items.map((item, j) => (
+                  <Button
+                    key={item.label}
+                    onClick={() => {
+                      setActiveComponent(item.component);
+                      setActiveItem(item.label);
+                      setIsOpen(false);
+                    }}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-300",
+                      activeItem === item.label
+                        ? "bg-brand-primary-600 text-white shadow-lg font-medium"
+                        : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium tracking-wide">{item.label}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+
+            {/* Collapsed Section: icons only */}
+            {!shouldShowFull && (
+              <div className="space-y-2">
+                {items.map((item) => (
+                  <div key={item.label} className="flex justify-center">
+                    <Button
+                      onClick={() => {
+                        setActiveComponent(item.component);
+                        setActiveItem(item.label);
+                        setIsOpen(false);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-10 h-10 p-0 rounded-lg transition-all duration-300",
+                        activeItem === item.label
+                          ? "bg-brand-primary-600 text-white shadow-lg"
+                          : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                      )}
+                      title={item.label}
+                    >
+                      <item.icon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Divider */}
+            {shouldShowFull && i !== TEAM_MENU.length - 1 && (
+              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
+            )}
+          </div>
+        ))}
+      </nav>
+    </aside>
+  );
+
+  // Main Render
+  return (
+    <>
+      {/* Mobile Drawer */}
+      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            size="icon"
+            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl"
+            aria-label="Open sidebar"
+          >
+            <Menu size={20} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          side="left"
+          className="p-0 w-64 border-r border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark"
+        >
+          {SidebarMenu}
+        </SheetContent>
+      </Sheet>
+      {/* Desktop Fixed Sidebar */}
+      <div className={cn(
+        "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
+        shouldShowFull ? "w-64" : "w-16"
+      )}>
+        {SidebarMenu}
+      </div>
     </>
   );
 };
