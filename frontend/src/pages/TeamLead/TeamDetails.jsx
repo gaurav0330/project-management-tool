@@ -50,10 +50,8 @@ export default function TeamDetails() {
   const [isHovering, setIsHovering] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
-  const { loading, error, data } = useQuery(GET_TEAM_BY_ID, { variables: { id: String(teamId) },
- });
-  const teamData = data?.getTeamById;
-=======
+
+
   // Fetch team data
   const { loading: teamLoading, error: teamError, data: teamData } = useQuery(GET_TEAM_BY_ID, { 
     variables: { id: teamId } 
