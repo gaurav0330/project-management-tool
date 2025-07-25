@@ -7,6 +7,44 @@ const ProjectDetailsCard = ({ project, loading }) => {
     return <SkeletonCard />;
   }
 
+  // --- Robust Date Formatter from ProjectCard ---
+  const formatDate = (dateInput) => {
+    try {
+      let date;
+
+      if (!dateInput) return "Not set";
+
+      if (typeof dateInput === 'string') {
+        // Handle ISO string/date-like strings
+        if (dateInput.includes('T') || dateInput.includes('-')) {
+          date = new Date(dateInput);
+        } else {
+          // String seems to be a timestamp (seconds or ms)
+          const timestamp = parseInt(dateInput);
+          date = new Date(timestamp);
+        }
+      } else if (typeof dateInput === 'number') {
+        // Handle Unix timestamp (convert seconds if necessary)
+        const timestamp = dateInput.toString().length === 10 ? dateInput * 1000 : dateInput;
+        date = new Date(timestamp);
+      } else {
+        date = new Date(dateInput);
+      }
+
+      if (isNaN(date.getTime())) return "Not set";
+
+      // Format as DD/MM/YYYY
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error);
+      return "Not set";
+    }
+  };
+
   // Status color mapping
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -113,11 +151,7 @@ const ProjectDetailsCard = ({ project, loading }) => {
                   Start Date
                 </p>
                 <p className="font-heading text-lg font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                  {project?.startDate ? new Date(project.startDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  }) : "Not set"}
+                  {formatDate(project?.startDate)}
                 </p>
               </div>
             </motion.div>
@@ -137,11 +171,7 @@ const ProjectDetailsCard = ({ project, loading }) => {
                   End Date
                 </p>
                 <p className="font-heading text-lg font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                  {project?.endDate ? new Date(project.endDate).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  }) : "Not set"}
+                  {formatDate(project?.endDate)}
                 </p>
               </div>
             </motion.div>
@@ -166,7 +196,7 @@ const ProjectDetailsCard = ({ project, loading }) => {
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div 
+                <div
                   className="bg-gradient-to-r from-brand-primary-500 to-brand-accent-500 h-3 rounded-full transition-all duration-500"
                   style={{ width: `${project.progress}%` }}
                 ></div>
