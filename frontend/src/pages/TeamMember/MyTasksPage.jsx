@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc } from "lucide-react";
+import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc, Loader } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // 🔹 GraphQL Query to Fetch Tasks
@@ -12,11 +12,24 @@ const GET_TASKS_FOR_MEMBER = gql`
       id
       title
       description
-      assignedTo
+      createdBy
       priority
       status
       dueDate
       createdAt
+
+    }
+  }
+`;
+
+// 🔹 GraphQL Query to Fetch User Details
+const GET_USER = gql`
+  query GetUser($userId: ID!) {
+    getUser(userId: $userId) {
+      id
+      username
+      email
+      role
     }
   }
 `;
@@ -35,6 +48,257 @@ const getMemberIdFromToken = () => {
   }
 };
 
+// Component to display user information
+const UserDisplay = ({ userId }) => {
+  const { data, loading, error } = useQuery(GET_USER, {
+    variables: { userId },
+    skip: !userId, // Skip query if no userId provided
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2">
+        <Loader className="w-3 h-3 animate-spin text-brand-primary-500" />
+        <span className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+          Loading...
+        </span>
+      </div>
+    );
+  }
+
+  if (error || !data?.getUser) {
+    return (
+      <span className="text-sm">
+        {userId} {/* Fallback to showing the ID if user fetch fails */}
+      </span>
+    );
+  }
+
+  return (
+    <span className="text-sm">
+      {data.getUser.username}
+    </span>
+  );
+};
+
+// Task Card Component
+const TaskCard = ({ task, index, projectId, navigate }) => {
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "High": return "from-red-500 to-red-600";
+      case "Medium": return "from-yellow-500 to-yellow-600";
+      case "Low": return "from-green-500 to-green-600";
+      default: return "from-gray-500 to-gray-600";
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Done":
+      case "Completed": return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
+      case "In Progress": return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
+      case "Pending Approval": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
+    }
+  };
+
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && 
+                   task.status !== "Done" && task.status !== "Completed";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.1 }}
+      whileHover={{ y: -4 }}
+      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+    >
+      {/* Priority Strip */}
+      <div className={`h-1 bg-gradient-to-r ${getPriorityColor(task.priority)}`} />
+      
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2 line-clamp-2">
+              {task.title}
+            </h3>
+            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-sm line-clamp-3">
+              {task.description}
+            </p>
+          </div>
+          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+            {task.status}
+          </div>
+        </div>
+
+        {/* Task Details */}
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            <Flag className="w-4 h-4" />
+            <span className="font-medium">Priority:</span>
+            <span className={`px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}>
+              {task.priority}
+            </span>
+          </div>
+
+          {task.dueDate && (
+            <div className={`flex items-center gap-3 text-sm ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-txt-secondary-light dark:text-txt-secondary-dark'}`}>
+              <Calendar className="w-4 h-4" />
+              <span className="font-medium">Due:</span>
+              <span className={isOverdue ? 'font-semibold' : ''}>
+                {new Date(task.dueDate).toLocaleDateString()}
+                {isOverdue && ' (Overdue)'}
+              </span>
+            </div>
+          )}
+
+          {/* Updated Assigned By section */}
+          {task.createdBy && (
+            <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+              <User className="w-4 h-4" />
+              <span className="font-medium">Assigned By:</span>
+              <UserDisplay userId={task.createdBy} />
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            <Clock className="w-4 h-4" />
+            <span className="font-medium">Created:</span>
+            <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <motion.button
+          className="w-full btn-primary flex items-center justify-center gap-2 group-hover:shadow-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => navigate(`/teammembertasksubmission/${projectId}/${task.id}`)}
+        >
+          <span>Submit Task</span>
+          <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+};
+
+// Filter Select Component
+const FilterSelect = ({ value, onChange, options, icon }) => (
+  <div className="relative">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 transition-all duration-200"
+    >
+      {options.map(option => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
+      {icon}
+    </div>
+  </div>
+);
+
+// Sort Select Component
+const SortSelect = ({ sortBy, setSortBy, sortOrder, setSortOrder }) => (
+  <div className="flex items-center gap-2 relative">
+    <div className="relative">
+      <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
+        className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500"
+      >
+        <option value="createdAt">Created Date</option>
+        <option value="priority">Priority</option>
+        <option value="dueDate">Due Date</option>
+        <option value="status">Status</option>
+      </select>
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
+        <SortDesc className="w-4 h-4" />
+      </div>
+    </div>
+    <motion.button
+      className="p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+    >
+      <SortDesc className={`w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark transition-transform duration-200 ${sortOrder === "asc" ? "rotate-180" : ""}`} />
+    </motion.button>
+  </div>
+);
+
+// Pagination Component
+const PaginationComponent = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  return (
+    <motion.div 
+      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <div className="flex items-center justify-between">
+        <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+          Showing {startItem} to {endItem} of {totalItems} tasks
+        </p>
+        
+        <div className="flex items-center gap-2">
+          <motion.button
+            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+            whileHover={{ scale: currentPage === 1 ? 1 : 1.02 }}
+            whileTap={{ scale: currentPage === 1 ? 1 : 0.98 }}
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </motion.button>
+          
+          <div className="flex items-center gap-1">
+            {[...Array(totalPages)].map((_, i) => {
+              const page = i + 1;
+              const isActive = page === currentPage;
+              
+              return (
+                <motion.button
+                  key={page}
+                  className={`w-10 h-10 rounded-xl font-body text-sm transition-all duration-200 ${
+                    isActive 
+                      ? "bg-brand-primary-500 text-white shadow-lg" 
+                      : "bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-100 dark:hover:bg-gray-600"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onPageChange(page)}
+                >
+                  {page}
+                </motion.button>
+              );
+            })}
+          </div>
+          
+          <motion.button
+            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+            whileHover={{ scale: currentPage === totalPages ? 1 : 1.02 }}
+            whileTap={{ scale: currentPage === totalPages ? 1 : 0.98 }}
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Main Component
 export default function MyTasksPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -411,215 +675,3 @@ export default function MyTasksPage() {
     </div>
   );
 }
-
-// Task Card Component
-const TaskCard = ({ task, index, projectId, navigate }) => {
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High": return "from-red-500 to-red-600";
-      case "Medium": return "from-yellow-500 to-yellow-600";
-      case "Low": return "from-green-500 to-green-600";
-      default: return "from-gray-500 to-gray-600";
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Done":
-      case "Completed": return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
-      case "In Progress": return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
-      case "Pending Approval": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
-    }
-  };
-
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && 
-                   task.status !== "Done" && task.status !== "Completed";
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
-      whileHover={{ y: -4 }}
-      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
-    >
-      {/* Priority Strip */}
-      <div className={`h-1 bg-gradient-to-r ${getPriorityColor(task.priority)}`} />
-      
-      <div className="p-6">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2 line-clamp-2">
-              {task.title}
-            </h3>
-            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-sm line-clamp-3">
-              {task.description}
-            </p>
-          </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-            {task.status}
-          </div>
-        </div>
-
-        {/* Task Details */}
-        <div className="space-y-3 mb-6">
-          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-            <Flag className="w-4 h-4" />
-            <span className="font-medium">Priority:</span>
-            <span className={`px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}>
-              {task.priority}
-            </span>
-          </div>
-
-          {task.dueDate && (
-            <div className={`flex items-center gap-3 text-sm ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-txt-secondary-light dark:text-txt-secondary-dark'}`}>
-              <Calendar className="w-4 h-4" />
-              <span className="font-medium">Due:</span>
-              <span className={isOverdue ? 'font-semibold' : ''}>
-                {new Date(task.dueDate).toLocaleDateString()}
-                {isOverdue && ' (Overdue)'}
-              </span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-            <User className="w-4 h-4" />
-            <span className="font-medium">Assigned by:</span>
-            <span>{task.assignedTo}</span>
-          </div>
-
-          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-            <Clock className="w-4 h-4" />
-            <span className="font-medium">Created:</span>
-            <span>{new Date(task.createdAt).toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        {/* Action Button */}
-        <motion.button
-          className="w-full btn-primary flex items-center justify-center gap-2 group-hover:shadow-lg"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate(`/teammembertasksubmission/${projectId}/${task.id}`)}
-        >
-          <span>Submit Task</span>
-          <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-};
-
-// Filter Select Component
-const FilterSelect = ({ value, onChange, options, icon }) => (
-  <div className="relative">
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 transition-all duration-200"
-    >
-      {options.map(option => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
-      {icon}
-    </div>
-  </div>
-);
-
-// Sort Select Component
-const SortSelect = ({ sortBy, setSortBy, sortOrder, setSortOrder }) => (
-  <div className="flex items-center gap-2">
-    <select
-      value={sortBy}
-      onChange={(e) => setSortBy(e.target.value)}
-      className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500"
-    >
-      <option value="createdAt">Created Date</option>
-      <option value="priority">Priority</option>
-      <option value="dueDate">Due Date</option>
-      <option value="status">Status</option>
-    </select>
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
-      <SortDesc className="w-4 h-4" />
-    </div>
-    <motion.button
-      className="p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-    >
-      <SortDesc className={`w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark transition-transform duration-200 ${sortOrder === "asc" ? "rotate-180" : ""}`} />
-    </motion.button>
-  </div>
-);
-
-// Pagination Component
-const PaginationComponent = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-
-  return (
-    <motion.div 
-      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <div className="flex items-center justify-between">
-        <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-          Showing {startItem} to {endItem} of {totalItems} tasks
-        </p>
-        
-        <div className="flex items-center gap-2">
-          <motion.button
-            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-            whileHover={{ scale: currentPage === 1 ? 1 : 1.02 }}
-            whileTap={{ scale: currentPage === 1 ? 1 : 0.98 }}
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </motion.button>
-          
-          <div className="flex items-center gap-1">
-            {[...Array(totalPages)].map((_, i) => {
-              const page = i + 1;
-              const isActive = page === currentPage;
-              
-              return (
-                <motion.button
-                  key={page}
-                  className={`w-10 h-10 rounded-xl font-body text-sm transition-all duration-200 ${
-                    isActive 
-                      ? "bg-brand-primary-500 text-white shadow-lg" 
-                      : "bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onPageChange(page)}
-                >
-                  {page}
-                </motion.button>
-              );
-            })}
-          </div>
-          
-          <motion.button
-            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-            whileHover={{ scale: currentPage === totalPages ? 1 : 1.02 }}
-            whileTap={{ scale: currentPage === totalPages ? 1 : 0.98 }}
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </motion.button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};

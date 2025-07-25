@@ -9,12 +9,66 @@ import {
   Flag,
   Calendar,
   Tag,
-  MessageCircle
+  MessageCircle,
+  Loader
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useQuery, gql } from "@apollo/client";
 import { useTheme } from "../../contexts/ThemeContext";
 import Attachments from "../../components/tasks/Attachments";
 import Feedback from "./FeedBackManager";
+
+// Query to get user details
+const GET_USER = gql`
+  query GetUser($userId: ID!) {
+    getUser(userId: $userId) {
+      id
+      username
+      email
+      role
+    }
+  }
+`;
+
+// Component to display user information
+const UserDisplay = ({ userId }) => {
+  const { data, loading, error } = useQuery(GET_USER, {
+    variables: { userId },
+    skip: !userId, // Skip query if no userId provided
+  });
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2">
+        <Loader className="w-4 h-4 animate-spin text-brand-primary-500" />
+        <span className="font-heading text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+          Loading...
+        </span>
+      </div>
+    );
+  }
+
+  if (error || !data?.getUser) {
+    return (
+      <span className="font-heading text-sm font-semibold text-txt-primary-light dark:text-txt-primary-dark">
+        {userId} {/* Fallback to showing the ID if user fetch fails */}
+      </span>
+    );
+  }
+
+  return (
+    <div>
+      <p className="font-heading text-sm font-semibold text-txt-primary-light dark:text-txt-primary-dark">
+        {data.getUser.username}
+      </p>
+      {data.getUser.email && (
+        <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+          {data.getUser.email}
+        </p>
+      )}
+    </div>
+  );
+};
 
 export default function TaskDetails({ task }) {
   const { isDark } = useTheme();
@@ -167,18 +221,16 @@ export default function TaskDetails({ task }) {
         {/* Task Meta Information */}
         <div className="grid grid-cols-1 gap-4">
           {/* Assigned To */}
-          {(task.assignedTo || task.assignName) && (
+          {task.assignedTo && (
             <div className="flex items-center gap-3 p-4 bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl border border-gray-200/20 dark:border-gray-700/20">
               <div className="w-10 h-10 bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark uppercase tracking-wide">
                   Assigned To
                 </p>
-                <p className="font-heading text-sm font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                  {task.assignName || task.assignedTo}
-                </p>
+                <UserDisplay userId={task.assignedTo} />
               </div>
             </div>
           )}
