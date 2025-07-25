@@ -19,7 +19,11 @@ const GET_TASKS_BY_MANAGER = gql`
         assignedTo
         status
         priority
-        attachments
+        attachments {
+        name
+        size
+        type
+      }
         dueDate
         createdAt
         updatedAt
