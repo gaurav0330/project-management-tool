@@ -39,12 +39,17 @@ const GET_TASKS_FOR_LEAD = gql`
       dueDate
       assignName
       createdAt
-      attachments
+      attachments {
+        name
+        size
+        type
+      }
       updatedAt
       remarks
     }
   }
 `;
+
 
 const priorityOrder = { High: 1, Medium: 2, Low: 3 };
 const statusOrder = { Pending: 1, "In Progress": 2, Completed: 3 };

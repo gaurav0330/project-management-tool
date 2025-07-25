@@ -1,24 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
-import { useTheme } from "../../contexts/ThemeContext";
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  Clock, 
-  Calendar, 
-  Flag, 
-  User,
-  Send,
-  PlayCircle,
-  PauseCircle,
-  AlertCircle,
-  FileText,
-  Upload
-} from "lucide-react";
+import { ArrowLeft, UploadCloud, CheckCircle, Clock, FileText, Upload, X, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 🔹 GraphQL Queries & Mutations
+// --- GraphQL Queries ---
 const GET_TASK_BY_ID = gql`
   query GetTaskById($taskId: ID!) {
     getTaskById(taskId: $taskId) {
@@ -30,37 +16,29 @@ const GET_TASK_BY_ID = gql`
       dueDate
       createdAt
       updatedAt
-      attachments
+      attachments { name size type }
       remarks
-      assignedTo
     }
   }
 `;
-
 const UPDATE_TASK_STATUS = gql`
   mutation UpdateTaskStatus($taskId: ID!, $status: String!) {
     updateTaskStatus(taskId: $taskId, status: $status) {
-      success
-      message
-      task {
-        id
-        title
-        status
-        updatedAt
-      }
+      success message task { id title status updatedAt }
     }
   }
 `;
-
 const SEND_TASK_FOR_APPROVAL = gql`
   mutation SendTaskForApproval($taskId: ID!) {
     sendTaskForApproval(taskId: $taskId) {
-      success
-      message
-      task {
-        id
-        status
-      }
+      success message task { id status }
+    }
+  }
+`;
+const ADD_TASK_ATTACHMENT = gql`
+  mutation AddTaskAttachment($taskId: ID!, $attachment: AttachmentInput!) {
+    addTaskAttachment(taskId: $taskId, attachment: $attachment) {
+      success message task { id attachments { name size type } }
     }
   }
 `;
@@ -68,666 +46,274 @@ const SEND_TASK_FOR_APPROVAL = gql`
 const TaskSubmissionPage = () => {
   const navigate = useNavigate();
   const { projectId, taskId } = useParams();
-  const { isDark } = useTheme();
+  const fileInputRef = useRef();
 
-  // 🔹 Fetch Task Data
-  const { data, loading, error, refetch } = useQuery(GET_TASK_BY_ID, {
-    variables: { taskId },
-    skip: !taskId,
-    pollInterval: 30000, // Auto refresh every 30 seconds
-  });
+  const { data, loading, error, refetch } = useQuery(GET_TASK_BY_ID, { variables: { taskId }, skip: !taskId });
 
-  const [updateTaskStatus, { loading: updating }] = useMutation(UPDATE_TASK_STATUS, {
-    onCompleted: (data) => {
-      refetch();
-      setNotification({
-        type: 'success',
-        message: data.updateTaskStatus.message || 'Task status updated successfully!',
-        show: true
-      });
-      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
-    },
-    onError: (error) => {
-      setNotification({
-        type: 'error',
-        message: error.message || 'Failed to update task status',
-        show: true
-      });
-      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
-    }
-  });
-
+  // --- Mutations
+  const [updateTaskStatus, { loading: updating }] = useMutation(UPDATE_TASK_STATUS, { onCompleted: () => refetch() });
   const [sendTaskForApproval, { loading: approving }] = useMutation(SEND_TASK_FOR_APPROVAL, {
-    onCompleted: (data) => {
-      refetch();
-      setNotification({
-        type: 'success',
-        message: data.sendTaskForApproval.message || 'Task sent for approval successfully!',
-        show: true
-      });
-      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
-    },
-    onError: (error) => {
-      setNotification({
-        type: 'error',
-        message: error.message || 'Failed to send task for approval',
-        show: true
-      });
-      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
-    }
+    onCompleted: () => { refetch(); notify('success', "Task sent for approval!"); },
+  });
+  const [addTaskAttachment, { loading: addingAttachment }] = useMutation(ADD_TASK_ATTACHMENT, {
+    onCompleted: () => { refetch(); notify('success', "File attached!"); },
+    onError: (err) => notify('error', err.message)
   });
 
+  // --- Status UI state
   const [status, setStatus] = useState(null);
-  const [notification, setNotification] = useState({ type: '', message: '', show: false });
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' });
 
-  // 🔹 Update status when data is fetched
   useEffect(() => {
-    if (data?.getTaskById?.status) {
-      setStatus(data.getTaskById.status);
-    }
+    if (data?.getTaskById?.status) setStatus(data.getTaskById.status);
   }, [data]);
 
-  // 🔹 Handle Status Update
-  const handleStatusUpdate = async (newStatus) => {
-    try {
-      await updateTaskStatus({ variables: { taskId, status: newStatus } });
-      setStatus(newStatus);
-    } catch (err) {
-      console.error("Error updating status:", err);
-    }
+  function notify(type, message) {
+    setNotification({ show: true, type, message });
+    setTimeout(() => setNotification((p) => ({ ...p, show: false })), 2200);
+  }
+
+  // --- Status Handlers
+  const handleStatusUpdate = async () => {
+    if (!status || status === "Done") return;
+    await updateTaskStatus({ variables: { taskId, status: "Done" } });
+    setStatus("Done");
+    notify("success", "Marked as Done!");
   };
 
-  // 🔹 Handle Sending Task for Approval
   const handleSendForApproval = async () => {
-    try {
-      await sendTaskForApproval({ variables: { taskId } });
-    } catch (err) {
-      console.error("Error sending task for approval:", err);
-    }
+    if (status !== "Done") return;
+    await sendTaskForApproval({ variables: { taskId } });
   };
 
-  // Helper functions
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High": return "from-red-500 to-red-600";
-      case "Medium": return "from-yellow-500 to-yellow-600";
-      case "Low": return "from-green-500 to-green-600";
-      default: return "from-gray-500 to-gray-600";
-    }
+  // --- Attachments upload
+  const handleFileInput = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const newAttachment = { name: file.name, size: file.size, type: file.type };
+    await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
   };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Done":
-      case "Completed": return "text-green-600 dark:text-green-400";
-      case "In Progress": return "text-blue-600 dark:text-blue-400";
-      case "Pending Approval": return "text-yellow-600 dark:text-yellow-400";
-      case "To Do": return "text-gray-600 dark:text-gray-400";
-      default: return "text-gray-600 dark:text-gray-400";
-    }
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    if (addingAttachment) return;
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const newAttachment = { name: file.name, size: file.size, type: file.type };
+    await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
   };
+  const handleDragOver = (e) => e.preventDefault();
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "Done":
-      case "Completed": return CheckCircle;
-      case "In Progress": return PlayCircle;
-      case "Pending Approval": return Clock;
-      case "To Do": return PauseCircle;
-      default: return AlertCircle;
-    }
-  };
-
-  const isOverdue = data?.getTaskById?.dueDate && 
-                   new Date(data.getTaskById.dueDate) < new Date() && 
-                   status !== "Done" && status !== "Completed";
-
-  // Loading Component
-  if (loading) {
-    return (
-      <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
-        <motion.div 
-          className="max-w-4xl mx-auto bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <div className="flex items-center justify-center space-x-3">
-            {[0, 1, 2].map((i) => (
-              <motion.div
-                key={i}
-                className="w-4 h-4 bg-brand-primary-500 rounded-full"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-              />
-            ))}
-          </div>
-          <p className="text-center mt-4 font-body text-txt-secondary-light dark:text-txt-secondary-dark">
-            Loading task details...
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // Error Component
-  if (error) {
-    return (
-      <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
-        <motion.div 
-          className="max-w-4xl mx-auto bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-8"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <h3 className="font-heading text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
-              Error Loading Task
-            </h3>
-            <p className="font-body text-red-600 dark:text-red-300 mb-4">
-              {error.message}
-            </p>
-            <div className="flex gap-4 justify-center">
-              <motion.button
-                className="btn-secondary"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/teamMember/project/${projectId}`)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </motion.button>
-              <motion.button
-                className="btn-primary"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => refetch()}
-              >
-                Try Again
-              </motion.button>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
+  // --- Data Shortcuts
   const task = data?.getTaskById;
-  if (!task) {
-    return (
-      <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
-        <motion.div 
-          className="max-w-4xl mx-auto bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <div className="text-center">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
-              Task Not Found
-            </h3>
-            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
-              The task you're looking for doesn't exist or has been removed.
-            </p>
-            <motion.button
-              className="btn-primary"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/teamMember/project/${projectId}`)}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
-  const StatusIcon = getStatusIcon(status);
+  // --- UI Helpers ---
+  const getStatusShade = (status) =>
+    status === "Completed" ? "bg-green-50 text-green-700 border-green-200"
+    : status === "Pending Approval" ? "bg-yellow-50 text-yellow-700 border-yellow-300"
+    : status === "Done" ? "bg-blue-50 text-blue-700 border-blue-300"
+    : "bg-gray-50 text-gray-700 border-gray-200";
 
-  return (
-    <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
-      <motion.div
-        className="max-w-4xl mx-auto space-y-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Notification */}
-        <AnimatePresence>
-          {notification.show && (
-            <NotificationBanner 
-              type={notification.type}
-              message={notification.message}
-              onClose={() => setNotification(prev => ({ ...prev, show: false }))}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Header with Back Button */}
-        <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
-          layout
-        >
-          <div className="flex items-center justify-between">
-            <motion.button
-              className="flex items-center gap-2 px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/teamMember/project/${projectId}`)}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </motion.button>
-
-            <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 ${getStatusColor(status)}`}>
-                <StatusIcon className="w-5 h-5" />
-                <span className="font-medium">{status || 'Unknown'}</span>
-              </div>
-              {isOverdue && (
-                <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Overdue</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Task Header */}
-        <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg overflow-hidden"
-          layout
-        >
-          {/* Priority Strip */}
-          <div className={`h-2 bg-gradient-to-r ${getPriorityColor(task.priority)}`} />
-          
-          <div className="p-8">
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex-1">
-                <h1 className="font-heading text-3xl font-bold text-heading-primary-light dark:text-heading-primary-dark mb-3">
-                  {task.title}
-                </h1>
-                <p className="font-body text-lg text-txt-secondary-light dark:text-txt-secondary-dark leading-relaxed">
-                  {task.description}
-                </p>
-              </div>
-            </div>
-
-            {/* Task Metadata */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <TaskMetadataCard
-                icon={Flag}
-                label="Priority"
-                value={task.priority}
-                color={getPriorityColor(task.priority)}
-              />
-              
-              {task.dueDate && (
-                <TaskMetadataCard
-                  icon={Calendar}
-                  label="Due Date"
-                  value={new Date(task.dueDate).toLocaleDateString()}
-                  isOverdue={isOverdue}
-                />
-              )}
-              
-              <TaskMetadataCard
-                icon={User}
-                label="Assigned By"
-                value={task.assignedTo || 'Unknown'}
-              />
-              
-              <TaskMetadataCard
-                icon={Clock}
-                label="Created"
-                value={new Date(task.createdAt).toLocaleDateString()}
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Progress Visualization */}
-        <TaskProgressCard status={status} />
-
-        {/* File Upload Section */}
-        <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
-          layout
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-brand-primary-500 to-brand-secondary-500 rounded-xl flex items-center justify-center">
-              <Upload className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark">
-                Task Submission
-              </h3>
-              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">
-                Upload files and submit your completed work
-              </p>
-            </div>
-          </div>
-
-          {/* File Upload Area */}
-          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-brand-primary-500 transition-colors duration-200">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Upload className="w-8 h-8 text-gray-400" />
-            </div>
-            <h4 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
-              Upload Your Work
-            </h4>
-            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
-              Drag and drop files here or click to browse
-            </p>
-            <motion.button
-              className="btn-secondary"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Choose Files
-            </motion.button>
-          </div>
-        </motion.div>
-
-        {/* Action Buttons */}
-        <TaskActionButtons
-          status={status}
-          onStatusUpdate={handleStatusUpdate}
-          onSendForApproval={handleSendForApproval}
-          updating={updating}
-          approving={approving}
-        />
-      </motion.div>
+  // --- Render
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
+      <div className="text-center text-brand-primary-500 font-heading animate-pulse text-xl">Loading task details...</div>
     </div>
   );
-};
-
-// Task Metadata Card Component
-const TaskMetadataCard = ({ icon: Icon, label, value, color, isOverdue }) => (
-  <motion.div
-    className="bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl p-4 border border-gray-200/20 dark:border-gray-700/20"
-    whileHover={{ scale: 1.02 }}
-    transition={{ duration: 0.2 }}
-  >
-    <div className="flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-        color ? `bg-gradient-to-br ${color}` : 'bg-gray-100 dark:bg-gray-700'
-      }`}>
-        <Icon className={`w-5 h-5 ${color ? 'text-white' : 'text-gray-400'}`} />
-      </div>
-      <div>
-        <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark mb-1">
-          {label}
-        </p>
-        <p className={`font-heading text-sm font-semibold ${
-          isOverdue ? 'text-red-600 dark:text-red-400' : 'text-heading-primary-light dark:text-heading-primary-dark'
-        }`}>
-          {value} {isOverdue && '(Overdue)'}
-        </p>
-      </div>
+  if (error) return (
+    <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
+      <div className="text-center text-red-600">Error: {error.message}</div>
     </div>
-  </motion.div>
-);
-
-// Task Progress Card Component
-const TaskProgressCard = ({ status }) => {
-  const getProgressPercentage = (status) => {
-    switch (status) {
-      case "To Do": return 0;
-      case "In Progress": return 50;
-      case "Done": return 75;
-      case "Pending Approval": return 90;
-      case "Completed": return 100;
-      default: return 0;
-    }
-  };
-
-  const progress = getProgressPercentage(status);
+  );
+  if (!task) return (
+    <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
+      <div className="text-center text-txt-secondary-light dark:text-txt-secondary-dark">Task not found</div>
+    </div>
+  );
 
   return (
-    <motion.div 
-      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
-      layout
+    <motion.div
+      className="max-w-4xl mx-auto my-12 p-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-3xl shadow-2xl space-y-8 border border-bg-accent-light dark:border-bg-accent-dark"
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45 }}
     >
-      <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-6">
-        Task Progress
-      </h3>
-      
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <span className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">Progress</span>
-          <span className="font-heading text-lg font-semibold text-brand-primary-500">{progress}%</span>
-        </div>
-        
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-          <motion.div
-            className="h-3 bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1, ease: "easeOut" }}
+      <AnimatePresence>
+        {notification.show && (
+          <NotificationBanner
+            type={notification.type}
+            message={notification.message}
+            onClose={() => setNotification((p) => ({ ...p, show: false }))}
           />
+        )}
+      </AnimatePresence>
+
+      {/* --- Top bar --- */}
+      <div className="flex items-center justify-between border-b pb-4 mb-4 border-bg-accent-light dark:border-bg-accent-dark">
+        <motion.button
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-bg-accent-light dark:bg-bg-accent-dark text-heading-primary-light dark:text-heading-primary-dark shadow hover:scale-105 transition"
+          onClick={() => navigate(`/teamMember/project/${projectId}`)}
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="font-semibold">Back</span>
+        </motion.button>
+        <span className={`font-body rounded-full px-3 py-1 border text-xs font-semibold uppercase shadow-sm tracking-wide ${getStatusShade(status)}`}>
+          {status}
+        </span>
+      </div>
+
+      {/* --- Task Title & Meta --- */}
+      <div>
+        <h1 className="font-heading text-2xl md:text-3xl font-bold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+          {task.title}
+        </h1>
+        <div className="flex flex-wrap gap-4 items-center text-txt-secondary-light dark:text-txt-secondary-dark mb-2">
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Priority: <b>{task.priority}</b></span>
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No deadline'}</span>
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Created: {new Date(task.createdAt).toLocaleDateString()}</span>
         </div>
-        
-        <div className="grid grid-cols-5 gap-2 mt-6">
-          {['To Do', 'In Progress', 'Done', 'Pending Approval', 'Completed'].map((step, index) => {
-            const isActive = getProgressPercentage(status) >= (index * 25);
-            const isCurrent = step === status;
-            
-            return (
-              <div key={step} className="text-center">
-                <div className={`w-4 h-4 rounded-full mx-auto mb-2 transition-all duration-300 ${
-                  isActive 
-                    ? 'bg-brand-primary-500' 
-                    : 'bg-gray-300 dark:bg-gray-600'
-                } ${isCurrent ? 'ring-4 ring-brand-primary-200 dark:ring-brand-primary-800' : ''}`} />
-                <p className={`text-xs font-body ${
-                  isActive 
-                    ? 'text-brand-primary-500 font-medium' 
-                    : 'text-txt-secondary-light dark:text-txt-secondary-dark'
-                }`}>
-                  {step}
-                </p>
-              </div>
-            );
-          })}
+        <p className="font-body text-lg mt-2">{task.description}</p>
+        {task.remarks && <p className="text-sm italic text-yellow-700 mt-2">Remarks: {task.remarks}</p>}
+      </div>
+
+      {/* --- ProgressBar --- */}
+      <ProgressBar status={status} />
+
+      {/* --- Attachment List --- */}
+      <AttachmentList attachments={task.attachments} />
+
+      {/* --- File Upload --- */}
+      <motion.div
+        className="mt-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border-2 border-dashed border-bg-accent-light dark:border-bg-accent-dark p-8 rounded-2xl text-center shadow-sm"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
+        <div className="mb-3 flex flex-col items-center gap-2">
+          <UploadCloud className="w-8 h-8 text-brand-primary-500" />
+          <span className="font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">Attach your files (PDF, DOC, PNG etc)</span>
         </div>
+        <motion.button
+          className="bg-brand-primary-500 text-white px-6 py-2 rounded-xl mt-2 font-medium shadow hover:bg-brand-primary-600 transition"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+          disabled={addingAttachment}
+        >
+          {addingAttachment ? "Uploading..." : "Choose File"}
+        </motion.button>
+        <input
+          type="file"
+          style={{ display: "none" }}
+          ref={fileInputRef}
+          onChange={handleFileInput}
+          disabled={addingAttachment}
+        />
+        <div className="mt-2 text-xs text-txt-muted-light dark:text-txt-muted-dark">Or drag and drop here</div>
+      </motion.div>
+
+      {/* --- Status Actions Modern --- */}
+      <div className="mt-6">
+        {status === "Completed" ? (
+          <motion.div
+            className="flex items-center gap-2 justify-center p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl shadow"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <span className="text-lg font-semibold text-green-700 dark:text-green-200">Task Completed</span>
+          </motion.div>
+        ) : status === "Pending Approval" ? (
+          <div className="flex items-center justify-center gap-2 text-yellow-700 font-semibold p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 shadow">
+            <Clock className="w-5 h-5" /> Pending Approval
+          </div>
+        ) : status === "Done" ? (
+          <motion.button
+            className="w-full md:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105"
+            whileHover={{ scale: 1.02 }}
+            onClick={handleSendForApproval}
+            disabled={approving}
+          >
+            {approving ? "Processing..." : "Send for Approval"}
+          </motion.button>
+        ) : (
+          <motion.button
+            className="w-full md:w-auto px-8 py-3 bg-brand-primary-600 hover:bg-brand-primary-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105"
+            whileHover={{ scale: 1.02 }}
+            onClick={handleStatusUpdate}
+            disabled={updating}
+          >
+            {updating ? "Processing..." : "Mark as Done"}
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );
 };
 
-// Task Action Buttons Component
-const TaskActionButtons = ({ status, onStatusUpdate, onSendForApproval, updating, approving }) => (
-  <motion.div 
-    className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
-    layout
-  >
-    <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-6">
-      Actions
-    </h3>
-    
-    <AnimatePresence mode="wait">
-      {status === "Completed" ? (
-        <motion.div
-          key="completed"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="flex items-center justify-center p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl"
-        >
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400 mr-3" />
-          <div>
-            <h4 className="font-heading text-lg font-semibold text-green-800 dark:text-green-200">
-              Task Completed
-            </h4>
-            <p className="font-body text-green-600 dark:text-green-300">
-              Great job! This task has been completed successfully.
-            </p>
-          </div>
-        </motion.div>
-      ) : status === "Pending Approval" ? (
-        <motion.div
-          key="pending"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
-          className="flex items-center justify-center p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl"
-        >
-          <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-3" />
-          <div>
-            <h4 className="font-heading text-lg font-semibold text-yellow-800 dark:text-yellow-200">
-              Pending Approval
-            </h4>
-            <p className="font-body text-yellow-600 dark:text-yellow-300">
-              Your submission is being reviewed. Please wait for approval.
-            </p>
-          </div>
-        </motion.div>
-      ) : (
-        <motion.div
-          key="actions"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="flex flex-col sm:flex-row gap-4"
-        >
-          {status === "Done" ? (
-            <motion.button
-              className="flex-1 btn-primary flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onSendForApproval}
-              disabled={approving}
-            >
-              {approving ? (
-                <>
-                  <motion.div
-                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  Send for Approval
-                </>
-              )}
-            </motion.button>
-          ) : (
-            <>
-              {status === "To Do" && (
-                <motion.button
-                  className="flex-1 btn-primary flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onStatusUpdate("In Progress")}
-                  disabled={updating}
-                >
-                  {updating ? (
-                    <>
-                      <motion.div
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <PlayCircle className="w-4 h-4" />
-                      Start Working
-                    </>
-                  )}
-                </motion.button>
-              )}
-              
-              {status === "In Progress" && (
-                <motion.button
-                  className="flex-1 btn-primary flex items-center justify-center gap-2"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onStatusUpdate("Done")}
-                  disabled={updating}
-                >
-                  {updating ? (
-                    <>
-                      <motion.div
-                        className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4" />
-                      Mark as Done
-                    </>
-                  )}
-                </motion.button>
-              )}
-            </>
-          )}
-        </motion.div>
-      )}
-    </AnimatePresence>
-  </motion.div>
+// --- Modern Attachment List
+const AttachmentList = ({ attachments }) => (
+  <div className="mt-4">
+    <h4 className="font-semibold mb-2 flex items-center gap-1 text-heading-primary-light dark:text-heading-primary-dark">
+      <FileText className="w-5 h-5" /> Attachments
+    </h4>
+    {attachments && attachments.length ? (
+      <ul className="space-y-2">
+        {attachments.map((att, i) => (
+          <li key={i} className="flex gap-3 items-center bg-bg-accent-light dark:bg-bg-accent-dark px-4 py-2 rounded-xl">
+            <FileText className="w-5 h-5 text-brand-primary-500" />
+            <span className="font-body font-medium">{att.name}</span>
+            <span className="ml-auto text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+              {att.size ? `${(att.size / 1024).toFixed(1)} KB` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div className="text-xs text-txt-muted-light dark:text-txt-muted-dark px-2">No attachments uploaded yet.</div>
+    )}
+  </div>
 );
 
-// Notification Banner Component
+// --- Modern ProgressBar
+const ProgressBar = ({ status }) => {
+  const progress = status === "Completed" ? 1
+    : status === "Pending Approval" ? 0.9
+    : status === "Done" ? 0.75
+    : status === "In Progress" ? 0.5
+    : 0;
+  return (
+    <div className="my-4">
+      <div className="w-full bg-bg-accent-light dark:bg-bg-accent-dark rounded-full h-3">
+        <motion.div
+          className="h-3 bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress * 100}%` }}
+          transition={{ duration: 1, ease: "easeOut" }}
+        />
+      </div>
+      <div className="flex justify-between text-xs text-txt-secondary-light dark:text-txt-secondary-dark mt-1 px-1">
+        <span>To Do</span>
+        <span>In Progress</span>
+        <span>Done</span>
+        <span>Pending Approval</span>
+        <span>Completed</span>
+      </div>
+    </div>
+  );
+};
+
+// --- NotificationBanner
 const NotificationBanner = ({ type, message, onClose }) => (
   <motion.div
-    initial={{ opacity: 0, y: -50 }}
+    initial={{ opacity: 0, y: -40 }}
     animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -50 }}
-    className={`p-4 rounded-xl border ${
-      type === 'success' 
-        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
-        : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-    }`}
+    exit={{ opacity: 0, y: -40 }}
+    className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full p-4 rounded-xl flex gap-3 items-center shadow-xl ring-1 ring-opacity-20
+    ${type === 'success' ? 'bg-green-50 ring-green-400 border-green-300 text-green-900'
+      : 'bg-red-50 ring-red-400 border-red-300 text-red-900' }`}
   >
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-          type === 'success' 
-            ? 'bg-green-100 dark:bg-green-800/30' 
-            : 'bg-red-100 dark:bg-red-800/30'
-        }`}>
-          {type === 'success' ? (
-            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
-          )}
-        </div>
-        <p className={`font-body ${
-          type === 'success' 
-            ? 'text-green-800 dark:text-green-200' 
-            : 'text-red-800 dark:text-red-200'
-        }`}>
-          {message}
-        </p>
-      </div>
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={onClose}
-        className={`p-1 rounded-full hover:bg-opacity-20 ${
-          type === 'success' 
-            ? 'text-green-600 dark:text-green-400 hover:bg-green-600' 
-            : 'text-red-600 dark:text-red-400 hover:bg-red-600'
-        }`}
-      >
-        <X className="w-4 h-4" />
-      </motion.button>
-    </div>
+    {type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+    <span className="font-medium">{message}</span>
+    <button onClick={onClose} className="ml-auto"><X className="w-4 h-4" /></button>
   </motion.div>
 );
 

@@ -119,7 +119,7 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
       {
         title: "Project Settings",
         icon: Settings,
-        links: [{ txt: "Settings", icon: Shield, comp: "setting" }],
+        links: [{ txt: "Settings", icon: Shield, comp: "settings" }],
       },
     ],
   };

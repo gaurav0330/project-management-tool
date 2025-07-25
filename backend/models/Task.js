@@ -19,8 +19,17 @@ const taskSchema = new mongoose.Schema(
       ref: "User",
     },
     status: {
-      type: String,  
-      enum: ["To Do", "In Progress", "Completed", "Done" ,"Pending Approval", "Under Review", "Rejected", "Needs Revision"],
+      type: String,
+      enum: [
+        "To Do",
+        "In Progress",
+        "Completed",
+        "Done",
+        "Pending Approval",
+        "Under Review",
+        "Rejected",
+        "Needs Revision",
+      ],
       default: "To Do",
     },
     priority: {
@@ -30,7 +39,14 @@ const taskSchema = new mongoose.Schema(
     },
     dueDate: { type: Date },
 
-    attachments: [{ type: String }], // File URLs
+    attachments: [
+      {
+        name: String,
+        size: Number,
+        type: String,
+        url: String,
+      },
+    ], // File URLs
 
     history: [
       {
@@ -43,10 +59,8 @@ const taskSchema = new mongoose.Schema(
 
     // 🔹 **Fix: Add remarks field**
     remarks: { type: String }, // Stores feedback, rejection reasons, etc.
-
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model("Task", taskSchema);
-

@@ -353,20 +353,31 @@ rejectTaskService: async (taskId, reason, user) => {
 
   // ✅ 2. Add Task Attachment
   addTaskAttachment: async (taskId, attachment, user) => {
-    try {
-      if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+  try {
+    if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
 
-      const task = await Task.findById(taskId);
-      if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
+    const task = await Task.findById(taskId);
+    if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
 
-      task.attachments.push(attachment);
-      await task.save();
+    // Ensure attachment is sane (optional)
+    const upload = {
+      name: attachment.name || null,
+      size: attachment.size || null,
+      type: attachment.type || null,
+      // url: attachment.url || null, // If you use a URL field
+    };
+    task.attachments.push(upload);
+    await task.save();
 
-      return { success: true, message: "Attachment added!", task };
-    } catch (error) {
-      return { success: false, message: `Failed to add attachment: ${error.message}`, task: null };
-    }
-  },
+    // Optionally to return a plain object with id etc:
+    // const plainTask = task.toObject();
+    // plainTask.id = task._id.toString();
+
+    return { success: true, message: "Attachment added!", task /* or plainTask */ };
+  } catch (error) {
+    return { success: false, message: `Failed to add attachment: ${error.message}`, task: null };
+  }
+},
 
   // ✅ 3. Send Task for Approval
   sendTaskForApproval: async (taskId, user) => {

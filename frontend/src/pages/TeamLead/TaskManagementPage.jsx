@@ -35,13 +35,18 @@ const GET_TASKS_BY_TEAM_LEAD = gql`
       priority
       dueDate
       createdAt
-      attachments
+      attachments {
+        name
+        size
+        type
+      }
       updatedAt
       assignName
       remarks
     }
   }
-`;
+`
+
 
 const DELETE_TASK = gql`
   mutation DeleteTask($taskId: ID!) {
