@@ -1,6 +1,77 @@
+// memberTypeDefs.js
 const { gql } = require("apollo-server-express");
 
 const memberTypeDefs = gql`
+  # --- ENUMS ---
+  enum UserRole {
+    Project_Manager
+    Team_Lead
+    Team_Member
+  }
+
+  # --- USER TYPES ---
+  type User {
+    id: ID!
+    username: String!
+    email: String!
+    role: UserRole!
+  }
+
+  type TeamMember {
+    teamMemberId: ID!
+    memberRole: String!
+    user: User!
+  }
+
+  # --- TEAM/PROJECT TYPES ---
+  type TeamLead {
+    teamLeadId: ID!
+    leadRole: String!
+  }
+
+  type Team {
+    id: ID!
+    projectId: ID!
+    leadId: ID!
+    members: [TeamMember]!
+  }
+
+  type Project {
+    id: ID!
+    title: String!
+    description: String
+    startDate: String
+    endDate: String
+    category: String
+    projectManager: User
+    teamLeads: [TeamLead]
+    teams: [Team]
+    status: String
+  }
+
+  # --- ATTACHMENTS ---
+  type Attachment {
+    name: String
+    size: Int
+    type: String
+    # url: String  # Uncomment if file URL is desired
+  }
+
+  input AttachmentInput {
+    name: String
+    size: Int
+    type: String
+    # url: String
+  }
+
+  # --- TASK AND HISTORY ---
+  type TaskHistory {
+    updatedBy: ID!
+    updatedAt: String!
+    oldStatus: String!
+    newStatus: String!
+  }
+
   type Task {
     id: ID!
     title: String!
@@ -11,17 +82,10 @@ const memberTypeDefs = gql`
     status: String!
     priority: String!
     dueDate: String
-    attachments: [String]
+    attachments: [Attachment]
     history: [TaskHistory]
     createdAt: String
     updatedAt: String
-  }
-
-  type TaskHistory {
-    updatedBy: ID!
-    updatedAt: String!
-    oldStatus: String!
-    newStatus: String!
   }
 
   type TaskResponse {
@@ -30,69 +94,27 @@ const memberTypeDefs = gql`
     task: Task
   }
 
+  type GetMembersResponse {
+    success: Boolean!
+    message: String!
+    members: [User]!
+  }
 
-  type Project {
-  id: ID!
-  title: String!
-  description: String
-  startDate: String
-  endDate: String
-  category: String
-  projectManager: User
-  teamLeads: [TeamLead]
-  teams: [Team]
-  status: String
-}
+  # --- QUERIES ---
+  type Query {
+    getProjectsByMember(memberId: ID!): [Project]
+    getTeamMembers(teamLeadId: ID!, projectId: ID!): [TeamMember]
+    getMembersByProjectId(projectId: ID!): GetMembersResponse!
+    # Add more queries as needed...
+  }
 
-type TeamLead {
-  teamLeadId: ID!
-  leadRole: String!
-}
-
-type Team {
-  id: ID!
-  projectId: ID!
-  leadId: ID!
-  members: [TeamMember]
-}
-
-enum UserRole {
-        Project_Manager
-        Team_Lead
-        Team_Member
-    }
-        
-type User {
-  id: ID!
-  username: String!
-  email: String!
-  role: UserRole!
-}
-
-type TeamMember {
-  teamMemberId: ID!
-  memberRole: String!
-  user: User!
-}
-
-type GetMembersResponse {
-  success: Boolean!
-  message: String!
-  members: [User]!  # Fix: Change User to [User] to return an array
-}
-
-type Query {
-  getProjectsByMember(memberId: ID!): [Project]
-   getTeamMembers(teamLeadId: ID!, projectId: ID!): [TeamMember]
-   getMembersByProjectId(projectId: ID!): GetMembersResponse!  # Now correctly returns multiple users
-}
-  
-
-  extend type Mutation {
+  # --- MUTATIONS ---
+  type Mutation {
     updateTaskStatus(taskId: ID!, status: String!): TaskResponse!
-    addTaskAttachment(taskId: ID!, attachment: String!): TaskResponse!
+    addTaskAttachment(taskId: ID!, attachment: AttachmentInput!): TaskResponse!
     sendTaskForApproval(taskId: ID!): TaskResponse!
-    requestTaskReview(taskId: ID!): TaskResponse! 
+    requestTaskReview(taskId: ID!): TaskResponse!
+    # Add more mutations as needed...
   }
 `;
 

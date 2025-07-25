@@ -22,6 +22,12 @@ const typeDefs = gql`
     user: User
   }
 
+type Attachment {
+  name: String
+  size: Int
+  type: String
+}
+
   type Task {
     id: ID!
     title: String!
@@ -32,7 +38,7 @@ const typeDefs = gql`
     status: String!
     priority: String!
     dueDate: String
-    attachments: [String]
+    attachments: [Attachment]
     history: [TaskHistory]
     assignName: String
     remarks: String
