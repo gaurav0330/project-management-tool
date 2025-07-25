@@ -35,7 +35,11 @@ const GET_TASKS_BY_MANAGER = gql`
       priority
       dueDate
       createdAt
-      attachments
+      attachments {
+        name
+        size
+        type
+      }
       updatedAt
       remarks
       assignName

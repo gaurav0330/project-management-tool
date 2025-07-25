@@ -5,6 +5,7 @@ import { Search, Filter, ChevronDown, X, RefreshCw, AlertCircle } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 import TaskList from "../../components/tasks/TaskList";
 import TaskDetails from "../../components/tasks/TaskDetails";
+import { useParams } from "react-router-dom";
 
 const GET_TASKS_BY_TEAM_LEAD = gql`
   query GetTasksByTeamLead($teamLeadId: ID!, $projectId: ID!) {
@@ -41,13 +42,20 @@ const FILTER_OPTIONS = [
   { value: "Needs Revision", label: "Needs Revision", icon: "🔧" },
 ];
 
-export default function TaskApprovalPage({ projectId }) {
+export default function TaskApprovalPage({ projectId: projectIdProp }) {
+
+   const { projectId: projectIdParam, teamId } = useParams();
+  const projectId = projectIdProp || projectIdParam;
+
   const token = localStorage.getItem("token");
   const decodedToken = jwtDecode(token);
   const teamLeadId = decodedToken.id;
 
+  console.log("TaskApprovalPage: projectId = ", projectId, "teamId =", teamId, "teamLeadId =", teamLeadId);
+
   const { data, loading, error, refetch } = useQuery(GET_TASKS_BY_TEAM_LEAD, {
     variables: { teamLeadId, projectId },
+    skip: !teamLeadId || !projectId,
     errorPolicy: 'all'
   });
 
