@@ -5,10 +5,9 @@ import { useTheme } from "../../contexts/ThemeContext";
 import Sidebar from "../../components/Other/sideBar";
 import AssignTeamLead from "../../components/tasks/AssignTeamLead";
 import AssignTasks from "../../components/tasks/AssignTasks";
-import CreateProjectPage from "../../pages/ProjectManager/CreateProjectPage";
 import TaskApprovalPage from "./TaskApprovalPage";
 import AssignedTasks from "../../components/tasks/AssignedTasks";
-import TeamLeadsList from "./TeamLeadsList";
+import ManageTeam from "./ManageTeam";
 import TeamMembersList from "./TeamMemberList";
 import AnalyticsDashboard from "./AnalyticsDashboard";
 import TaskStatusTimeline from "../../components/charts/TaskAssignment";
@@ -143,7 +142,7 @@ export default function ProjectDashboard() {
                   layout
                   transition={{ duration: 0.3 }}
                 >
-                  <TeamLeadsList projectId={projectId} />
+                  <ManageTeam projectId={projectId} />
                 </motion.div>
               ) : activeComponent === "assignedTasks" ? (
                 <motion.div 
