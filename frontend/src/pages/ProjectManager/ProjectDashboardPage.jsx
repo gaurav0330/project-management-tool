@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode"; // fixed import (no curly braces)
 import { useTheme } from "../../contexts/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import FilterBar from "../../components/TeamMember/FilterBar";
@@ -71,8 +71,19 @@ export default function ProjectDashboard() {
     { label: "Pending", value: projects.filter(p => p.status === "Pending").length, icon: "⏳" }
   ];
 
-  if (!managerId) return <div className="text-center py-40 text-red-500">Unauthorized</div>;
-  if (error) return <div className="text-center py-40 text-red-500">Error loading projects</div>;
+  if (!managerId)
+    return (
+      <div className="text-center py-40 text-red-500">
+        Unauthorized
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="text-center py-40 text-red-500">
+        Error loading projects
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300 relative">
@@ -164,19 +175,26 @@ export default function ProjectDashboard() {
             setStatusFilter={setStatusFilter}
           />
 
+          {/* Project Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {loading
-              ? [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
-              : filteredProjects.map((project, i) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                  >
-                    <ProjectCard project={project} />
-                  </motion.div>
-                ))}
+            {loading ? (
+              [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
+            ) : filteredProjects.length === 0 ? (
+              <p className="col-span-full text-center text-txt-secondary-light dark:text-txt-secondary-dark text-lg py-20">
+                There are no projects to display.
+              </p>
+            ) : (
+              filteredProjects.map((project, i) => (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <ProjectCard project={project} />
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       )}

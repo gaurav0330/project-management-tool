@@ -157,7 +157,7 @@ export default function Footer() {
               <li className="flex items-start space-x-3">
                 <FaMapMarkerAlt className="text-brand-primary-500 mt-1 flex-shrink-0" />
                 <span className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-sm">
-                  1234 Innovation Drive, Tech Valley, CA 94043
+                  Maharashtra
                 </span>
               </li>
               <li className="flex items-center space-x-3">
@@ -166,7 +166,7 @@ export default function Footer() {
                   href="mailto:contact@yojanadesk.com" 
                   className="font-body text-txt-secondary-light dark:text-txt-secondary-dark hover:text-heading-accent-light dark:hover:text-heading-accent-dark text-sm transition-colors duration-300"
                 >
-                  contact@yojanadesk.com
+                  gauravjikar070806@gmaiil.com
                 </a>
               </li>
               <li className="flex items-center space-x-3">
