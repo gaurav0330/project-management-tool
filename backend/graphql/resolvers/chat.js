@@ -58,13 +58,19 @@ const chatResolvers = {
       }).populate("members teamLead");
     
       // Combine all groups into a single array
-      const allGroups = [
+      let allGroups = [
         ...teamLeadGroups,
         ...(leadsGroup ? [leadsGroup] : []),
         ...customGroups,
       ];
     
-      return allGroups;
+      // Deduplicate groups based on their `id`
+      const uniqueGroups = allGroups.filter(
+        (group, index, self) =>
+          index === self.findIndex((g) => g.id.toString() === group.id.toString())
+      );
+    
+      return uniqueGroups;
     },
     getGroupsByMemberId: async (_, { memberId, projectId }) => {
       if (!projectId) {
