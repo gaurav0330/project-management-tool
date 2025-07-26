@@ -13,6 +13,7 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import TaskStatusTimeline from "../../components/charts/TaskAssignment";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 import SettingsPage from "../../pages/SettingsPage";
+import Chat from "./Chat";
 import { motion, AnimatePresence } from "framer-motion";
 
 const GET_PROJECT_BY_ID = gql`
@@ -152,7 +153,17 @@ export default function ProjectDashboard() {
                 >
                   <AssignedTasks projectId={projectId} />
                 </motion.div>
-              ) : activeComponent === "TimeLine" ? (
+              )
+              : activeComponent === "chat" ? (
+                <motion.div 
+                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+                  layout
+                  transition={{ duration: 0.3 }}
+                >
+                  <Chat projectId={projectId} />
+                </motion.div>
+              ) 
+              : activeComponent === "TimeLine" ? (
                 <motion.div 
                   className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
                   layout
