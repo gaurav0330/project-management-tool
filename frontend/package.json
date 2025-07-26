@@ -31,6 +31,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "d3-flextree": "^2.1.2",
+    "dagre": "^0.8.5",
     "dayjs": "^1.11.13",
     "flowbite-react": "^0.10.2",
     "framer-motion": "^12.23.7",
