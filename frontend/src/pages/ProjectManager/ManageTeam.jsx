@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql, useApolloClient } from "@apollo/client";
 import { jwtDecode } from "jwt-decode";
 import ReactFlow, {
   Background,
@@ -71,8 +71,27 @@ const GET_TASKS_BY_MANAGER = gql`
   }
 `;
 
+const GET_TASKS_FOR_MEMBER = gql`
+  query GetTasksForMember($memberId: ID!, $projectId: ID!) {
+    getTasksForMember(memberId: $memberId, projectId: $projectId) {
+      id
+      title
+      description
+      project
+      createdBy
+      assignedTo
+      status
+      priority
+      dueDate
+      createdAt
+      updatedAt
+      remarks
+    }
+  }
+`;
+
 // Task Modal Component
-const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
+const TaskModal = ({ isOpen, onClose, tasks, personName, personType = "lead" }) => {
   if (!isOpen) return null;
 
   return (
@@ -81,7 +100,7 @@ const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 font-heading">
-              Tasks for {leadName}
+              Tasks for {personType === "member" ? "Member" : "Lead"}: {personName}
             </h2>
             <button
               onClick={onClose}
@@ -97,7 +116,7 @@ const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
             <div className="text-center py-8">
               <div className="text-4xl mb-4">📋</div>
               <p className="text-gray-500 dark:text-gray-400 text-lg">
-                No tasks assigned to this lead yet.
+                No tasks assigned to this {personType} yet.
               </p>
             </div>
           ) : (
@@ -117,7 +136,9 @@ const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                           : task.status === 'In Progress'
                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          : task.status === 'Pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
                       }`}
                     >
                       {task.status}
@@ -140,7 +161,7 @@ const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
                             : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200'
                         }`}
                       >
-                        {task.priority}
+                        {task.priority || 'Not Set'}
                       </span>
                     </div>
                     <div>
@@ -151,12 +172,21 @@ const TaskModal = ({ isOpen, onClose, tasks, leadName }) => {
                     </div>
                   </div>
                   
-                  {task.assignName && (
-                    <div className="mt-2 text-sm">
-                      <span className="font-medium text-gray-500 dark:text-gray-400">Assigned to:</span>
-                      <span className="ml-2 text-gray-700 dark:text-gray-300">{task.assignName}</span>
+                  {task.remarks && (
+                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <span className="font-medium text-blue-700 dark:text-blue-300 text-sm">Remarks:</span>
+                      <p className="text-blue-600 dark:text-blue-200 text-sm mt-1">{task.remarks}</p>
                     </div>
                   )}
+                  
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Created: {new Date(task.createdAt).toLocaleDateString()}
+                    {task.updatedAt && task.updatedAt !== task.createdAt && (
+                      <span className="ml-4">
+                        Updated: {new Date(task.updatedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -176,7 +206,7 @@ const NodeLabel = ({
   isExpanded = false, 
   onClick,
   onTaskClick,
-  leadId,
+  personId,
   hasTaskButton = false
 }) => {
   const getNodeStyle = () => {
@@ -223,8 +253,8 @@ const NodeLabel = ({
 
   const handleTaskClick = (e) => {
     e.stopPropagation();
-    if (onTaskClick && leadId) {
-      onTaskClick(leadId);
+    if (onTaskClick && personId) {
+      onTaskClick(personId, type);
     }
   };
 
@@ -270,13 +300,17 @@ const NodeLabel = ({
 };
 
 const ManageTeam = ({ projectId }) => {
+  // Get Apollo client instance
+  const client = useApolloClient();
+  
   // State for controlling what's expanded
   const [expandedManager, setExpandedManager] = useState(false);
   const [expandedLeads, setExpandedLeads] = useState(new Set());
   const [expandedTeams, setExpandedTeams] = useState(new Set());
   const [taskModalOpen, setTaskModalOpen] = useState(false);
-  const [selectedLeadTasks, setSelectedLeadTasks] = useState([]);
-  const [selectedLeadName, setSelectedLeadName] = useState('');
+  const [selectedTasks, setSelectedTasks] = useState([]);
+  const [selectedPersonName, setSelectedPersonName] = useState('');
+  const [selectedPersonType, setSelectedPersonType] = useState('lead');
 
   // Get manager ID from JWT token
   const token = localStorage.getItem("token");
@@ -301,7 +335,7 @@ const ManageTeam = ({ projectId }) => {
     variables: { projectId },
   });
 
-  const { data: tasksData, refetch: refetchTasks } = useQuery(GET_TASKS_BY_MANAGER, {
+  const { data: tasksData } = useQuery(GET_TASKS_BY_MANAGER, {
     variables: { managerId, projectId },
     skip: !managerId || !projectId,
   });
@@ -345,17 +379,63 @@ const ManageTeam = ({ projectId }) => {
     setExpandedTeams(newExpandedTeams);
   };
 
-  const handleTaskClick = (leadId) => {
-    if (tasksData?.getTasksByManager) {
-      // Filter tasks assigned to this specific lead
-      const leadTasks = tasksData.getTasksByManager.filter(task => task.assignedTo === leadId);
-      
-      // Find lead name
-      const lead = data?.getLeadsByProjectId?.teamLeads?.find(l => l.user.id === leadId);
-      const leadName = lead?.user.username || 'Unknown Lead';
-      
-      setSelectedLeadTasks(leadTasks);
-      setSelectedLeadName(leadName);
+  // Unified task click handler for both leads and members
+  const handleTaskClick = async (personId, personType) => {
+    try {
+      if (personType === 'lead') {
+        // Handle lead tasks
+        if (tasksData?.getTasksByManager) {
+          const leadTasks = tasksData.getTasksByManager.filter(task => task.assignedTo === personId);
+          const lead = data?.getLeadsByProjectId?.teamLeads?.find(l => l.user.id === personId);
+          const leadName = lead?.user.username || 'Unknown Lead';
+          
+          setSelectedTasks(leadTasks);
+          setSelectedPersonName(leadName);
+          setSelectedPersonType('lead');
+          setTaskModalOpen(true);
+        }
+      } else if (personType === 'member') {
+        // Handle member tasks using Apollo client
+        console.log('Fetching tasks for member:', personId, 'in project:', projectId);
+        
+        const { data: memberTasksData } = await client.query({
+          query: GET_TASKS_FOR_MEMBER,
+          variables: { memberId: personId, projectId },
+          fetchPolicy: 'network-only', // Always fetch fresh data
+        });
+
+        console.log('Member tasks data:', memberTasksData);
+
+        if (memberTasksData?.getTasksForMember) {
+          // Find member name from the data structure
+          let memberName = 'Unknown Member';
+          data?.getLeadsByProjectId?.teamLeads?.forEach(lead => {
+            lead.teams.forEach(team => {
+              const member = team.members.find(m => m.user.id === personId);
+              if (member) {
+                memberName = member.user.username;
+              }
+            });
+          });
+
+          setSelectedTasks(memberTasksData.getTasksForMember);
+          setSelectedPersonName(memberName);
+          setSelectedPersonType('member');
+          setTaskModalOpen(true);
+        } else {
+          // Show empty modal if no tasks found
+          setSelectedTasks([]);
+          setSelectedPersonName('Member');
+          setSelectedPersonType('member');
+          setTaskModalOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      // Show error in modal
+      setSelectedTasks([]);
+      setSelectedPersonName(personType === 'member' ? 'Member' : 'Lead');
+      setSelectedPersonType(personType);
       setTaskModalOpen(true);
     }
   };
@@ -369,9 +449,9 @@ const ManageTeam = ({ projectId }) => {
     );
 
     // Improved spacing calculations
-    const spacing = 300; // Increased spacing between nodes
-    const verticalSpacing = 200; // Increased vertical spacing
-    const memberSpacing = 220; // Specific spacing for members
+    const spacing = 300;
+    const verticalSpacing = 200;
+    const memberSpacing = 220;
     const totalWidth = Math.max(teamLeads.length * spacing * 1.5, 1200);
 
     let nodes = [];
@@ -452,7 +532,7 @@ const ManageTeam = ({ projectId }) => {
                 isExpanded={expandedLeads.has(lead.user.id)}
                 onClick={() => hasTeams && handleLeadClick(lead.user.id)}
                 onTaskClick={handleTaskClick}
-                leadId={lead.user.id}
+                personId={lead.user.id}
                 hasTaskButton={true}
               />
             ),
@@ -525,11 +605,10 @@ const ManageTeam = ({ projectId }) => {
             // Only show members if this team is expanded
             if (expandedTeams.has(team.id)) {
               team.members.forEach((member, memberIndex) => {
-                // Improved member positioning with proper spacing
                 const memberX = teamX + (memberIndex - (team.members.length - 1) / 2) * memberSpacing;
-                const memberY = teamY + verticalSpacing; // Increased distance for members
+                const memberY = teamY + verticalSpacing;
 
-                // Member node
+                // Member node with task button
                 const memberNodeId = `member-${member.user.id}-${team.id}`;
                 nodes.push({
                   id: memberNodeId,
@@ -540,6 +619,9 @@ const ManageTeam = ({ projectId }) => {
                         email={member.user.email}
                         role={member.memberRole}
                         type="member"
+                        onTaskClick={handleTaskClick}
+                        personId={member.user.id}
+                        hasTaskButton={true}
                       />
                     ),
                   },
@@ -623,7 +705,7 @@ const ManageTeam = ({ projectId }) => {
           {/* Enhanced Instructions */}
           <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-800">
             <p className="text-blue-800 dark:text-blue-200 text-base font-medium font-body">
-              💡 <strong className="font-heading">Instructions:</strong> Click on the Manager to see Leads, click on Leads to see Teams, click on Teams to see Members. Click the 📋 button on Team Leads to view their tasks.
+              💡 <strong className="font-heading">Instructions:</strong> Click on the Manager to see Leads, click on Leads to see Teams, click on Teams to see Members. Click the 📋 button on Team Leads and Members to view their tasks.
             </p>
           </div>
         </div>
@@ -669,8 +751,9 @@ const ManageTeam = ({ projectId }) => {
       <TaskModal
         isOpen={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}
-        tasks={selectedLeadTasks}
-        leadName={selectedLeadName}
+        tasks={selectedTasks}
+        personName={selectedPersonName}
+        personType={selectedPersonType}
       />
     </>
   );
