@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Home, FolderKanban, Users, BarChart3, Settings, ChevronDown, ChevronRight,
   Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle, 
-  TrendingUp, Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft
+  TrendingUp, Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft , MessageSquare
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -63,6 +63,14 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
           { txt: "Approve Tasks", icon: CheckCircle, comp: "approvetask" },
         ],
       },
+      {
+        title: "Chat & Collaboration",
+        icon: MessageSquare,
+        links: [
+          { txt: "Chat", icon: MessageSquare, comp: "chat" },
+        ],
+      },
+
       {
         title: "Analytics & Reports",
         icon: BarChart3,
