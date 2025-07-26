@@ -5,6 +5,7 @@ const Project = require("../../models/Project");
 const Task = require("../../models/Task");
 const User = require("../../models/User");
 const Team = require("../../models/Teams");
+const { createDefaultGroupsForProject } = require("../../services/groupService");
 
 const projectResolvers = {
   Query: {
@@ -190,6 +191,9 @@ const projectResolvers = {
         category: category,
         managerId: user.id
       });
+
+      // Create default chat groups for the project
+      await createDefaultGroupsForProject(project._id);
 
       console.log(project);
 

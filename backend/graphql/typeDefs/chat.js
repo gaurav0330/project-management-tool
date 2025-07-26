@@ -17,6 +17,9 @@ const chatTypeDefs = gql`
   type Group {
     id: ID!
     name: String!
+    type: String!
+    project: ID!
+    team: ID
     teamLead: User!
     members: [User!]
   }
@@ -30,10 +33,12 @@ const chatTypeDefs = gql`
   }
 
   type Query {
-    getGroups: [Group!]!
+    getGroups(projectId: ID!): [Group!]!
     getMessages(groupId: ID!): [Message!]!
-    getGroupsByLeadId(leadId: ID!): [Group!]!
-    getGroupsByMemberId(memberId: ID!): [Group!]!
+    getGroupsByLeadId(leadId: ID!, projectId: ID!): [Group!]!
+    getGroupsByMemberId(memberId: ID!, projectId: ID!): [Group!]!
+    getGroupsByProjectId(projectId: ID!): [Group!]!
+    getGroupsForLead(leadId: ID!, projectId: ID!): [Group!]!
   }
 
   type Mutation {

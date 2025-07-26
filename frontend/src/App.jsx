@@ -18,12 +18,14 @@ import CreateProjectPage from './pages/ProjectManager/CreateProjectPage';
 import AssignTaskPage from './pages/ProjectManager/AssignTaskPage';
 import TaskApprovalPage from './pages/ProjectManager/TaskApprovalPage';
 import ProjectHomePage from './pages/ProjectManager/ProjectHomePage';
+import ProjectManagerChat from './pages/ProjectManager/Chat';
 
 // Team Member Pages
 import TeamMemberDashboardPage from './pages/TeamMember/TeamMemberDashboardPage';
 import MyTasksPage from './pages/TeamMember/MyTasksPage';
 import TaskSubmissionPage from './pages/TeamMember/TaskSubmissionMemberPage';
 import TeamMemberHome from './pages/TeamMember/TeamMemberHome';
+import TeamMemberChat from './pages/TeamMember/Chat';
 
 // Team Lead Pages
 import TeamLeadDashboard from './pages/TeamLead/teamLeadDashboard';
@@ -32,6 +34,7 @@ import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
 import TeamDetails from './pages/TeamLead/TeamDetails';
+import TeamLeadChat from './pages/TeamLead/Chat';
 
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
@@ -53,7 +56,8 @@ function AppContent() {
     "/teamLead",
     "/teamlead/project",
     "/teamMember/project",
-    "/teammembertasksubmission"
+    "/teammembertasksubmission",
+    "/chat"
   ];
 
   // ✅ Define routes where container padding should be applied
@@ -135,6 +139,14 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/projectManager/chat" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager"]}>
+                <ProjectManagerChat />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* 🟠 Team Member Only Routes */}
           <Route 
@@ -168,6 +180,14 @@ function AppContent() {
                 <TaskSubmissionPage />
               </ProtectedRoute>
             }
+          />
+          <Route 
+            path="/teamMember/chat" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Member"]}>
+                <TeamMemberChat />
+              </ProtectedRoute>
+            } 
           />
 
           {/* 🟡 Team Lead Only Routes */}
@@ -216,6 +236,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowedRoles={["Team_Lead"]}>
                 <TaskDistributionPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/teamLead/chat" 
+            element={
+              <ProtectedRoute allowedRoles={["Team_Lead"]}>
+                <TeamLeadChat />
               </ProtectedRoute>
             } 
           />

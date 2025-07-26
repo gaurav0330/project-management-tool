@@ -6,6 +6,7 @@ const { ApolloError } = require("apollo-server-express");
 const { AuthenticationError } = require("apollo-server-express");
 const Team = require("../models/Teams");
 const { sendTeamLeadAssignmentEmail ,sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail,sendEmail} = require("../services/emailService");
+const { updateGroupsOnUserChange } = require("./groupService");
 
 const projectService = {
   createProject: async ({ title, description, startDate, endDate, managerId,category }) => {
@@ -97,7 +98,12 @@ const projectService = {
           if (leadUser) {
               await sendTeamLeadAssignmentEmail(leadUser.username, leadUser.email, project.title);
           }
-      }
+        }
+
+        // Update chat groups for each new lead
+        for (const lead of formattedTeamLeads) {
+          await updateGroupsOnUserChange({ projectId: project._id, userId: lead.teamLeadId, action: "add" });
+        }
 
         return {
             success: true,
