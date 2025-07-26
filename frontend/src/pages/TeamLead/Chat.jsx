@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../../components/authContext';
+import { jwtDecode } from 'jwt-decode';
 import { 
   GET_GROUPS_FOR_LEAD,
   GET_MESSAGES, 
@@ -15,9 +16,21 @@ const TeamLeadChat = ({ projectId }) => {
   const messagesEndRef = useRef(null);
 
   // Get current user from localStorage
+  // Extract user from token
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    setCurrentUser(user);
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token); // Decode the token
+        setCurrentUser({
+          id: decodedToken.id,
+          username: decodedToken.username,
+          role: decodedToken.role,
+        });
+      } catch (error) {
+        console.error("Token decode error:", error);
+      }
+    }
   }, []);
 
   // Fetch groups for team lead

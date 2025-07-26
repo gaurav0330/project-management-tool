@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../../components/authContext';
+import { jwtDecode } from 'jwt-decode';
 import { 
   GET_GROUPS, 
   GET_GROUPS_BY_LEAD, 
@@ -16,10 +17,21 @@ const Chat = ({ projectId }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const messagesEndRef = useRef(null);
 
-  // Get current user from localStorage
+  // Extract user from token
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    setCurrentUser(user);
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token); // Decode the token
+        setCurrentUser({
+          id: decodedToken.id,
+          username: decodedToken.username,
+          role: decodedToken.role,
+        });
+      } catch (error) {
+        console.error("Token decode error:", error);
+      }
+    }
   }, []);
 
   // Determine which query to use based on user role
