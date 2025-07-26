@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import AssignTeamLead from "../../components/tasks/AssignTeamLead";
 
 const AssignLeadPage = () => {
-  const { projectId } = useParams();  // ✅ Extract projectId from the URL
+  const { projectId } = useParams(); 
 
   console.log("✅ Project ID from URL params:", projectId);
 
