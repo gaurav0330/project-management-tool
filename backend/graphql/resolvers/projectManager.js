@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const Project = require("../../models/Project");
 const Task = require("../../models/Task");
 const User = require("../../models/User");
+const Team = require("../../models/Teams");
 
 const projectResolvers = {
   Query: {
@@ -18,6 +19,7 @@ const projectResolvers = {
     getProjectsByManagerId: async (_, args) => {
       return await projectService.getProjectsByManagerId(args.managerId);
     },
+
     // getLeadsByProjectId: async (_, { projectId }, { user }) => {
     //   if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
   
@@ -47,72 +49,130 @@ const projectResolvers = {
     // }  
 
 
-     getLeadsByProjectId : async (_, { projectId }, { user }) => {
-      if (!user) {
-        throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-      }
+ getLeadsByProjectId : async (_, { projectId }, { user }) => {
+  if (!user) {
+    throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+  }
+
+  try {
+    console.log(`🔍 Fetching leads, teams, and members for project ID: ${projectId}`);
+
+    // Find the project
+    const project = await Project.findById(projectId);
+    if (!project) {
+      console.error("❌ Project not found!");
+      return {
+        success: false,
+        message: "Project not found",
+        teamLeads: [],
+      };
+    }
+
+    // Extract team lead IDs from project
+    const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
+    console.log("📌 Team Lead IDs:", teamLeadIds);
+
+    // Fetch all team lead users
+    const leadUsers = await User.find({ _id: { $in: teamLeadIds } });
+    console.log("👥 Retrieved Lead Users:", leadUsers);
+
+    // Fetch all teams for this project
+    const teams = await Team.find({ projectId: projectId });
+    console.log("🏗️ Retrieved Teams:", teams);
+
+    // Get all member IDs from all teams
+    const allMemberIds = teams.flatMap(team => 
+      team.members.map(member => member.teamMemberId)
+    );
     
-      try {
-        console.log(`🔍 Fetching leads for project ID: ${projectId}`);
-    
-        // Find the project
-        const project = await Project.findById(projectId);
-        if (!project) {
-          console.error("❌ Project not found!");
-          return {
-            success: false,
-            message: "Project not found",
-            teamLeads: [],
-          };
+    // Fetch all member users in one query
+    const memberUsers = await User.find({ _id: { $in: allMemberIds } });
+    console.log("👤 Retrieved Member Users:", memberUsers);
+
+    // Build the hierarchical structure
+    const teamLeads = await Promise.all(
+      project.teamLeads.map(async (lead) => {
+        const userDetails = leadUsers.find((user) => user.id === lead.teamLeadId.toString());
+        
+        if (!userDetails) {
+          console.warn(`⚠️ Lead user with ID ${lead.teamLeadId} not found`);
+          return null;
         }
-    
-        // Extract team lead IDs
-        const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
-        console.log("📌 Team Lead IDs:", teamLeadIds);
-    
-        // Fetch all users in one query
-        const users = await User.find({ _id: { $in: teamLeadIds } });
-        console.log("👥 Retrieved Users:", users);
-    
-        // Map leads with user details
-        const teamLeads = project.teamLeads
-          .map((lead) => {
-            const userDetails = users.find((user) => user.id === lead.teamLeadId.toString());
-            
-            if (!userDetails) {
-              console.warn(`⚠️ User with ID ${lead.teamLeadId} not found`);
-              return null; // Handle missing users gracefully
+
+        // Find teams created by this lead
+        const leadTeams = teams.filter(team => 
+          team.leadId.toString() === lead.teamLeadId.toString()
+        );
+
+        // Map teams with their members
+        const teamsWithMembers = leadTeams.map(team => {
+          // Get members for this team
+          const teamMembers = team.members.map(member => {
+            const memberUser = memberUsers.find(user => 
+              user.id === member.teamMemberId.toString()
+            );
+
+            if (!memberUser) {
+              console.warn(`⚠️ Member user with ID ${member.teamMemberId} not found`);
+              return null;
             }
-    
+
             return {
               user: {
-                id: userDetails.id,
-                username: userDetails.username,
-                email: userDetails.email,
-                role: userDetails.role,
+                id: memberUser.id,
+                username: memberUser.username,
+                email: memberUser.email,
+                role: memberUser.role,
               },
-              leadRole: lead.leadRole,
-              teamLeadId: lead.teamLeadId, // Ensure teamLeadId is included
+              memberRole: member.memberRole,
+              teamMemberId: member.teamMemberId.toString(),
             };
-          })
-          .filter(Boolean); // Remove any null values
-    
-        console.log("✅ Final Team Leads:", teamLeads);
-    
+          }).filter(Boolean); // Remove null values
+
+          return {
+            id: team.id,
+            teamName: team.teamName,
+            description: team.description,
+            leadId: team.leadId.toString(),
+            projectId: team.projectId.toString(),
+            members: teamMembers,
+            createdAt: team.createdAt.toISOString(),
+          };
+        });
+
         return {
-          success: true,
-          message: "Team Leads retrieved successfully",
-          teamLeads: teamLeads,
+          user: {
+            id: userDetails.id,
+            username: userDetails.username,
+            email: userDetails.email,
+            role: userDetails.role,
+          },
+          leadRole: lead.leadRole,
+          teamLeadId: lead.teamLeadId.toString(),
+          teams: teamsWithMembers,
         };
-      } catch (error) {
-        console.error("❌ Error fetching leads:", error);
-        return {
-          success: false,
-          message: "Error fetching team leads",
-          teamLeads: [],
-        };
-      }
-    }
+      })
+    );
+
+    const validTeamLeads = teamLeads.filter(Boolean);
+
+    console.log("✅ Final Team Leads with Teams and Members:", JSON.stringify(validTeamLeads, null, 2));
+
+    return {
+      success: true,
+      message: "Team structure retrieved successfully",
+      teamLeads: validTeamLeads,
+    };
+  } catch (error) {
+    console.error("❌ Error fetching team structure:", error);
+    return {
+      success: false,
+      message: "Error fetching team structure",
+      teamLeads: [],
+    };
+  }
+}
+
     
   },
 

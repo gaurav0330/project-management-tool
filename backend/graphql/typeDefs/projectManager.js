@@ -27,15 +27,33 @@ const projectTypeDefs = gql`
   }
 
   type TeamLead {
-     user: User!  
+    user: User!  
     leadRole: String
+    teamLeadId: ID!
+    teams: [Team!]!  # Changed from teamMembers to teams
+  }
+
+  type Team {
+    id: ID!
+    teamName: String!
+    description: String!
+    leadId: ID!
+    projectId: ID!
+    members: [TeamMember!]!
+    createdAt: String
+  }
+
+  type TeamMember {
+    user: User!
+    memberRole: String
+    teamMemberId: ID!
   }
 
   type GetLeadsResponse {
-  success: Boolean!
-  message: String!
-  teamLeads: [TeamLead!]!
-}
+    success: Boolean!
+    message: String!
+    teamLeads: [TeamLead!]!
+  }
 
   type Query {
     getAllProjects: [Project]
@@ -68,9 +86,8 @@ const projectTypeDefs = gql`
     rejectTaskByManager(taskId: ID!, reason: String!): TaskResponse!
     requestTaskModificationsByManager(taskId: ID!, feedback: String!): TaskResponse!
 
-    deleteProject(projectId: ID!): Boolean!  # Only Project Managers
-    leaveProject(projectId: ID!): Boolean!   # For Team Leads & Team Members
-
+    deleteProject(projectId: ID!): Boolean!
+    leaveProject(projectId: ID!): Boolean!
     deleteTask(taskId: ID!): Boolean!
   }
 
