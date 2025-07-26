@@ -4,7 +4,6 @@ import {
   MdSearch,
   MdHome,
   MdNotifications,
-  MdMessage,
 } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode"; // ✅ Fixed import with curly braces
@@ -90,16 +89,6 @@ export default function Navbar() {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
-              {/* Messages - Hide for Project Manager */}
-              {userRole !== "Project_Manager" && (
-                <button
-                  className="p-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition"
-                  onClick={() => navigate("/chat")}
-                >
-                  <MdMessage size={20} className="text-txt-primary-light dark:text-txt-primary-dark" />
-                </button>
-              )}
-
               {/* Dashboard Button */}
               <button
                 className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 text-white rounded-md transition"
@@ -168,14 +157,6 @@ export default function Navbar() {
                 >
                   Dashboard
                 </button>
-                {userRole !== "Project_Manager" && (
-                  <button 
-                    onClick={() => navigate("/chat")} 
-                    className="text-left py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
-                  >
-                    Chat
-                  </button>
-                )}
                 <div className="pt-2">
                   <LogoutButton />
                 </div>

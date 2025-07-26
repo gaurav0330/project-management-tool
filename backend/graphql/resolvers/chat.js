@@ -1,4 +1,4 @@
-const { createGroup, getGroups } = require("../../services/groupService");
+const { createGroup, getGroups ,getGroupsByProjectId } = require("../../services/groupService");
 const { sendMessage, getMessages } = require("../../services/messageService");
 const Message = require("../../models/Message");
 const User = require("../../models/User");
@@ -6,13 +6,74 @@ const Group = require("../../models/Group");
 
 const chatResolvers = {
   Query: {
-    getGroups: async () => await getGroups(),
-    getMessages: async (_, { groupId }) => await getMessages(groupId),
-    getGroupsByLeadId: async (_, { leadId }) => {
-      return await Group.find({ teamLead: leadId }).populate("members teamLead");
+    getGroups: async (_, { projectId }) => {
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+      return await Group.find({ project: projectId }).populate("members teamLead");
     },
-    getGroupsByMemberId: async (_, { memberId }) => {
-      return await Group.find({ members: memberId }).populate("members teamLead");
+    getGroupsByProjectId: async (_, { projectId }) => {
+      if (!projectId) throw new Error("Project ID is required");
+    
+      // Fetch groups filtered by projectId
+      return await Group.find({ project: projectId }).populate("members teamLead");
+    },
+    
+     
+    getMessages: async (_, { groupId }) => await getMessages(groupId),
+    getGroupsByLeadId: async (_, { leadId, projectId }) => {
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+    
+      // Fetch groups where the lead is the teamLead
+      const groups = await Group.find({
+        teamLead: leadId, // Filter groups where the lead is the teamLead
+        project: projectId,
+      }).populate("members teamLead");
+    
+      return groups;
+    },
+    getGroupsForLead: async (_, { leadId, projectId }) => {
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+    
+      // Fetch groups where the lead is the teamLead
+      const teamLeadGroups = await Group.find({
+        teamLead: leadId,
+        project: projectId,
+      }).populate("members teamLead");
+    
+      // Fetch the Leads group
+      const leadsGroup = await Group.findOne({
+        type: "leads",
+        project: projectId,
+      }).populate("members teamLead");
+    
+      // Fetch custom groups where the lead is invited as a member
+      const customGroups = await Group.find({
+        members: leadId,
+        project: projectId,
+      }).populate("members teamLead");
+    
+      // Combine all groups into a single array
+      const allGroups = [
+        ...teamLeadGroups,
+        ...(leadsGroup ? [leadsGroup] : []),
+        ...customGroups,
+      ];
+    
+      return allGroups;
+    },
+    getGroupsByMemberId: async (_, { memberId, projectId }) => {
+      if (!projectId) {
+        throw new Error("Project ID is required");
+      }
+      return await Group.find({ 
+        members: memberId, 
+        project: projectId 
+      }).populate("members teamLead");
     },
   },
 
@@ -74,6 +135,28 @@ const chatResolvers = {
         createdAt: message.createdAt.toISOString(), // Ensure the date is formatted correctly
       };
     },
+
+    // notifyUserAddition: async (_, { projectId, userId, groupType }) => {
+    //   const user = await User.findById(userId);
+    //   if (!user) throw new Error("User not found");
+
+    //   const group = await Group.findOne({ project: projectId, type: groupType });
+    //   if (!group) throw new Error("Group not found");
+
+    //   // Notify Project Manager
+    //   const project = await Project.findById(projectId).populate("projectManager");
+    //   const projectManager = project.projectManager;
+
+    //   if (projectManager) {
+    //     await sendEmail(
+    //       projectManager.email,
+    //       "New User Added to Group",
+    //       `User ${user.username} has been added to the ${group.name} group.`
+    //     );
+    //   }
+
+    //   return { success: true, message: "Notification sent successfully" };
+    // },
   },
 };
 

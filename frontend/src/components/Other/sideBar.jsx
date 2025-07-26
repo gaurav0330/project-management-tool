@@ -108,6 +108,13 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
         ],
       },
       {
+        title: "Chat & Collaboration",
+        icon: MessageSquare,
+        links: [
+          { txt: "Chat", icon: MessageSquare, comp: "chat" },
+        ],
+      },
+      {
         title: "Project Settings",
         icon: Settings,
         links: [{ txt: "Settings", icon: Shield, comp: "setting" }],
@@ -123,6 +130,13 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
         title: "My Tasks",
         icon: ClipboardList,
         links: [{ txt: "My Tasks", icon: Target, comp: "tasks" }],
+      },
+      {
+        title: "Chat & Collaboration",
+        icon: MessageSquare,
+        links: [
+          { txt: "Chat", icon: MessageSquare, comp: "chat" },
+        ],
       },
       {
         title: "Project Settings",

@@ -15,6 +15,7 @@ import DisplayTeamTaskPage from "./DisplayTeamTaskPage";
 import AssignedTasks from "../../components/tasks/AssignedTasks";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 import SettingsPage from "../../pages/SettingsPage";
+import TeamLeadChat from "./Chat";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaCalendarAlt, 
@@ -197,6 +198,14 @@ export default function TeamLeadDashboard() {
                   transition={{ duration: 0.3 }}
                 >
                   <DisplayTeamTaskPage />
+                </motion.div>
+              ) : activeComponent === "chat" ? (
+                <motion.div 
+                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+                  layout
+                  transition={{ duration: 0.3 }}
+                >
+                  <TeamLeadChat projectId={projectId} />
                 </motion.div>
               ) : activeComponent === "assignedTasks" ? (
                 <motion.div 

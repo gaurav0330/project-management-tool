@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { useAuth } from '../../components/authContext';
+import { jwtDecode } from 'jwt-decode';
 import { 
-  GET_GROUPS, 
-  GET_GROUPS_BY_LEAD, 
   GET_GROUPS_BY_MEMBER,
   GET_MESSAGES, 
   SEND_MESSAGE 
 } from '../../graphql/chatQueries';
 
-const Chat = ({ projectId }) => {
+const TeamMemberChat = ({ projectId }) => {
   const { userRole } = useAuth();
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [message, setMessage] = useState('');
@@ -17,39 +16,38 @@ const Chat = ({ projectId }) => {
   const messagesEndRef = useRef(null);
 
   // Get current user from localStorage
+  // Extract user from token
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    setCurrentUser(user);
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token); // Decode the token
+        setCurrentUser({
+          id: decodedToken.id,
+          username: decodedToken.username,
+          role: decodedToken.role,
+        });
+      } catch (error) {
+        console.error("Token decode error:", error);
+      }
+    }
   }, []);
 
-  // Determine which query to use based on user role
-  const getGroupsQuery = () => {
-    if (!currentUser) return GET_GROUPS;
-    
-    switch (userRole) {
-      case 'Team_Lead':
-        return GET_GROUPS_BY_LEAD;
-      case 'Team_Member':
-        return GET_GROUPS_BY_MEMBER;
-      case 'Project_Manager':
-      default:
-        return GET_GROUPS;
-    }
-  };
+  console.log('Current User:', currentUser);
 
-  // Fetch groups based on user role
+  // Fetch groups for team member
   const { data: groupsData, loading: groupsLoading, error: groupsError } = useQuery(
-    getGroupsQuery(),
+    GET_GROUPS_BY_MEMBER,
     {
-      variables: userRole === 'Team_Lead' || userRole === 'Team_Member' 
-        ? { 
-            [userRole === 'Team_Lead' ? 'leadId' : 'memberId']: currentUser?.id,
-            projectId: projectId
-          }
-        : { projectId: projectId },
+      variables: { 
+        memberId: currentUser?.id,
+        projectId: projectId
+      },
       skip: !currentUser || !projectId
     }
   );
+
+  console.log(currentUser?.id);
 
   // Fetch messages for selected group
   const { data: messagesData, loading: messagesLoading, refetch: refetchMessages } = useQuery(
@@ -137,18 +135,16 @@ const Chat = ({ projectId }) => {
     );
   }
 
-  const groups = groupsData?.getGroups || groupsData?.getGroupsByLeadId || groupsData?.getGroupsByMemberId || [];
+  const groups = groupsData?.getGroupsByMemberId || [];
+  console.log(groups);
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Group List */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-800">Project Chat</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            {userRole === 'Project_Manager' ? 'Project Manager' : 
-             userRole === 'Team_Lead' ? 'Team Lead' : 'Team Member'} View
-          </p>
+          <h1 className="text-xl font-bold text-gray-800">Team Member Chat</h1>
+          <p className="text-sm text-gray-600 mt-1">Connect with your team</p>
           {projectId && (
             <p className="text-xs text-gray-500 mt-1">Project ID: {projectId}</p>
           )}
@@ -158,7 +154,7 @@ const Chat = ({ projectId }) => {
           {groups.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               <p>No chat groups available</p>
-              <p className="text-sm mt-1">Groups will appear when projects and teams are created</p>
+              <p className="text-sm mt-1">Groups will appear when you're added to teams</p>
             </div>
           ) : (
             groups.map((group) => (
@@ -225,7 +221,7 @@ const Chat = ({ projectId }) => {
                     <div
                       className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                         msg.sender?.id === currentUser?.id
-                          ? 'bg-blue-500 text-white'
+                          ? 'bg-purple-500 text-white'
                           : 'bg-gray-200 text-gray-800'
                       }`}
                     >
@@ -253,13 +249,13 @@ const Chat = ({ projectId }) => {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Type your message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   disabled={!currentUser}
                 />
                 <button
                   type="submit"
                   disabled={!message.trim() || !currentUser}
-                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Send
                 </button>
@@ -279,4 +275,4 @@ const Chat = ({ projectId }) => {
   );
 };
 
-export default Chat;
+export default TeamMemberChat; 

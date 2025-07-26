@@ -4,6 +4,7 @@ const Project = require("../../models/Project");
 const mongoose  = require("mongoose");
 const {sendTeamMemberAddedEmail} = require("../../services/emailService");
 const User = require("../../models/User");
+const { createTeamGroup, updateGroupsOnUserChange } = require("../../services/groupService");
 
 const teamResolvers = {
   Query: {
@@ -58,6 +59,9 @@ const teamResolvers = {
         });
     
         await newTeam.save();
+
+        // Create a chat group for this team
+        await createTeamGroup(newTeam._id);
     
         // ✅ Update the project schema to include the new team
         await Project.findByIdAndUpdate(projectId, {
@@ -96,6 +100,10 @@ const teamResolvers = {
           team.members.push(...newMembers);
           await team.save();
 
+          // Update chat groups for each new member
+          for (const member of newMembers) {
+            await updateGroupsOnUserChange({ projectId: team.projectId, teamId: team._id, userId: member.teamMemberId, action: "add" });
+          }
 
           // ✅ Fetch user details for email notification
         const addedUsers = await User.find({ _id: { $in: teamMembers.map(m => m.teamMemberId) } });
