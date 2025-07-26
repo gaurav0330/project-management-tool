@@ -25,6 +25,7 @@
     "@shadcn/ui": "^0.0.4",
     "@splinetool/react-spline": "^4.1.0",
     "@tailwindcss/vite": "^4.0.8",
+    "@xyflow/react": "^12.8.2",
     "axios": "^1.7.9",
     "chart.js": "^4.4.8",
     "class-variance-authority": "^0.7.1",
