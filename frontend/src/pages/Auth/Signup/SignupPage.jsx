@@ -4,16 +4,37 @@ import { SIGNUP_MUTATION } from "../../../graphql/authQueries";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../../contexts/ThemeContext";
 import Logo from "../../../components/authComponent/Logo";
-import IllustrationSection from "../../../components/authComponent/IllustrationSection";
+
+// Icons
+const UserIcon = () => (
+  <svg className="w-5 h-5 text-txt-muted-light dark:text-txt-muted-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" d="M16 21v-2a4 4 0 00-8 0v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+  </svg>
+);
+const MailIcon = () => (
+  <svg className="w-5 h-5 text-txt-muted-light dark:text-txt-muted-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v16H4V4zm16 0L12 13 4 4" />
+  </svg>
+);
+const LockIcon = () => (
+  <svg className="w-5 h-5 text-txt-muted-light dark:text-txt-muted-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <rect width="16" height="10" x="4" y="11" rx="2" strokeWidth="1.7" />
+    <path strokeWidth="1.7" strokeLinecap="round" d="M8 11V7a4 4 0 018 0v4" />
+  </svg>
+);
+const ChevronDown = () => (
+  <svg className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-txt-muted-light dark:text-txt-muted-dark" fill="none" stroke="currentColor" strokeWidth="1.7" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+  </svg>
+);
 
 function SignUpPage() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  
   const [formData, setFormData] = useState({
     username: "",
-    email: "@gmail.com",
-    password: "111111",
+    email: "",
+    password: "",
     role: "Project_Manager",
   });
 
@@ -25,189 +46,164 @@ function SignUpPage() {
   });
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await signup({ variables: formData });
-    } catch (err) {
-      console.error("Signup Error:", err);
-    }
+    } catch (err) {}
   };
 
   return (
-    <div className="page-bg min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 bg-bg-primary-light dark:bg-bg-primary-dark shadow-2xl rounded-3xl overflow-hidden transition-colors duration-300">
-        {/* Left Section */}
-        <div className="p-8 md:p-12 flex flex-col bg-gradient-to-br from-brand-primary-500 to-brand-secondary-500 text-white relative overflow-hidden">
-          {/* Background decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-40 h-40 bg-white/10 rounded-full translate-y-20 -translate-x-20"></div>
-          
-          <div className="relative z-10">
-            <Logo />
-            <IllustrationSection />
-          </div>
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-bg-secondary-light to-white dark:from-bg-secondary-dark dark:to-black px-4 py-10 sm:px-6">
+      <div className="w-full max-w-md sm:max-w-lg bg-white dark:bg-bg-primary-dark rounded-3xl shadow-xl border border-bg-accent-light dark:border-bg-accent-dark p-6 sm:p-8 transition-all">
+        <div className="flex flex-col items-center mb-6">
+          <Logo className="mb-3" />
+          <h1 className="text-2xl sm:text-3xl font-bold font-heading text-heading-accent-light dark:text-heading-accent-dark">
+            Create your account
+          </h1>
+          <p className="mt-1 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            Start your free trial — no credit card required.
+          </p>
         </div>
 
-        {/* Right Section */}
-        <div className="p-8 md:p-12 bg-bg-primary-light dark:bg-bg-primary-dark transition-colors duration-300">
-          <div className="max-w-md mx-auto">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="font-heading text-4xl font-bold mb-3 text-heading-primary-light dark:text-heading-primary-dark">
-                Create your account
-              </h1>
-              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-lg">
-                Start your 30-day free trial. No credit card required.
-              </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Username */}
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2">
+              <UserIcon />
+            </span>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              maxLength={32}
+              className="w-full pl-[2.75rem] pr-4 py-2.5 rounded-full border border-bg-accent-light dark:border-bg-accent-dark bg-bg-secondary-light dark:bg-bg-secondary-dark text-sm text-txt-primary-light dark:text-txt-primary-dark placeholder-txt-muted-light dark:placeholder-txt-muted-dark focus:ring-2 focus:ring-brand-secondary-500 focus:outline-none transition"
+            />
+          </div>
+
+          {/* Email */}
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2">
+              <MailIcon />
+            </span>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              maxLength={64}
+              className="w-full pl-[2.75rem] pr-4 py-2.5 rounded-full border border-bg-accent-light dark:border-bg-accent-dark bg-bg-secondary-light dark:bg-bg-secondary-dark text-sm text-txt-primary-light dark:text-txt-primary-dark placeholder-txt-muted-light dark:placeholder-txt-muted-dark focus:ring-2 focus:ring-brand-secondary-500 focus:outline-none transition"
+            />
+          </div>
+
+          {/* Password */}
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2">
+              <LockIcon />
+            </span>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              minLength={6}
+              maxLength={32}
+              className="w-full pl-[2.75rem] pr-4 py-2.5 rounded-full border border-bg-accent-light dark:border-bg-accent-dark bg-bg-secondary-light dark:bg-bg-secondary-dark text-sm text-txt-primary-light dark:text-txt-primary-dark placeholder-txt-muted-light dark:placeholder-txt-muted-dark focus:ring-2 focus:ring-brand-secondary-500 focus:outline-none transition"
+            />
+          </div>
+
+          {/* Role */}
+          <div className="relative">
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="appearance-none w-full pl-[2.75rem] pr-8 py-2.5 rounded-full border border-bg-accent-light dark:border-bg-accent-dark bg-bg-secondary-light dark:bg-bg-secondary-dark text-sm text-txt-primary-light dark:text-txt-primary-dark focus:ring-2 focus:ring-brand-secondary-500 focus:outline-none transition cursor-pointer"
+            >
+              <option value="Project_Manager">Project Manager</option>
+              <option value="Team_Lead">Team Lead</option>
+              <option value="Team_Member">Team Member</option>
+            </select>
+            <ChevronDown />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="text-xs text-error bg-error/10 border border-error/30 rounded-full px-4 py-2 flex items-center gap-2">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 flex-shrink-0">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-.75-9V6a.75.75 0 111.5 0v3a.75.75 0 01-1.5 0zm1.25 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+              </svg>
+              {error.message}
             </div>
+          )}
 
-            {/* Signup Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Field */}
-              <div className="space-y-2">
-                <label className="font-body text-sm font-medium text-heading-primary-light dark:text-heading-primary-dark block">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  placeholder="Enter your username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-bg-secondary-light dark:bg-bg-secondary-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-transparent transition-all duration-200 font-body"
-                />
-              </div>
-
-              {/* Email Field */}
-              <div className="space-y-2">
-                <label className="font-body text-sm font-medium text-heading-primary-light dark:text-heading-primary-dark block">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-bg-secondary-light dark:bg-bg-secondary-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-transparent transition-all duration-200 font-body"
-                />
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <label className="font-body text-sm font-medium text-heading-primary-light dark:text-heading-primary-dark block">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-bg-secondary-light dark:bg-bg-secondary-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-transparent transition-all duration-200 font-body"
-                />
-              </div>
-
-              {/* Role Selection */}
-              <div className="space-y-2">
-                <label className="font-body text-sm font-medium text-heading-primary-light dark:text-heading-primary-dark block">
-                  Select Role
-                </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-bg-secondary-light dark:bg-bg-secondary-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 focus:border-transparent transition-all duration-200 font-body cursor-pointer"
-                >
-                  <option value="Project_Manager">👨‍💼 Project Manager</option>
-                  <option value="Team_Lead">👩‍💻 Team Lead</option>
-                  <option value="Team_Member">👨‍💻 Team Member</option>
-                </select>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 hover:from-brand-primary-600 hover:to-brand-secondary-600 text-white font-button font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Creating Account...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    Create Account
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </span>
-                )}
-              </button>
-            </form>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-                <p className="font-body text-red-600 dark:text-red-400 text-sm text-center">
-                  {error.message}
-                </p>
-              </div>
-            )}
-
-            {/* Login Link */}
-            <div className="mt-8 text-center">
-              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">
-                Already have an account?{" "}
-                <a
-                  href="/login"
-                  className="font-medium text-brand-primary-500 hover:text-brand-primary-600 dark:text-brand-primary-400 dark:hover:text-brand-primary-300 transition-colors duration-200"
-                >
-                  Sign in here
-                </a>
-              </p>
-            </div>
-
-            {/* Divider */}
-            <div className="mt-8 flex items-center">
-              <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-              <span className="px-4 font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-                or continue with
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-full bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 text-white font-medium text-sm shadow-md hover:shadow-xl hover:scale-105 transition-transform duration-150 active:scale-95 disabled:opacity-60"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                  <path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                </svg>
+                Creating...
               </span>
-              <div className="flex-1 border-t border-gray-300 dark:border-gray-600"></div>
-            </div>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+        </form>
 
-            {/* Social Login Options */}
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <button className="flex items-center justify-center gap-2 px-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 font-body">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-                Google
-              </button>
-              <button className="flex items-center justify-center gap-2 px-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark text-txt-primary-light dark:text-txt-primary-dark border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 font-body">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                Facebook
-              </button>
-            </div>
-          </div>
+        {/* Divider */}
+        <div className="flex items-center my-6">
+          <div className="flex-1 h-px bg-border-light dark:bg-border-dark" />
+          <span className="mx-3 text-xs text-txt-muted-light dark:text-txt-muted-dark">or sign up with</span>
+          <div className="flex-1 h-px bg-border-light dark:bg-border-dark" />
         </div>
+
+        {/* Social Buttons */}
+        <div className="flex gap-2">
+          <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-bg-accent-light dark:border-bg-accent-dark rounded-full bg-white dark:bg-bg-accent-dark text-xs text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-50 dark:hover:bg-bg-secondary-dark transition">
+            <svg className="h-4 w-4" viewBox="0 0 24 24">
+              <g>
+                <path fill="#4285F4" d="M21.8 10h-9.8v4h5.7c-.5 1.3-1.4 2.3-2.2 3v3h3.5c2.1-1.9 3.3-4.7 3.3-8z" />
+                <path fill="#34A853" d="M12 22c2.4 0 4.3-.8 5.8-2.1l-3.5-2.7c-1 .7-2.2 1.1-3.7 1.1-2.8 0-5.2-1.9-6-4.4H3v2.8A10 10 0 0012 22z" />
+                <path fill="#FBBC05" d="M6 13.8a6 6 0 010-3.7v-2.8H3A10 10 0 002 12c0 1.6.4 3.1 1 4.7l3.9-2.9z" />
+                <path fill="#EA4335" d="M12 6.5c1.3 0 2.4.4 3.3 1.3L18 5.3A10 10 0 0012 2a10 10 0 00-9 5.8l3.9 2.8c.8-2.6 3.2-4.1 5.1-4.1z" />
+              </g>
+            </svg>
+            Google
+          </button>
+          <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-bg-accent-light dark:border-bg-accent-dark rounded-full bg-white dark:bg-bg-accent-dark text-xs text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-50 dark:hover:bg-bg-secondary-dark transition">
+            <svg width="16" height="16" fill="#1877F3" viewBox="0 0 24 24">
+              <path d="M22.676 0H1.326C.595 0 0 .6 0 1.34V22.66c0 .74.595 1.34 1.326 1.34h11.495V14.74h-3.133v-3.624h3.133V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.461.099 2.794.142v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.764v2.314h3.587l-.467 3.624h-3.12V24h6.116c.73 0 1.325-.6 1.325-1.34V1.34C24 .6 23.405 0 22.675 0"/>
+            </svg>
+            Facebook
+          </button>
+        </div>
+
+        <p className="text-center mt-6 text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+          Already have an account?{" "}
+          <a href="/login" className="text-brand-primary-500 dark:text-brand-primary-400 font-medium hover:underline">
+            Sign in
+          </a>
+        </p>
       </div>
     </div>
   );
