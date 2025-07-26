@@ -58,8 +58,6 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
           { txt: "Manage Lead", icon: UserCog, comp: "managelead" },
           { txt: "Manage Tasks", icon: ClipboardList, comp: "assignedTasks" },
           { txt: "Manage Team", icon: Users, comp: "manageteam" },
-          { txt: "Create Tasks", icon: Target, comp: "tasks" },
-          { txt: "Members", icon: User, comp: "members" },
           { txt: "Approve Tasks", icon: CheckCircle, comp: "approvetask" },
         ],
       },
