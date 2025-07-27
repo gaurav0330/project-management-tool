@@ -9,6 +9,8 @@ import {
   GET_MESSAGES,
   SEND_MESSAGE,
 } from "../../graphql/chatQueries";
+import { Video } from "lucide-react";
+import toast from 'react-hot-toast'; // ✅ ADD THIS for feedback (install if needed: npm i react-hot-toast)
 
 // Utility: Get initials for each group
 const getInitials = (name) =>
@@ -103,8 +105,26 @@ const Chat = ({ projectId }) => {
     });
   };
 
-  const formatTime = (timestamp) =>
-    new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  // ✅ IMPROVED: Start Video Call with Full URL and Toast Feedback
+  const handleStartVideoCall = async () => {
+    const meetingId = `${selectedGroup.id}_${Date.now()}`;
+    const meetingUrl = `${window.location.origin}/videocall?meeting=${encodeURIComponent(meetingId)}&group=${selectedGroup.id}`; // ✅ Full URL
+
+    const vcMsg = `[Video Call Invitation] Join this meeting: ${meetingUrl}`;
+    await sendMessage({
+      variables: { groupId: selectedGroup.id, senderId: currentUser.id, content: vcMsg },
+    });
+
+    toast.success('Video call invitation sent to the group!'); // ✅ Feedback
+  };
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "";
+    // Handles possible numeric string (ms since epoch)
+    const date = new Date(parseInt(timestamp, 10));
+    if (isNaN(date)) return "Invalid";
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
 
   const getGroupTypeLabel = (type) => {
     switch (type) {
@@ -160,8 +180,9 @@ const Chat = ({ projectId }) => {
     <div className="flex h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body">
       {/* Sidebar */}
       <aside className="min-w-[20rem] max-w-xs w-80 flex flex-col shadow-2xl rounded-r-3xl
-            bg-bg-secondary-light/80 dark:bg-bg-secondary-dark/90 backdrop-blur-xl border-r border-brand-primary-100 dark:border-brand-primary-900
-            relative overflow-y-auto z-20">
+          bg-bg-secondary-light/80 dark:bg-bg-secondary-dark/90 backdrop-blur-xl border-r border-brand-primary-100 dark:border-brand-primary-900
+          relative overflow-y-auto z-20">
+        {/* ...sidebar unchanged... */}
         <div className="p-8 pb-4 border-b border-brand-primary-100 dark:border-brand-primary-900 bg-bg-secondary-light/80 dark:bg-bg-secondary-dark/80 flex flex-col gap-2 sticky top-0 z-20">
           <div className="flex items-center gap-3 mb-1">
             <span className="text-brand-accent-600 dark:text-brand-accent-400 text-3xl">💬</span>
@@ -230,10 +251,12 @@ const Chat = ({ projectId }) => {
           )}
         </nav>
       </aside>
+      
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col relative">
         {selectedGroup ? (
           <>
+            {/* === GROUP HEADER === */}
             <header className="sticky top-0 z-10 flex items-center gap-3 bg-bg-secondary-light/80 dark:bg-bg-secondary-dark/90 backdrop-blur-lg border-b border-brand-primary-100 dark:border-brand-primary-900 px-10 py-6">
               <div className="flex-1 flex flex-col gap-1 min-w-0">
                 <h2 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark truncate">
@@ -243,6 +266,18 @@ const Chat = ({ projectId }) => {
                   {getGroupTypeLabel(selectedGroup.type)} • {selectedGroup.members?.length || 0} members
                 </span>
               </div>
+              {/* Video Call Button Only for Project Managers */}
+              {
+                userRole === "Project_Manager" && (
+                  <button
+                    onClick={handleStartVideoCall}
+                    className="flex items-center gap-2 rounded-lg px-4 py-2 text-white bg-gradient-to-r from-brand-primary-600 via-brand-accent-600 to-brand-accent-700 hover:brightness-110 shadow-md font-semibold focus:outline-none focus:ring-2 focus:ring-brand-accent-500"
+                  >
+                    <Video className="w-5 h-5" />
+                    Start Video Call
+                  </button>
+                )
+              }
               <div className="flex items-center gap-2 flex-wrap max-w-[300px]">
                 {selectedGroup.members?.slice(0, 5).map((m) => (
                   <span
@@ -259,7 +294,7 @@ const Chat = ({ projectId }) => {
                 )}
               </div>
             </header>
-            {/* Messages */}
+            {/* === MESSAGES === */}
             <section className="flex-1 overflow-y-auto px-6 md:px-14 py-8 space-y-6 bg-transparent scrollbar-thin">
               {messagesLoading ? (
                 <div className="flex items-center justify-center h-40">
@@ -267,7 +302,7 @@ const Chat = ({ projectId }) => {
                 </div>
               ) : messagesData?.getMessages?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-60 text-txt-muted-light dark:text-txt-muted-dark mt-10">
-                  <svg width="36" height="36" className="mb-2 opacity-50" viewBox="0 0 24 24" fill="none"><path d="M17.657 6.343A8 8 0 206.343 17.657C6.933 16.933 7.885 13.261 11 13c-1.657 1.657 4-5.657 6.657-6.657z" stroke="currentColor" strokeWidth="1.5" /></svg>
+                  <svg width="36" height="36" className="mb-2 opacity-50" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M7 13h10M7 9h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   <span className="font-heading text-lg font-medium mb-1">No messages yet</span>
                   <span className="text-sm">Start the conversation!</span>
                 </div>
@@ -276,6 +311,12 @@ const Chat = ({ projectId }) => {
                   const isSelf = msg.sender?.id === currentUser?.id;
                   const nextMsg = messagesData.getMessages[idx + 1];
                   const isTail = !nextMsg || nextMsg.sender?.id !== msg.sender?.id;
+
+
+                  // If it's a video call invite, show a styled button/link
+                  const isVideoCallInvite = msg.content.startsWith("[Video Call Invitation]");
+
+
                   return (
                     <div key={msg.id} className={`w-full flex ${isSelf ? "justify-end" : "justify-start"}`}>
                       <div className={`relative group flex flex-col items-end max-w-[80%] md:max-w-xl ${isSelf ? "items-end" : "items-start"}`}>
@@ -298,8 +339,19 @@ const Chat = ({ projectId }) => {
                             )}
                             <span className="text-xs text-txt-muted-light dark:text-txt-muted-dark opacity-70">{formatTime(msg.createdAt)}</span>
                           </div>
-                          {msg.content}
-                          {/* Chat bubble tail */}
+                          {isVideoCallInvite ? (
+                            <a
+                              href={msg.content.match(/(https?:\/\/[^\s]+)/)?.[0] || "#"}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-5 py-3 bg-gradient-to-r from-brand-accent-600 via-brand-accent-500 to-brand-primary-600 text-white font-semibold rounded-lg shadow hover:brightness-110 transition-all gap-3 my-2"
+                            >
+                              <Video className="w-6 h-6 opacity-90" />
+                              Join Video Call
+                            </a>
+                          ) : (
+                            msg.content
+                          )}
                           {isTail && (
                             <span className={`absolute ${isSelf ? "bottom-0 -right-3" : "bottom-0 -left-3"} w-4 h-4 overflow-hidden`}>
                               <svg width="16" height="16" className={isSelf ? "text-brand-primary-600" : "text-bg-accent-light dark:text-bg-accent-dark"} viewBox="0 0 16 16" fill="currentColor">
