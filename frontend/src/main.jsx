@@ -14,7 +14,7 @@ if (rootElement) {
   createRoot(rootElement).render(
     <React.StrictMode>
       <ThemeProvider>
-        <Router> {/* ✅ Keep Router here */}
+        <Router>
           <AuthProvider>
             <ApolloProvider client={client}>
               <App />

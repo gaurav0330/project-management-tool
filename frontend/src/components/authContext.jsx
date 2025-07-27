@@ -6,6 +6,7 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(null);
+  const [isLoading, setIsLoading] = useState(true); // ✅ Add loading state
   const navigate = useNavigate();
 
   // ✅ Function to check if token is expired
@@ -48,16 +49,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    const token = localStorage.getItem("token");
+    const initializeAuth = () => {
+      try {
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        const token = localStorage.getItem("token");
 
-    if (storedUser && token && !isTokenExpired(token)) {
-      setUserRole(storedUser.role);
-      console.log("User user name :", storedUser.name);
-    } else if (storedUser || token) {
-      // ✅ Clear invalid data
-      logout();
-    }
+        if (storedUser && token && !isTokenExpired(token)) {
+          setUserRole(storedUser.role);
+          console.log("User user name :", storedUser.name);
+        } else if (storedUser || token) {
+          // ✅ Clear invalid data
+          logout();
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        // Clear potentially corrupted data
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      } finally {
+        setIsLoading(false); // ✅ Set loading to false after initialization
+      }
+    };
+
+    initializeAuth();
 
     // ✅ Set up interval to check token expiration every minute
     const tokenCheckInterval = setInterval(() => {
@@ -67,14 +81,15 @@ export const AuthProvider = ({ children }) => {
     }, 60000); // Check every minute
 
     return () => clearInterval(tokenCheckInterval);
-  }, [userRole, navigate]);
+  }, [navigate]); // ✅ Remove userRole from dependencies to prevent infinite loops
 
   return (
     <AuthContext.Provider value={{ 
       userRole, 
       setUserRole, 
       logout, 
-      checkTokenValidity 
+      checkTokenValidity,
+      isLoading // ✅ Provide loading state
     }}>
       {children}
     </AuthContext.Provider>
