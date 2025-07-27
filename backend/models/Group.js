@@ -8,7 +8,7 @@ const groupSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["all", "leads", "team"],
+    enum: ["all", "leads", "team", "custom"], // Add "custom" to the enum
     required: true,
   },
   project: {
@@ -22,7 +22,7 @@ const groupSchema = new mongoose.Schema({
   },
   teamLead: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Ensure this references the User model
+    ref: "User",
   },
   members: [
     {
@@ -30,6 +30,11 @@ const groupSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  creator: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // Reference to the user who created the group
+    default: null, // Default to null for automated groups
+  },
 });
 
 const Group = mongoose.model("Group", groupSchema);

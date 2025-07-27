@@ -127,11 +127,23 @@ async function getGroupsByProjectId(projectId) {
   return await Group.find({ project: projectId }).populate("members teamLead");
 }
 
+//create custom groups
+async function createCustomGroup(name, projectId, memberIds) {
+  const group = new Group({
+    name,
+    type: "custom",
+    project: projectId,
+    members: memberIds,
+  });
+  return await group.save();
+}
+
 module.exports = {
   createGroup,
   getGroupsByProjectId,
   getGroups,
   createDefaultGroupsForProject,
   createTeamGroup,
-  updateGroupsOnUserChange
+  updateGroupsOnUserChange,
+  createCustomGroup
 };

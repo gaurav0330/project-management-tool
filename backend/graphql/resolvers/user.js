@@ -2,6 +2,9 @@ const { ApolloError } = require("apollo-server-express"); // ✅ Import ApolloEr
 const authController = require("../../controllers/authController");
 const User = require("../../models/User"); // ✅ Import User model
 const mongoose = require("mongoose");
+const Project = require("../../models/Project");
+const Team = require("../../models/Teams");
+
 
 
 const authResolvers = {
@@ -36,6 +39,54 @@ const userResolvers = {
           throw new Error("Failed to fetch user");
         }
       },
+
+      getUsersByProjectId: async (_, { projectId }) => {
+        try {
+          console.log("🔍 Fetching project with ID:", projectId);
+  
+          // Fetch the project and populate references
+          const project = await Project.findById(projectId)
+            .populate("projectManager")
+            .populate("teamLeads.teamLeadId")
+            .populate("teams");
+  
+          if (!project) {
+            console.error("❌ Project not found!");
+            throw new Error("Project not found");
+          }
+  
+          console.log("✅ Project found:", project);
+  
+          // Collect all user IDs
+          const projectManager = project.projectManager?._id;
+          const teamLeads = project.teamLeads.map((lead) => lead.teamLeadId?._id);
+          const teamIds = project.teams.map((team) => team._id);
+  
+          // Fetch team members from all teams
+          const teams = await Team.find({ _id: { $in: teamIds } }).populate("members.teamMemberId");
+          const teamMembers = teams.flatMap((team) =>
+            team.members.map((member) => member.teamMemberId?._id)
+          );
+  
+          const allUserIds = Array.from(new Set([projectManager, ...teamLeads, ...teamMembers].filter(Boolean)));
+  
+          console.log("✅ All User IDs:", allUserIds);
+  
+          // Fetch user details
+          const users = await User.find({ _id: { $in: allUserIds } });
+  
+          return users.map((user) => ({
+            id: user._id.toString(),
+            username: user.username,
+            email: user.email,
+            role: user.role,
+          }));
+        } catch (error) {
+          console.error("❌ Error fetching users by project ID:", error);
+          throw new Error("Failed to fetch users");
+        }
+      },
+    
 
       getAllManagers: async () => {
         try{

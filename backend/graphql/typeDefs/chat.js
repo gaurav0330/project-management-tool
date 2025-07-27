@@ -20,8 +20,9 @@ const chatTypeDefs = gql`
     type: String!
     project: ID!
     team: ID
-    teamLead: User!
-    members: [User!]
+    teamLead: User
+    members: [User!]!
+    creator: User # Add creator field
   }
 
   type Message {
@@ -43,6 +44,12 @@ const chatTypeDefs = gql`
 
   type Mutation {
     createGroup(name: String!, teamLeadId: ID!, memberIds: [ID!]!): Group!
+    createCustomGroup(
+      name: String!,
+      projectId: ID!,
+      memberIds: [ID!]!,
+      creatorId: ID # Add creatorId argument
+    ): Group!
     sendMessage(groupId: ID!, senderId: ID!, content: String!): Message!
   }
 `;

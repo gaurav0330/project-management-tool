@@ -18,14 +18,14 @@ import CreateProjectPage from './pages/ProjectManager/CreateProjectPage';
 import AssignTaskPage from './pages/ProjectManager/AssignTaskPage';
 import TaskApprovalPage from './pages/ProjectManager/TaskApprovalPage';
 import ProjectHomePage from './pages/ProjectManager/ProjectHomePage';
-import ProjectManagerChat from './pages/ProjectManager/Chat';
+// import ProjectManagerChat from './pages/ProjectManager/Chat';
 
 // Team Member Pages
 import TeamMemberDashboardPage from './pages/TeamMember/TeamMemberDashboardPage';
 import MyTasksPage from './pages/TeamMember/MyTasksPage';
 import TaskSubmissionPage from './pages/TeamMember/TaskSubmissionMemberPage';
 import TeamMemberHome from './pages/TeamMember/TeamMemberHome';
-import TeamMemberChat from './pages/TeamMember/Chat';
+// import TeamMemberChat from './pages/TeamMember/Chat';
 
 // Team Lead Pages
 import TeamLeadDashboard from './pages/TeamLead/teamLeadDashboard';
@@ -34,10 +34,12 @@ import DisplayTeamTaskPage from './pages/TeamLead/DisplayTeamTaskPage';
 import TaskDistributionPage from './pages/TeamLead/TaskDistributionPage';
 import LeadProjectHome from './pages/TeamLead/LeadProjectHomePage';
 import TeamDetails from './pages/TeamLead/TeamDetails';
-import TeamLeadChat from './pages/TeamLead/Chat';
+// import TeamLeadChat from './pages/TeamLead/Chat';
 
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
+
+import Chat from './pages/Chat';
 
 // ✅ ADD THIS - Import your VideoCall component
 import VideoCall from './components/VideoCall/VideoCall'; // Adjust path as needed
@@ -143,14 +145,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
+          {/* <Route 
             path="/projectManager/chat" 
             element={
               <ProtectedRoute allowedRoles={["Project_Manager"]}>
                 <ProjectManagerChat />
               </ProtectedRoute>
             } 
-          />
+          /> */}
 
           {/* 🟠 Team Member Only Routes */}
           <Route 
@@ -185,14 +187,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route 
+          {/* <Route 
             path="/teamMember/chat" 
             element={
               <ProtectedRoute allowedRoles={["Team_Member"]}>
                 <TeamMemberChat />
               </ProtectedRoute>
             } 
-          />
+          /> */}
 
           {/* 🟡 Team Lead Only Routes */}
           <Route 
@@ -243,14 +245,14 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
+          {/* <Route 
             path="/teamLead/chat" 
             element={
               <ProtectedRoute allowedRoles={["Team_Lead"]}>
                 <TeamLeadChat />
               </ProtectedRoute>
             } 
-          />
+          /> */}
 
           {/* 💬 Chat Routes */}
           <Route 
@@ -261,11 +263,13 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          {/* <Route path="/chat/:projectId" component={Chat} /> */}
+
           <Route 
-            path="/chat" 
+            path="/chat/:projectId"
             element={
-              <ProtectedRoute allowedRoles={["Team_Lead", "Team_Member"]}>
-                <ChatPage />
+              <ProtectedRoute allowedRoles={["Project_Manager", "Team_Lead", "Team_Member"]}>
+                <Chat />
               </ProtectedRoute>
             } 
           />

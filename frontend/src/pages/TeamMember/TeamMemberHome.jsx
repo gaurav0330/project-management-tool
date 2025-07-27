@@ -7,7 +7,7 @@ import MyTasksPage from "./MyTasksPage";
 import TaskSubmissionPage from "./TaskSubmissionMemberPage";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 import SettingsPage from "../../pages/SettingsPage";
-import TeamMemberChat from "./Chat";
+import Chat from "../Chat";
 import { motion, AnimatePresence } from "framer-motion";
 
 // GraphQL Query for fetching project by ID
@@ -114,7 +114,7 @@ export default function TeamMemberDashboardPage() {
                   layout
                   transition={{ duration: 0.3 }}
                 >
-                  <TeamMemberChat projectId={projectId} />
+                  <Chat projectId={projectId} />
                 </motion.div>
               ) : activeComponent === "taskSubmission" ? (
                 <motion.div 

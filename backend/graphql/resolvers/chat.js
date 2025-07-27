@@ -3,6 +3,8 @@ const { sendMessage, getMessages } = require("../../services/messageService");
 const Message = require("../../models/Message");
 const User = require("../../models/User");
 const Group = require("../../models/Group");
+const Project = require("../../models/Project");
+const mongoose = require("mongoose");
 
 const chatResolvers = {
   Query: {
@@ -141,6 +143,61 @@ const chatResolvers = {
         createdAt: message.createdAt.toISOString(), // Ensure the date is formatted correctly
       };
     },
+
+    createCustomGroup: async (_, { name, projectId, memberIds, creatorId }, { user }) => {
+      try {
+        console.log("🔍 Validating projectId:", projectId);
+    
+        // Validate project existence
+        const project = await Project.findById(projectId);
+        if (!project) {
+          console.error("❌ Project not found for ID:", projectId);
+          throw new Error("Project not found");
+        }
+        console.log("✅ Project found:", project);
+    
+        // Validate creator
+        const creator = await User.findById(creatorId);
+        if (!creator) {
+          console.error("❌ Creator not found for ID:", creatorId);
+          throw new Error("Creator not found");
+        }
+        console.log("✅ Creator validated:", creator);
+    
+        // ✅ Automatically add creatorId to memberIds if not already present
+        const uniqueMemberIds = [...new Set([...memberIds, creatorId])]; // Use Set to avoid duplicates
+    
+        // Validate members (now including creator)
+        const members = await User.find({ _id: { $in: uniqueMemberIds } });
+        if (members.length !== uniqueMemberIds.length) {
+          console.error("❌ One or more members not found:", uniqueMemberIds);
+          throw new Error("One or more members not found");
+        }
+        console.log("✅ Members validated (including creator):", members);
+    
+        // Create the group with updated memberIds
+        const newGroup = await Group.create({
+          name,
+          type: "custom",
+          project: projectId,
+          members: uniqueMemberIds, // Use the updated list
+          creator: creatorId,
+        });
+    
+        console.log("✅ Group created successfully:", newGroup);
+    
+        return {
+          id: newGroup._id.toString(),
+          name: newGroup.name,
+          type: newGroup.type,
+          project: newGroup.project.toString(),
+        };
+      } catch (error) {
+        console.error("❌ Error in createCustomGroup:", error);
+        throw new Error(error.message || "Failed to create custom group");
+      }
+    },
+    
 
     // notifyUserAddition: async (_, { projectId, userId, groupType }) => {
     //   const user = await User.findById(userId);

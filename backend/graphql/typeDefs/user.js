@@ -20,6 +20,7 @@ const userTypeDefs = gql`
         getAllManagers: [User]  # ✅ Query to fetch all managers
         getAllLeads: [User]  # ✅ Query to fetch all leads
         getAllTeamMembers: [User]  # ✅ Query to fetch all leads
+        getUsersByProjectId(projectId: ID!): [User!]! # ✅ New query to fetch all users by project ID
     }
 
     type Mutation {

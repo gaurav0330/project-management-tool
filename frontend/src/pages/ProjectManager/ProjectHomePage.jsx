@@ -13,7 +13,7 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import TaskStatusTimeline from "../../components/charts/TaskAssignment";
 import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 import SettingsPage from "../../pages/SettingsPage";
-import Chat from "./Chat";
+import Chat from "../Chat";
 import { motion, AnimatePresence } from "framer-motion";
 
 const GET_PROJECT_BY_ID = gql`
