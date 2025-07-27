@@ -1,11 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom'; // ✅ NO BrowserRouter import
 import './index.css';
 import Navbar from './components/Other/NavBar';
 import Footer from './components/Other/Footer';
 import ProtectedRoute from './components/protectedRoute';
 import { useAuth } from './components/authContext';
-import { useTheme } from './contexts/ThemeContext'; // ✅ Import theme context
+import { useTheme } from './contexts/ThemeContext';
 
 import Dashboard from './pages/Home/Dashboard';
 import SignUpPage from './pages/Auth/Signup/SignupPage';
@@ -39,13 +39,14 @@ import TeamLeadChat from './pages/TeamLead/Chat';
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
 
-// ✅ AppContent component with theme integration
-function AppContent() {
+import { Toaster } from 'react-hot-toast';
+
+
+function App() {
   const { userRole } = useAuth();
-  const { isDark, theme } = useTheme(); // ✅ Get theme state
+  const { isDark, theme } = useTheme();
   const location = useLocation();
 
-  // ✅ Define routes where Footer should be hidden
   const hideFooterRoutes = [
     "/login", 
     "/signup",
@@ -60,7 +61,6 @@ function AppContent() {
     "/chat"
   ];
 
-  // ✅ Define routes where container padding should be applied
   const containerRoutes = [
     "/projectDashboard",
     "/createproject",
@@ -80,10 +80,10 @@ function AppContent() {
   const shouldUseContainer = containerRoutes.some(route => location.pathname.startsWith(route));
 
   return (
-    <div className="page-bg min-h-screen"> {/* ✅ Theme-aware background */}
+    <div className="page-bg min-h-screen">
       <Navbar />
-      
-     <main className={`mt-16 main-content ${shouldUseContainer ? 'px-24 sm:px-24 md:px-24 section-padding' : ''}`}>
+       <Toaster position="top-right" />
+      <main className={`mt-16 main-content ${shouldUseContainer ? 'px-24 sm:px-24 md:px-24 section-padding' : ''}`}>
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />
@@ -268,18 +268,8 @@ function AppContent() {
         </Routes>
       </main>
       
-      {/* ✅ Conditionally render Footer */}
       {!shouldHideFooter && <Footer />}
     </div>
-  );
-}
-
-// ✅ Main App component
-function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
   );
 }
 
