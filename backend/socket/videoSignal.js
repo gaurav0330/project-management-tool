@@ -1,11 +1,11 @@
-// socket/videoSignal.js
-const Meeting = require('../models/Meeting'); // We'll create this model
+// socket/videoSignal.js - Complete with Enhanced Screen Sharing
+const Meeting = require('../models/Meeting');
 
 function setupVideoSignaling(io) {
   // In-memory store for active rooms and participants
   const activeRooms = new Map(); // meetingId -> Map(socketId -> userInfo)
   
-  console.log('🎥 Video signaling server initialized');
+  console.log('🎥 Video signaling server initialized with screen sharing support');
 
   io.on('connection', (socket) => {
     console.log(`🔵 Video client connected: ${socket.id}`);
@@ -23,12 +23,13 @@ function setupVideoSignaling(io) {
           activeRooms.set(meetingId, new Map());
         }
         
-        // Add user to room
+        // Add user to room with screen sharing state
         activeRooms.get(meetingId).set(socket.id, {
           ...user,
           joinedAt: new Date(),
           isAudioOn: true,
-          isVideoOn: true
+          isVideoOn: true,
+          isScreenSharing: false // ✅ ADD THIS: Track screen sharing state
         });
 
         // Update or create meeting in database
@@ -69,7 +70,7 @@ function setupVideoSignaling(io) {
           count: roomParticipants.length
         });
 
-        console.log(`✅ User ${user.username} successfully joined room ${meetingId}`);
+        console.log(`✅ User ${user.username} successfully joined room ${meetingId} (Total: ${roomParticipants.length})`);
         
       } catch (error) {
         console.error('❌ Error joining video room:', error);
@@ -92,7 +93,10 @@ function setupVideoSignaling(io) {
     // Handle audio/video state changes
     socket.on('toggle-audio', ({ meetingId, isAudioOn }) => {
       if (activeRooms.has(meetingId) && activeRooms.get(meetingId).has(socket.id)) {
-        activeRooms.get(meetingId).get(socket.id).isAudioOn = isAudioOn;
+        const participant = activeRooms.get(meetingId).get(socket.id);
+        participant.isAudioOn = isAudioOn;
+        
+        console.log(`🎤 User ${participant.username} ${isAudioOn ? 'unmuted' : 'muted'} in ${meetingId}`);
         
         // Broadcast audio state to other participants
         socket.to(meetingId).emit('participant-audio-changed', {
@@ -104,7 +108,10 @@ function setupVideoSignaling(io) {
 
     socket.on('toggle-video', ({ meetingId, isVideoOn }) => {
       if (activeRooms.has(meetingId) && activeRooms.get(meetingId).has(socket.id)) {
-        activeRooms.get(meetingId).get(socket.id).isVideoOn = isVideoOn;
+        const participant = activeRooms.get(meetingId).get(socket.id);
+        participant.isVideoOn = isVideoOn;
+        
+        console.log(`📹 User ${participant.username} ${isVideoOn ? 'enabled' : 'disabled'} video in ${meetingId}`);
         
         // Broadcast video state to other participants
         socket.to(meetingId).emit('participant-video-changed', {
@@ -114,17 +121,47 @@ function setupVideoSignaling(io) {
       }
     });
 
-    // Handle screen sharing
+    // ✅ ENHANCED: Handle screen sharing with state tracking
     socket.on('start-screen-share', ({ meetingId }) => {
-      socket.to(meetingId).emit('user-started-screen-share', {
-        socketId: socket.id
-      });
+      if (activeRooms.has(meetingId) && activeRooms.get(meetingId).has(socket.id)) {
+        const participant = activeRooms.get(meetingId).get(socket.id);
+        participant.isScreenSharing = true;
+        
+        console.log(`🖥️ User ${participant.username} started screen sharing in ${meetingId}`);
+        
+        // Notify other participants
+        socket.to(meetingId).emit('user-started-screen-share', {
+          socketId: socket.id,
+          username: participant.username
+        });
+
+        // Update meeting activity
+        Meeting.findOneAndUpdate(
+          { meetingId },
+          { lastActivity: new Date() }
+        ).catch(err => console.error('Error updating meeting activity:', err));
+      }
     });
 
     socket.on('stop-screen-share', ({ meetingId }) => {
-      socket.to(meetingId).emit('user-stopped-screen-share', {
-        socketId: socket.id
-      });
+      if (activeRooms.has(meetingId) && activeRooms.get(meetingId).has(socket.id)) {
+        const participant = activeRooms.get(meetingId).get(socket.id);
+        participant.isScreenSharing = false;
+        
+        console.log(`🛑 User ${participant.username} stopped screen sharing in ${meetingId}`);
+        
+        // Notify other participants
+        socket.to(meetingId).emit('user-stopped-screen-share', {
+          socketId: socket.id,
+          username: participant.username
+        });
+
+        // Update meeting activity
+        Meeting.findOneAndUpdate(
+          { meetingId },
+          { lastActivity: new Date() }
+        ).catch(err => console.error('Error updating meeting activity:', err));
+      }
     });
 
     // Handle meeting chat messages
@@ -137,8 +174,16 @@ function setupVideoSignaling(io) {
         socketId: socket.id
       };
 
+      console.log(`💬 Message in ${meetingId} from ${user.username}: ${message.substring(0, 50)}${message.length > 50 ? '...' : ''}`);
+
       // Broadcast message to all participants in the meeting
       io.to(meetingId).emit('meeting-message-received', messageData);
+
+      // Update meeting activity
+      Meeting.findOneAndUpdate(
+        { meetingId },
+        { lastActivity: new Date() }
+      ).catch(err => console.error('Error updating meeting activity:', err));
     });
 
     // Handle manual leave
@@ -158,13 +203,22 @@ function setupVideoSignaling(io) {
       }
     });
 
-    // Helper function to handle user leaving
+    // ✅ ENHANCED: Helper function to handle user leaving with screen sharing cleanup
     async function handleUserLeave(socket, meetingId) {
       try {
         if (!activeRooms.has(meetingId)) return;
 
         const user = activeRooms.get(meetingId).get(socket.id);
         if (!user) return;
+
+        // ✅ NEW: If user was screen sharing, notify others they stopped
+        if (user.isScreenSharing) {
+          console.log(`🛑 User ${user.username} stopped screen sharing due to leaving ${meetingId}`);
+          socket.to(meetingId).emit('user-stopped-screen-share', {
+            socketId: socket.id,
+            username: user.username
+          });
+        }
 
         // Remove user from room
         activeRooms.get(meetingId).delete(socket.id);
@@ -195,15 +249,50 @@ function setupVideoSignaling(io) {
           );
           
           console.log(`🏁 Meeting ${meetingId} ended - no participants remaining`);
+        } else {
+          // Update meeting activity for remaining participants
+          await Meeting.findOneAndUpdate(
+            { meetingId },
+            { lastActivity: new Date() }
+          );
         }
 
-        console.log(`👋 User ${user.username} left room ${meetingId}`);
+        console.log(`👋 User ${user.username} left room ${meetingId} (Remaining: ${remainingCount})`);
         
       } catch (error) {
         console.error('❌ Error handling user leave:', error);
       }
     }
+
+    // ✅ NEW: Handle connection errors
+    socket.on('error', (error) => {
+      console.error(`❌ Socket error for ${socket.id}:`, error);
+    });
+
+    // ✅ NEW: Heartbeat for connection monitoring
+    socket.on('ping', () => {
+      socket.emit('pong');
+    });
   });
+
+  // ✅ NEW: Periodic cleanup of stale meetings (optional)
+  setInterval(async () => {
+    try {
+      const cutoffTime = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+      await Meeting.updateMany(
+        { 
+          status: 'active', 
+          lastActivity: { $lt: cutoffTime } 
+        },
+        { 
+          status: 'ended',
+          endedAt: new Date()
+        }
+      );
+    } catch (error) {
+      console.error('❌ Error cleaning up stale meetings:', error);
+    }
+  }, 60 * 60 * 1000); // Run every hour
 }
 
 module.exports = setupVideoSignaling;
