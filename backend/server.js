@@ -3,29 +3,31 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const http = require("http");
-const { Server } = require("socket.io"); // Import Server from socket.io
+const { Server } = require("socket.io");
 const typeDefs = require("./graphql/typeDefs");
 const resolvers = require("./graphql/resolvers");
 const authMiddleware = require("./middleware/authmiddleware");
-const setupSocket = require("./socket"); // Import the setupSocket function
+const setupSocket = require("./socket"); // Your existing chat setup
+const setupVideoSignaling = require("./socket/videoSignal"); // ✅ ADD THIS LINE
 
 dotenv.config();
 
 const app = express();
-// Create HTTP server
 const httpServer = http.createServer(app);
 
-// Initialize Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173", // Allow your frontend URL
-    methods: ["GET", "POST"], // Allow necessary HTTP methods
-    credentials: true // Allow credentials if needed
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
-// Set up Socket.io using the setupSocket function
+// Set up Socket.io for chat
 setupSocket(io);
+
+// ✅ ADD THIS LINE - Set up video calling signaling
+setupVideoSignaling(io);
 
 const apolloServer = new ApolloServer({
   typeDefs,
@@ -48,12 +50,11 @@ async function startServer() {
 
   console.log("✅ MongoDB Connected Successfully");
 
-  // Start the HTTP server
   httpServer.listen(5000, () => {
     console.log(`🚀 Server running at http://localhost:5000${apolloServer.graphqlPath}`);
     console.log(`📡 Socket.io listening on ws://localhost:5000`);
+    console.log(`🎥 Video signaling ready`); // ✅ ADD THIS LOG
   });
 }
 
 startServer();
- 

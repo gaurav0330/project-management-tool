@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom'; // ✅ NO BrowserRouter import
+import { Routes, Route, useLocation } from 'react-router-dom';
 import './index.css';
 import Navbar from './components/Other/NavBar';
 import Footer from './components/Other/Footer';
@@ -39,8 +39,10 @@ import TeamLeadChat from './pages/TeamLead/Chat';
 import CreateGroupPage from './pages/Chat/CreateGroup';
 import ChatPage from './pages/Chat/ChatPage';
 
-import { Toaster } from 'react-hot-toast';
+// ✅ ADD THIS - Import your VideoCall component
+import VideoCall from './components/VideoCall/VideoCall'; // Adjust path as needed
 
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const { userRole } = useAuth();
@@ -58,7 +60,8 @@ function App() {
     "/teamlead/project",
     "/teamMember/project",
     "/teammembertasksubmission",
-    "/chat"
+    "/chat",
+    "/videocall" // ✅ ADD THIS - Hide footer for video calls
   ];
 
   const containerRoutes = [
@@ -74,6 +77,7 @@ function App() {
     "/teamleadtaskDis",
     "/create-group",
     "/chat"
+    // Note: Don't add /videocall here as it uses full screen layout
   ];
 
   const shouldHideFooter = hideFooterRoutes.some(route => location.pathname.startsWith(route));
@@ -82,7 +86,7 @@ function App() {
   return (
     <div className="page-bg min-h-screen">
       <Navbar />
-       <Toaster position="top-right" />
+      <Toaster position="top-right" />
       <main className={`mt-16 main-content ${shouldUseContainer ? 'px-24 sm:px-24 md:px-24 section-padding' : ''}`}>
         <Routes>
           {/* 🟢 Public Routes */}
@@ -262,6 +266,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["Team_Lead", "Team_Member"]}>
                 <ChatPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/videocall" 
+            element={
+              <ProtectedRoute allowedRoles={["Project_Manager", "Team_Lead", "Team_Member"]}>
+                <VideoCall />
               </ProtectedRoute>
             } 
           />
