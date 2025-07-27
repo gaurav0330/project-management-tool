@@ -5,19 +5,22 @@ import App from "./App.jsx";
 import { ApolloProvider } from "@apollo/client";
 import client from "./apolloClient";
 import { AuthProvider } from "./components/authContext";
-import { ThemeProvider } from "./contexts/ThemeContext.jsx"; // ✅ Import ThemeProvider
+import { ThemeProvider } from "./contexts/ThemeContext.jsx";
+import { BrowserRouter as Router } from "react-router-dom";
 
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
   createRoot(rootElement).render(
     <React.StrictMode>
-      <ThemeProvider> {/* ✅ Wrap with ThemeProvider as outermost */}
-        <AuthProvider> {/* ✅ AuthProvider stays inside */}
-          <ApolloProvider client={client}>
-            <App />
-          </ApolloProvider>
-        </AuthProvider>
+      <ThemeProvider>
+        <Router> {/* ✅ Keep Router here */}
+          <AuthProvider>
+            <ApolloProvider client={client}>
+              <App />
+            </ApolloProvider>
+          </AuthProvider>
+        </Router>
       </ThemeProvider>
     </React.StrictMode>
   );
