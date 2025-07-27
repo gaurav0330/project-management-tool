@@ -145,14 +145,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          {/* <Route 
-            path="/projectManager/chat" 
-            element={
-              <ProtectedRoute allowedRoles={["Project_Manager"]}>
-                <ProjectManagerChat />
-              </ProtectedRoute>
-            } 
-          /> */}
+         
 
           {/* 🟠 Team Member Only Routes */}
           <Route 
@@ -187,14 +180,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* <Route 
-            path="/teamMember/chat" 
-            element={
-              <ProtectedRoute allowedRoles={["Team_Member"]}>
-                <TeamMemberChat />
-              </ProtectedRoute>
-            } 
-          /> */}
+          
 
           {/* 🟡 Team Lead Only Routes */}
           <Route 
@@ -245,14 +231,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          {/* <Route 
-            path="/teamLead/chat" 
-            element={
-              <ProtectedRoute allowedRoles={["Team_Lead"]}>
-                <TeamLeadChat />
-              </ProtectedRoute>
-            } 
-          /> */}
+         
 
           {/* 💬 Chat Routes */}
           <Route 
