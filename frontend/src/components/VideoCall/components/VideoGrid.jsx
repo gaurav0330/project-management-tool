@@ -1,7 +1,8 @@
-// components/VideoGrid.jsx
+// components/VideoGrid.jsx - Stabilized for no flickering with Screen Sharing Support
 import React, { useEffect, useRef } from 'react';
+import { Monitor } from 'lucide-react'; // ✅ ADD THIS: For screen sharing icon (install lucide-react if needed)
 
-const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
+const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn, screenSharingUser, isScreenSharing }) => {
   const remoteVideoRefs = useRef(new Map());
 
   // Convert peers Map to array for easier handling
@@ -18,12 +19,13 @@ const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
       const videoElement = remoteVideoRefs.current.get(socketId);
       
       if (videoElement && peerData.stream) {
-        console.log(`📺 Setting stream for ${peerData.user?.username || socketId}`);
-        videoElement.srcObject = peerData.stream;
-        
-        videoElement.play().catch(error => {
-          console.log('Video play failed:', error);
-        });
+        if (videoElement.srcObject !== peerData.stream) { // ✅ CHANGED: Prevent re-attachment to avoid flicker
+          console.log(`📺 Setting stream for ${peerData.user?.username || socketId}`);
+          videoElement.srcObject = peerData.stream;
+          videoElement.play().catch(error => {
+            console.error('Video play failed:', error);
+          });
+        }
       } else {
         console.log(`⚠️ Missing video element or stream for ${socketId}`, {
           hasVideoElement: !!videoElement,
@@ -31,7 +33,7 @@ const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
         });
       }
     });
-  }, [peers]);
+  }, [peers]); // Only re-run when peers change
 
   // Dynamic grid layout for multiple users
   let gridClass = 'grid gap-4 h-full p-4';
@@ -45,15 +47,16 @@ const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
     <div className={gridClass}>
       {/* Remote Videos */}
       {peerArray.map(([socketId, peerData]) => (
-        <div key={socketId} className="relative bg-gray-800 rounded-2xl overflow-hidden">
+        <div 
+          key={socketId} 
+          className={`relative bg-gray-800 rounded-2xl overflow-hidden ${
+            screenSharingUser === socketId ? 'ring-2 ring-blue-500' : '' // ✅ ADDED: Highlight if this is the sharing screen
+          }`}
+        >
           <video
             ref={(el) => {
               if (el) {
                 remoteVideoRefs.current.set(socketId, el);
-                if (peerData.stream) {
-                  el.srcObject = peerData.stream;
-                  el.play().catch(console.error);
-                }
               }
             }}
             className="w-full h-full object-cover"
@@ -68,6 +71,14 @@ const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
               {peerData.user?.username || `Participant`}
             </span>
           </div>
+          
+          {/* ✅ ADDED: Screen Sharing Indicator for Remote */}
+          {screenSharingUser === socketId && (
+            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+              <Monitor className="w-3 h-3" />
+              Sharing Screen
+            </div>
+          )}
           
           {/* Debug Info (remove in production) */}
           <div className="absolute top-2 left-2 bg-red-600/80 text-white text-xs px-2 py-1 rounded">
@@ -99,6 +110,14 @@ const VideoGrid = ({ peers, localVideoRef, currentUser, isVideoOn }) => {
         <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1">
           <span className="text-white text-sm font-medium">You</span>
         </div>
+        
+        {/* ✅ ADDED: Screen Sharing Indicator for Local */}
+        {isScreenSharing && (
+          <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+            <Monitor className="w-3 h-3" />
+            Sharing Your Screen
+          </div>
+        )}
         
         {/* Debug Info for Local Video */}
         <div className="absolute top-2 right-2 bg-green-600/80 text-white text-xs px-2 py-1 rounded">
