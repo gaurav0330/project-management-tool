@@ -1,3 +1,4 @@
+// components/VideoCall/VideoCall.jsx - Complete with Screen Sharing Support
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Video, ArrowLeft } from "lucide-react";
@@ -30,7 +31,10 @@ const VideoCall = () => {
     toggleAudio,
     toggleVideo,
     sendMeetingMessage,
-    localStream  // ✅ ADD THIS for debugging
+    localStream,
+    screenSharingUser, // ✅ ADDED: Screen sharing user tracker
+    isScreenSharing, // ✅ ADDED: Current user screen sharing state
+    toggleScreenShare // ✅ ADDED: Screen sharing toggle function
   } = useVideoCall(searchParams);
 
   console.log('📱 VideoCall component - hasLocalStream:', !!localStream);
@@ -100,7 +104,10 @@ const VideoCall = () => {
           toggleVideo={toggleVideo}
           meetingMessages={meetingMessages}
           sendMeetingMessage={sendMeetingMessage}
-          localStream={localStream} // ✅ ADD THIS
+          localStream={localStream}
+          screenSharingUser={screenSharingUser} // ✅ ADDED: Pass screen sharing user
+          isScreenSharing={isScreenSharing} // ✅ ADDED: Pass screen sharing state
+          toggleScreenShare={toggleScreenShare} // ✅ ADDED: Pass screen sharing toggle
         />
       )}
     </div>

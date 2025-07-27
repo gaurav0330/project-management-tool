@@ -1,6 +1,7 @@
-// hooks/useWebRTC.js - Complete Native WebRTC Implementation
+// hooks/useWebRTC.js - Complete Native WebRTC Implementation with Screen Sharing
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
+import useScreenShare from './useScreenShare'; // ✅ ADD THIS
 
 const useWebRTC = (meetingId, currentUser, isCallActive) => {
   const [peers, setPeers] = useState(new Map());
@@ -8,11 +9,21 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
   const [participants, setParticipants] = useState([]);
   const [participantCount, setParticipantCount] = useState(0);
   const [meetingMessages, setMeetingMessages] = useState([]);
+  const [screenSharingUser, setScreenSharingUser] = useState(null); // ✅ ADD THIS
   
   const socketRef = useRef();
   const peersRef = useRef(new Map());
   const localVideoRef = useRef();
-  const streamPromiseRef = useRef(null); // ✅ NEW: Promise for waiting on stream
+  const streamPromiseRef = useRef(null);
+
+  // ✅ ADD THIS: Initialize screen sharing hook
+  const screenShareHook = useScreenShare(
+    localVideoRef, 
+    socketRef, 
+    meetingId, 
+    peers, 
+    setPeers
+  );
 
   // WebRTC configuration
   const rtcConfiguration = {
@@ -126,7 +137,7 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
       let currentStream = localStream;
       if (!currentStream) {
         console.log(`⏳ Waiting for local stream for ${user.username}...`);
-        currentStream = await streamPromiseRef.current; // Wait for promise to resolve
+        currentStream = await streamPromiseRef.current;
         if (!currentStream) {
           console.error(`❌ No local stream available for ${user.username} after waiting!`);
           return;
@@ -142,7 +153,7 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
 
       // Create offer if initiator
       if (isInitiator) {
-        await new Promise(resolve => setTimeout(resolve, 100)); // Wait for tracks to be added
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         console.log(`📤 Creating offer for ${user.username}`);
         const offer = await peerConnection.createOffer();
@@ -176,7 +187,7 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
     // Initialize stream and join room
     const initializeStreamAndJoin = async () => {
       console.log('🎥 Initializing local stream before joining room...');
-      streamPromiseRef.current = initializeLocalStream(); // ✅ NEW: Create promise
+      streamPromiseRef.current = initializeLocalStream();
       const stream = await streamPromiseRef.current;
       
       if (!stream) {
@@ -212,6 +223,34 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
       createPeerConnection(socketId, user, false);
       
       setParticipants(prev => [...prev, { socketId, user }]);
+    });
+
+    // ✅ ADD THESE: Screen sharing event listeners
+    socketRef.current.on('user-started-screen-share', ({ socketId }) => {
+      console.log('🖥️ User started screen sharing:', socketId);
+      setScreenSharingUser(socketId);
+      
+      // Update participants to show who's sharing
+      setParticipants(prev => 
+        prev.map(p => 
+          p.socketId === socketId 
+            ? { ...p, user: { ...p.user, isScreenSharing: true } }
+            : { ...p, user: { ...p.user, isScreenSharing: false } }
+        )
+      );
+    });
+
+    socketRef.current.on('user-stopped-screen-share', ({ socketId }) => {
+      console.log('🛑 User stopped screen sharing:', socketId);
+      setScreenSharingUser(null);
+      
+      // Update participants
+      setParticipants(prev => 
+        prev.map(p => ({ 
+          ...p, 
+          user: { ...p.user, isScreenSharing: false } 
+        }))
+      );
     });
 
     // Handle WebRTC signaling
@@ -377,7 +416,9 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
     meetingMessages,
     toggleAudio,
     toggleVideo,
-    sendMeetingMessage
+    sendMeetingMessage,
+    screenSharingUser, // ✅ ADD THIS
+    ...screenShareHook // ✅ ADD THIS: Spread screen sharing functions
   };
 };
 
