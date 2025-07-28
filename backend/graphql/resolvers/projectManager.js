@@ -6,6 +6,7 @@ const Task = require("../../models/Task");
 const User = require("../../models/User");
 const Team = require("../../models/Teams");
 const { createDefaultGroupsForProject } = require("../../services/groupService");
+const crypto = require("crypto");  // ✅ NEW: For generating random secret
 
 const projectResolvers = {
   Query: {
@@ -21,175 +22,145 @@ const projectResolvers = {
       return await projectService.getProjectsByManagerId(args.managerId);
     },
 
-    // getLeadsByProjectId: async (_, { projectId }, { user }) => {
-    //   if (!user) throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-  
-    //   try {
-          
-    //       console.log(`Fetching leads for project ID: ${projectId}`); // ✅ Debugging
-  
-    //       // Find the project and populate the team leads
-    //       const project = await Project.findById(projectId).populate("teamLeads.teamLeadId");
-  
-    //       if (!project) {
-    //           throw new ApolloError("Project not found", "NOT_FOUND");
-    //       }
-  
-    //       // Extract both teamLeadId (User) and leadRole
-    //       const teamLeads = project.teamLeads.map(lead => ({
-    //           teamLeadId: lead.teamLeadId, // ✅ This will be a User object
-    //           leadRole: lead.leadRole      // ✅ This is a String
-    //       }));
-  
-    //       console.log("✅ Leads found:", teamLeads);
-    //       return teamLeads;
-    //   } catch (error) {
-    //       console.error("❌ Error fetching leads:", error);
-    //       throw new ApolloError("Error fetching leads", "INTERNAL_SERVER_ERROR");
-    //   }
-    // }  
+    getLeadsByProjectId: async (_, { projectId }, { user }) => {
+      if (!user) {
+        throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
+      }
 
+      try {
+        console.log(`🔍 Fetching leads, teams, and members for project ID: ${projectId}`);
 
- getLeadsByProjectId : async (_, { projectId }, { user }) => {
-  if (!user) {
-    throw new ApolloError("Unauthorized!", "UNAUTHORIZED");
-  }
-
-  try {
-    console.log(`🔍 Fetching leads, teams, and members for project ID: ${projectId}`);
-
-    // Find the project
-    const project = await Project.findById(projectId);
-    if (!project) {
-      console.error("❌ Project not found!");
-      return {
-        success: false,
-        message: "Project not found",
-        teamLeads: [],
-      };
-    }
-
-    // Extract team lead IDs from project
-    const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
-    console.log("📌 Team Lead IDs:", teamLeadIds);
-
-    // Fetch all team lead users
-    const leadUsers = await User.find({ _id: { $in: teamLeadIds } });
-    console.log("👥 Retrieved Lead Users:", leadUsers);
-
-    // Fetch all teams for this project
-    const teams = await Team.find({ projectId: projectId });
-    console.log("🏗️ Retrieved Teams:", teams);
-
-    // Get all member IDs from all teams
-    const allMemberIds = teams.flatMap(team => 
-      team.members.map(member => member.teamMemberId)
-    );
-    
-    // Fetch all member users in one query
-    const memberUsers = await User.find({ _id: { $in: allMemberIds } });
-    console.log("👤 Retrieved Member Users:", memberUsers);
-
-    // Build the hierarchical structure
-    const teamLeads = await Promise.all(
-      project.teamLeads.map(async (lead) => {
-        const userDetails = leadUsers.find((user) => user.id === lead.teamLeadId.toString());
-        
-        if (!userDetails) {
-          console.warn(`⚠️ Lead user with ID ${lead.teamLeadId} not found`);
-          return null;
+        // Find the project
+        const project = await Project.findById(projectId);
+        if (!project) {
+          console.error("❌ Project not found!");
+          return {
+            success: false,
+            message: "Project not found",
+            teamLeads: [],
+          };
         }
 
-        // Find teams created by this lead
-        const leadTeams = teams.filter(team => 
-          team.leadId.toString() === lead.teamLeadId.toString()
+        // Extract team lead IDs from project
+        const teamLeadIds = project.teamLeads.map((lead) => lead.teamLeadId);
+        console.log("📌 Team Lead IDs:", teamLeadIds);
+
+        // Fetch all team lead users
+        const leadUsers = await User.find({ _id: { $in: teamLeadIds } });
+        console.log("👥 Retrieved Lead Users:", leadUsers);
+
+        // Fetch all teams for this project
+        const teams = await Team.find({ projectId: projectId });
+        console.log("🏗️ Retrieved Teams:", teams);
+
+        // Get all member IDs from all teams
+        const allMemberIds = teams.flatMap(team => 
+          team.members.map(member => member.teamMemberId)
         );
+        
+        // Fetch all member users in one query
+        const memberUsers = await User.find({ _id: { $in: allMemberIds } });
+        console.log("👤 Retrieved Member Users:", memberUsers);
 
-        // Map teams with their members
-        const teamsWithMembers = leadTeams.map(team => {
-          // Get members for this team
-          const teamMembers = team.members.map(member => {
-            const memberUser = memberUsers.find(user => 
-              user.id === member.teamMemberId.toString()
-            );
-
-            if (!memberUser) {
-              console.warn(`⚠️ Member user with ID ${member.teamMemberId} not found`);
+        // Build the hierarchical structure
+        const teamLeads = await Promise.all(
+          project.teamLeads.map(async (lead) => {
+            const userDetails = leadUsers.find((user) => user.id === lead.teamLeadId.toString());
+            
+            if (!userDetails) {
+              console.warn(`⚠️ Lead user with ID ${lead.teamLeadId} not found`);
               return null;
             }
 
+            // Find teams created by this lead
+            const leadTeams = teams.filter(team => 
+              team.leadId.toString() === lead.teamLeadId.toString()
+            );
+
+            // Map teams with their members
+            const teamsWithMembers = leadTeams.map(team => {
+              // Get members for this team
+              const teamMembers = team.members.map(member => {
+                const memberUser = memberUsers.find(user => 
+                  user.id === member.teamMemberId.toString()
+                );
+
+                if (!memberUser) {
+                  console.warn(`⚠️ Member user with ID ${member.teamMemberId} not found`);
+                  return null;
+                }
+
+                return {
+                  user: {
+                    id: memberUser.id,
+                    username: memberUser.username,
+                    email: memberUser.email,
+                    role: memberUser.role,
+                  },
+                  memberRole: member.memberRole,
+                  teamMemberId: member.teamMemberId.toString(),
+                };
+              }).filter(Boolean); // Remove null values
+
+              return {
+                id: team.id,
+                teamName: team.teamName,
+                description: team.description,
+                leadId: team.leadId.toString(),
+                projectId: team.projectId.toString(),
+                members: teamMembers,
+                createdAt: team.createdAt.toISOString(),
+              };
+            });
+
             return {
               user: {
-                id: memberUser.id,
-                username: memberUser.username,
-                email: memberUser.email,
-                role: memberUser.role,
+                id: userDetails.id,
+                username: userDetails.username,
+                email: userDetails.email,
+                role: userDetails.role,
               },
-              memberRole: member.memberRole,
-              teamMemberId: member.teamMemberId.toString(),
+              leadRole: lead.leadRole,
+              teamLeadId: lead.teamLeadId.toString(),
+              teams: teamsWithMembers,
             };
-          }).filter(Boolean); // Remove null values
+          })
+        );
 
-          return {
-            id: team.id,
-            teamName: team.teamName,
-            description: team.description,
-            leadId: team.leadId.toString(),
-            projectId: team.projectId.toString(),
-            members: teamMembers,
-            createdAt: team.createdAt.toISOString(),
-          };
-        });
+        const validTeamLeads = teamLeads.filter(Boolean);
+
+        console.log("✅ Final Team Leads with Teams and Members:", JSON.stringify(validTeamLeads, null, 2));
 
         return {
-          user: {
-            id: userDetails.id,
-            username: userDetails.username,
-            email: userDetails.email,
-            role: userDetails.role,
-          },
-          leadRole: lead.leadRole,
-          teamLeadId: lead.teamLeadId.toString(),
-          teams: teamsWithMembers,
+          success: true,
+          message: "Team structure retrieved successfully",
+          teamLeads: validTeamLeads,
         };
-      })
-    );
-
-    const validTeamLeads = teamLeads.filter(Boolean);
-
-    console.log("✅ Final Team Leads with Teams and Members:", JSON.stringify(validTeamLeads, null, 2));
-
-    return {
-      success: true,
-      message: "Team structure retrieved successfully",
-      teamLeads: validTeamLeads,
-    };
-  } catch (error) {
-    console.error("❌ Error fetching team structure:", error);
-    return {
-      success: false,
-      message: "Error fetching team structure",
-      teamLeads: [],
-    };
-  }
-}
-
-    
+      } catch (error) {
+        console.error("❌ Error fetching team structure:", error);
+        return {
+          success: false,
+          message: "Error fetching team structure",
+          teamLeads: [],
+        };
+      }
+    }
   },
 
   Mutation: {
-    createProject: async (_, { title, description, startDate, endDate , category }, { user }) => {
+    createProject: async (_, { title, description, startDate, endDate, category, githubRepo }, { user }) => {  // ✅ UPDATED: Added optional githubRepo
       if (!user || user.role !== "Project_Manager") {
         throw new ApolloError("Unauthorized! Only Project Managers can create projects.", "FORBIDDEN");
       }
-  console.log(category);
+      console.log(category);
       const project = await projectService.createProject({
         title,
         description,
         startDate,
         endDate,
         category: category,
-        managerId: user.id
+        managerId: user.id,
+        githubRepo  // ✅ NEW: Pass optional githubRepo
       });
 
       // Create default chat groups for the project
@@ -238,8 +209,33 @@ const projectResolvers = {
 
     async deleteTask(_, { taskId }, { user }) {
       return await projectService.deleteTaskService({ taskId, user });
-     },
+    },
 
+    // ✅ NEW: Resolver for createWebhookConfig mutation
+    createWebhookConfig: async (_, { projectId, githubRepo }, context) => {
+      // Auth check: Ensure user is manager (using your context)
+      if (!context.user || context.user.role !== "Project_Manager") {
+        throw new ApolloError("Unauthorized: Only managers can set up webhooks", "FORBIDDEN");
+      }
+
+      const project = await Project.findById(projectId);
+      if (!project) throw new ApolloError("Project not found", "NOT_FOUND");
+
+      // Generate unique secret (32 bytes, hex)
+      const secret = crypto.randomBytes(32).toString("hex");
+
+      // Save to project
+      project.githubRepo = githubRepo;
+      project.githubWebhookSecret = secret;
+      await project.save();
+
+      // Your app's webhook URL (hardcode or from env; use production URL)
+      const webhookUrl = process.env.APP_URL 
+        ? `${process.env.APP_URL}/api/github/webhook` 
+        : "http://localhost:5000/api/github/webhook";  // Fallback for dev
+
+      return { url: webhookUrl, secret };
+    },
   },
 };
 

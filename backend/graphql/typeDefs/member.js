@@ -86,6 +86,8 @@ const memberTypeDefs = gql`
     history: [TaskHistory]
     createdAt: String
     updatedAt: String
+    taskId: String  # ✅ NEW: For GitHub referencing
+    closedBy: String  # ✅ NEW: Who closed it via GitHub
   }
 
   type TaskResponse {
@@ -114,6 +116,7 @@ const memberTypeDefs = gql`
     addTaskAttachment(taskId: ID!, attachment: AttachmentInput!): TaskResponse!
     sendTaskForApproval(taskId: ID!): TaskResponse!
     requestTaskReview(taskId: ID!): TaskResponse!
+    closeTask(taskId: String!, closedBy: String!): Task  # ✅ NEW: Mutation to close a task
     # Add more mutations as needed...
   }
 `;

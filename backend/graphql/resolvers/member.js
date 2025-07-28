@@ -1,12 +1,9 @@
-
 const memberService = require("../../services/member");
 const { ApolloError } = require("apollo-server-express");
 const Team = require("../../models/Teams");
 const User = require("../../models/User");
 
-
 const memberResolvers = {
-
   Query: {
     getProjectsByMember: async (_, { memberId }) => {
       try {
@@ -106,10 +103,6 @@ const memberResolvers = {
         };
       }
     },
-    
-
-
-
   },
 
   Mutation: {
@@ -125,8 +118,14 @@ const memberResolvers = {
     requestTaskReview: async (_, args, context) => {
       return memberService.requestTaskReviewService(args, context.user);
     },
+    closeTask: async (_, { taskId, closedBy }, context) => {  // ✅ NEW: Resolver for closing a task
+      // Use your auth context for permissions (e.g., only allow if authenticated)
+      if (!context.user) throw new ApolloError("Unauthorized");
 
-
+      // Call service to handle the update (implement in memberService.js)
+      return await memberService.closeTask(taskId, closedBy);
+    },
   },
 };
+
 module.exports = memberResolvers;

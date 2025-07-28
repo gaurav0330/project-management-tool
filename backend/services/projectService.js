@@ -1,3 +1,4 @@
+// Updated projectService.js
 const Project = require("../models/Project");
 const User = require("../models/User");
 const mongoose = require("mongoose");
@@ -9,7 +10,7 @@ const { sendTeamLeadAssignmentEmail ,sendTaskAssignedEmail,sendTaskApprovalEmail
 const { updateGroupsOnUserChange } = require("./groupService");
 
 const projectService = {
-  createProject: async ({ title, description, startDate, endDate, managerId,category }) => {
+  createProject: async ({ title, description, startDate, endDate, managerId, category, githubRepo }) => {  // ✅ UPDATED: Added optional githubRepo
     const project = new Project({
       title,
       description,
@@ -17,7 +18,8 @@ const projectService = {
       endDate,
       category,
       projectManager: managerId,  // ✅ Correct field name
-      status: "In Progress"
+      status: "In Progress",
+      githubRepo  // ✅ NEW: Optional; will be undefined/null if not provided
     });
   
     await project.save();
@@ -122,6 +124,7 @@ const projectService = {
 },
 
 
+
   assignTaskService : async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
     try {
         if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
@@ -163,11 +166,13 @@ const projectService = {
 
         await newTask.save();
 
+
 // Fetch Team Lead Details (assignedTo)
 const teamLead = await User.findById(assignedTo);
 if (!teamLead) {
     return { success: false, message: "Assigned Team Lead not found.", task: newTask };
 }
+
 
 // Send email notification
 await sendTaskAssignedEmail({
@@ -179,6 +184,7 @@ await sendTaskAssignedEmail({
     priority: priority || "Medium",
     dueDate: dueDate ? new Date(dueDate).toDateString() : "No due date",
 });
+
 
         return {
             success: true,
@@ -196,7 +202,7 @@ await sendTaskAssignedEmail({
   },
   
 
- approveTaskCompletion : async (taskId, approved, remarks, user) => {
+approveTaskCompletion : async (taskId, approved, remarks, user) => {
     const task = await Task.findById(taskId);
     if (!task) throw new Error("Task not found");
   
@@ -247,6 +253,7 @@ await sendTaskAssignedEmail({
      });
 
 
+
     return {
       success: true,
       message: "Task approved successfully!",
@@ -283,6 +290,7 @@ await sendTaskAssignedEmail({
           task,
       };
   }
+
 
   // Send Email Notification
   await sendTaskRejectionEmail({
@@ -321,6 +329,7 @@ await sendTaskAssignedEmail({
   
     await task.save();
 
+
     // Fetch Team Member Details
     const teamMember = await User.findById(task.assignedTo);
     if (!teamMember) {
@@ -331,6 +340,7 @@ await sendTaskAssignedEmail({
         };
     }
 
+
     // Send Email Notification
     await sendTaskModificationEmail({
         email: teamMember.email,
@@ -340,6 +350,7 @@ await sendTaskAssignedEmail({
         taskTitle: task.title,
         feedback: feedback || "No additional feedback provided",
     });
+
 
   
     return {
@@ -435,11 +446,10 @@ await sendTaskAssignedEmail({
       await sendEmail(user.email, subject, message);
       return true;
     }
-
     
     throw new Error("User is not part of this project");
   },
-  
+ 
   deleteTaskService : async ({ taskId, user }) => {
     try {
         if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
@@ -475,7 +485,6 @@ await sendTaskAssignedEmail({
 
   
 }
-
 };
 
 module.exports = projectService;

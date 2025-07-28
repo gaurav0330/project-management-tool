@@ -7,7 +7,7 @@ const Team = require("../models/Teams");
 const {sendTaskApprovalRequestEmail} = require("../services/emailService");
 
 const memberService = {
-   getProjectsByMember : async (memberId) => {
+  getProjectsByMember: async (memberId) => {
     try {
       console.log("Service received memberId:", memberId);
       
@@ -260,8 +260,39 @@ const memberService = {
       };
     }
   },
-  
 
+  // ✅ NEW: Close Task Service (for GitHub webhook integration)
+  closeTask: async (taskId, closedBy) => {
+    try {
+      const task = await Task.findOne({ taskId });
+      if (!task) throw new Error("Task not found");
+
+      const oldStatus = task.status;
+      task.status = "Completed";  // Or "Done" based on your enum
+      task.closedBy = closedBy;
+      task.history.push({
+        updatedBy: closedBy,  // Or use context.user.id if available
+        updatedAt: new Date(),
+        oldStatus,
+        newStatus: task.status,
+      });
+
+      await task.save();
+
+      // Optional: Emit Socket.io event for real-time notification (e.g., to lead/manager)
+      // const io = require('../../server').io;  // If you expose io
+      // io.emit('taskUpdated', { taskId: task._id, status: task.status });
+
+      return {
+        ...task._doc,
+        id: task._id.toString(),
+        dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+        // ... format other fields like in your other services
+      };
+    } catch (error) {
+      throw new Error(`Error closing task: ${error.message}`);
+    }
+  },
 };
 
 module.exports = memberService;
