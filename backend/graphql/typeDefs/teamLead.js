@@ -2,7 +2,6 @@
 const { gql } = require("apollo-server-express");
 
 const leadTypeDefs = gql`
-
   # --- ENUMS ---
   enum UserRole {
     Project_Manager
@@ -81,7 +80,10 @@ const leadTypeDefs = gql`
     createdAt: String
     attachments: [Attachment]
     history: [TaskHistory]
-    # Add fields as needed, e.g. remarks, assignName, etc.
+    taskId: String  # ✅ NEW: Unique ID for GitHub referencing (e.g., "FE-UI-101")
+    closedBy: String  # ✅ NEW: GitHub user who closed it (for webhook integration)
+    assignName: String  # ✅ NEW: Computed username of assignedTo user
+    remarks: String  # ✅ NEW: Feedback or notes (already in model)
   }
 
   # --- RESPONSE TYPES ---

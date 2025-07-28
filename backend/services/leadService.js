@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
 const { sendTeamAssignEmail , sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail,sendTaskSubmissionEmail} = require("../services/emailService");
+const shortid = require('shortid'); 
 
 const leadService = {
 
@@ -99,104 +100,123 @@ getProjectsByLeadId: async (leadId) => {
 },
 
 assignTaskMemberService: async ({ projectId, title, description, assignedTo, priority, dueDate, user }) => {
-    try {
-        if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
+  try {
+    if (!user) throw new ApolloError("Unauthorized! Please log in.", "UNAUTHORIZED");
 
-        if (!mongoose.Types.ObjectId.isValid(projectId)) {
-            throw new ApolloError("Invalid project ID", "BAD_REQUEST");
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
-            throw new ApolloError("Invalid assignedTo ID", "BAD_REQUEST");
-        }
-
-        // ✅ Optimized query using aggregation
-        const project = await Project.aggregate([
-            { $match: { _id: new mongoose.Types.ObjectId(projectId) } },
-            { 
-                $lookup: {
-                    from: "teams",
-                    localField: "teams",
-                    foreignField: "_id",
-                    as: "teams"
-                }
-            },
-            { 
-                $unwind: "$teams"
-            },
-            { 
-                $lookup: {
-                    from: "users",
-                    localField: "teams.members.teamMemberId",
-                    foreignField: "_id",
-                    as: "teamMembers"
-                }
-            },
-            { 
-                $match: { "teamMembers._id": new mongoose.Types.ObjectId(assignedTo) }
-            },
-            {
-                $project: {
-                    _id: 1 // Only return project ID (or more if needed)
-                }
-            }
-        ]);
-
-        if (project.length === 0) {
-            return { success: false, message: "Assigned user is not a Team Member of this project.", task: null };
-        }
-
-        // ✅ Create the task
-        const newTask = new Task({
-            title,
-            description,
-            project: projectId,
-            createdBy: user.id,
-            assignedTo: new mongoose.Types.ObjectId(assignedTo),
-            status: "To Do",
-            priority: priority || "Medium",
-            dueDate,
-            createdAt: new Date(),
-        });
-
-        await newTask.save();
-
-        // ✅ Fetch Assigned Team Member Info
-        const teamMember = await User.findById(assignedTo);
-        if (!teamMember) {
-            return {
-                success: true,
-                message: "Task assigned but team member not found for email notification.",
-                task: newTask,
-            };
-        }
-
-        // ✅ Send Email Notification
-        await sendTaskAssignedEmail({
-            email: teamMember.email,
-            teamLeadName: teamMember.username,
-            projectManager: user.username,
-            projectName: project.title,
-            taskTitle: title,
-            priority: priority || "Medium",
-            dueDate: dueDate ? new Date(dueDate).toDateString() : "No due date",
-        });
-
-
-        return {
-            success: true,
-            message: "Task assigned successfully",
-            task: newTask,
-        };
-    } catch (error) {
-        console.error("❌ Error in assignTaskService:", error.message);
-        return {
-            success: false,
-            message: `Failed to assign task: ${error.message}`,
-            task: null,
-        };
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new ApolloError("Invalid project ID", "BAD_REQUEST");
     }
+
+    if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+      throw new ApolloError("Invalid assignedTo ID", "BAD_REQUEST");
+    }
+
+    // ✅ Optimized query using aggregation (unchanged)
+    const project = await Project.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(projectId) } },
+      { 
+        $lookup: {
+          from: "teams",
+          localField: "teams",
+          foreignField: "_id",
+          as: "teams"
+        }
+      },
+      { 
+        $unwind: "$teams"
+      },
+      { 
+        $lookup: {
+          from: "users",
+          localField: "teams.members.teamMemberId",
+          foreignField: "_id",
+          as: "teamMembers"
+        }
+      },
+      { 
+        $match: { "teamMembers._id": new mongoose.Types.ObjectId(assignedTo) }
+      },
+      {
+        $project: {
+          _id: 1,  // Only return project ID (or more if needed)
+          title: 1  // ✅ UPDATED: Include project title for taskId generation
+        }
+      }
+    ]);
+
+    if (project.length === 0) {
+      return { success: false, message: "Assigned user is not a Team Member of this project.", task: null };
+    }
+
+    // ✅ Generate unique taskId (e.g., "TASK-PROJTITLE-ABC123")
+    const projectTitlePrefix = project[0].title ? project[0].title.substring(0, 4).toUpperCase() : 'TASK';
+    const uniqueId = shortid.generate();  // Generates a short unique string
+    const taskId = `${projectTitlePrefix}-${uniqueId}`;
+
+    // ✅ Create the task with new fields
+    const newTask = new Task({
+      title,
+      description,
+      project: projectId,
+      createdBy: user.id,
+      assignedTo: new mongoose.Types.ObjectId(assignedTo),
+      status: "To Do",
+      priority: priority || "Medium",
+      dueDate,
+      createdAt: new Date(),
+      taskId,  // ✅ NEW: Set generated taskId
+      closedBy: "",  // ✅ NEW: Default empty
+      remarks: ""  // ✅ NEW: Default empty (if not provided)
+    });
+
+    await newTask.save();
+
+    // ✅ Fetch Assigned Team Member Info (for email and assignName)
+    const teamMember = await User.findById(assignedTo);
+    if (!teamMember) {
+      return {
+        success: true,
+        message: "Task assigned but team member not found for email notification.",
+        task: newTask,
+      };
+    }
+
+    // ✅ Send Email Notification (unchanged)
+    await sendTaskAssignedEmail({
+      email: teamMember.email,
+      teamLeadName: teamMember.username,
+      projectManager: user.username,
+      projectName: project[0].title,  // Use from aggregation
+      taskTitle: title,
+      priority: priority || "Medium",
+      dueDate: dueDate ? new Date(dueDate).toDateString() : "No due date",
+    });
+
+    // ✅ Compute and add assignName to response (not saved in DB, just for response)
+    const taskResponse = {
+      ...newTask.toObject(),
+      id: newTask._id.toString(),
+      dueDate: newTask.dueDate ? newTask.dueDate.toISOString() : null,
+      createdAt: newTask.createdAt.toISOString(),
+      updatedAt: newTask.updatedAt ? newTask.updatedAt.toISOString() : null,
+      assignName: teamMember.username || "Unknown",  // ✅ NEW: Computed field
+    };
+
+    return {
+      success: true,
+      message: "Task assigned successfully",
+      task: taskResponse,  // ✅ UPDATED: Includes all queried fields
+    };
+  } catch (error) {
+    console.error("❌ Error in assignTaskService:", error.message);
+    return {
+      success: false,
+      message: `Failed to assign task: ${error.message}`,
+      task: null,
+    };
+  }
 },
+
 
 approveTaskCompletionService: async ({ taskId, approved, remarks }, user) => {
     try {

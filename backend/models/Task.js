@@ -59,6 +59,8 @@ const taskSchema = new mongoose.Schema(
 
     // 🔹 **Fix: Add remarks field**
     remarks: { type: String }, // Stores feedback, rejection reasons, etc.
+    taskId: { type: String, unique: true, sparse: true },  // ✅ NEW: For GitHub referencing
+    closedBy: { type: String },  // ✅ NEW: Who closed it via GitHu
   },
   { timestamps: true }
 );

@@ -324,5 +324,55 @@ const taskService = {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
   },
+ closeTask: async (taskId, closedBy) => {
+  try {
+    const task = await Task.findOne({ taskId });
+    if (!task) throw new Error("Task not found");
+
+    const oldStatus = task.status;
+    task.status = "Completed";  // Matches your enum; change to "Done" if preferred
+
+    task.closedBy = closedBy;  // String (GitHub username) - this field is fine as string per your model
+
+    // ✅ FIXED: Find User ID by closedBy (GitHub username) for history.updatedBy (ObjectId)
+    let updatedById = null;
+    const user = await User.findOne({ username: closedBy });  // Assume username matches GitHub login
+    if (user) {
+      updatedById = user._id;  // Use real ObjectId
+    } else {
+      console.warn(`No user found for closedBy: ${closedBy} - using null for history`);
+      // Optional: Create a guest user or skip history push if critical
+    }
+
+    task.history.push({
+      updatedBy: updatedById,  // Now an ObjectId (or null if no match)
+      updatedAt: new Date(),
+      oldStatus,
+      newStatus: task.status,
+    });
+
+    await task.save();  // This should now succeed without type errors
+
+    // Optional: Emit Socket.io event for real-time frontend updates
+    // const io = require('../server').io;  // Expose io in server.js via module.exports.io = io;
+    // io.emit('taskUpdated', { taskId: task._id, status: task.status, closedBy });
+
+    // Return formatted task (matches your other services)
+    return {
+      ...task._doc,
+      id: task._id.toString(),
+      dueDate: task.dueDate ? task.dueDate.toISOString() : null,
+      createdAt: task.createdAt ? task.createdAt.toISOString() : null,
+      updatedAt: task.updatedAt ? task.updatedAt.toISOString() : null,
+      createdBy: task.createdBy ? task.createdBy.toString() : null,
+      assignedTo: task.assignedTo ? task.assignedTo.toString() : null,
+      // Add more fields if needed, e.g., attachments, remarks
+    };
+  } catch (error) {
+    console.error("Error in closeTask:", error);  // ✅ ADDED: More logging for debugging
+    throw new Error(`Error closing task: ${error.message}`);
+  }
+},
+
 };
 module.exports = taskService;

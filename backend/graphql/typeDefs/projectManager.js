@@ -1,3 +1,4 @@
+// Updated projectTypeDefs.js (graphql/typeDefs/projectTypeDefs.js or equivalent)
 const { gql } = require("apollo-server-express");
 
 const projectTypeDefs = gql`
@@ -11,6 +12,8 @@ const projectTypeDefs = gql`
     status: String!
     projectManager: User!
     teamLeads: [TeamLead] 
+    githubRepo: String  # ✅ NEW: Optional field in Project type
+    githubWebhookSecret: String  # ✅ NEW: Optional (not exposed publicly if sensitive)
   }
 
   type Task {
@@ -55,6 +58,12 @@ const projectTypeDefs = gql`
     teamLeads: [TeamLead!]!
   }
 
+  # ✅ NEW: Response type for webhook config
+  type WebhookConfig {
+    url: String!
+    secret: String!
+  }
+
   type Query {
     getAllProjects: [Project]
     getProjectById(id: ID!): Project
@@ -69,6 +78,7 @@ const projectTypeDefs = gql`
       startDate: String!
       endDate: String!
       category: String
+      githubRepo: String  # ✅ NEW: Optional input for GitHub repo during creation
     ): Project!
 
     assignTeamLead(projectId: ID!, teamLeads: [TeamLeadInput!]!): AssignTeamLeadResponse! 
@@ -89,6 +99,9 @@ const projectTypeDefs = gql`
     deleteProject(projectId: ID!): Boolean!
     leaveProject(projectId: ID!): Boolean!
     deleteTask(taskId: ID!): Boolean!
+
+    # ✅ NEW: Mutation to generate webhook config (per project/repo)
+    createWebhookConfig(projectId: ID!, githubRepo: String!): WebhookConfig
   }
 
   input TeamLeadInput {
