@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Home, FolderKanban, Users, BarChart3, Settings, ChevronDown, ChevronRight,
   Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle, 
-  TrendingUp, Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft , MessageSquare
+  TrendingUp, Github,Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft , MessageSquare
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,7 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
         icon: FolderKanban,
         links: [
           { txt: "Project Home", icon: Briefcase, comp: "projectHome" },
+          {txt: "Integrations" , icon: Github, comp: "integrations" },
           { txt: "Manage Lead", icon: UserCog, comp: "managelead" },
           { txt: "Manage Tasks", icon: ClipboardList, comp: "assignedTasks" },
           { txt: "Manage Team", icon: Users, comp: "manageteam" },
