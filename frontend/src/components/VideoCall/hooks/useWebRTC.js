@@ -182,7 +182,13 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
     }
 
     console.log("🔌 Connecting to socket server...");
-    socketRef.current = io('http://localhost:5000'); // ✅ FIXED: Use your actual server URL (replace if needed)
+    
+   const SOCKET_URL =
+  process.env.NODE_ENV === "production"
+    ? process.env.REACT_APP_BACKEND_WS_URL || "wss://your-backend-app.onrender.com"
+    : "http://localhost:5000";
+
+socketRef.current = io(SOCKET_URL);// ✅ FIXED: Use your actual server URL (replace if needed)
 
     // ✅ ADD: Connect event handler
     socketRef.current.on('connect', () => {
