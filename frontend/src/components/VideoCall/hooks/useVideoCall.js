@@ -1,5 +1,5 @@
-// hooks/useVideoCall.js
-import { useState, useEffect } from 'react';
+// hooks/useVideoCall.js - Enhanced with screen sharing and complete integration
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { jwtDecode } from 'jwt-decode';
 import useWebRTC from './useWebRTC';
@@ -14,6 +14,21 @@ const useVideoCall = (searchParams) => {
   const [groupId, setGroupId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState(null);
+  
+  // Enhanced state for screen sharing and video controls
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenSharingUser, setScreenSharingUser] = useState(null);
+  const [peers, setPeers] = useState(new Map());
+  const [meetingMessages, setMeetingMessages] = useState([]);
+  
+  // Refs for video elements and streams
+  const localVideoRef = useRef(null);
+  const localScreenRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const localScreenStreamRef = useRef(null);
+  const cameraStreamRef = useRef(null);
 
   // Get user ID from token/localStorage first
   useEffect(() => {
@@ -27,8 +42,12 @@ const useVideoCall = (searchParams) => {
       let extractedUserId = null;
       
       if (stored) {
-        const userData = JSON.parse(stored);
-        extractedUserId = userData.id || userData._id;
+        try {
+          const userData = JSON.parse(stored);
+          extractedUserId = userData.id || userData._id;
+        } catch (parseError) {
+          console.error("❌ Error parsing user data:", parseError);
+        }
       }
       
       if (!extractedUserId && token) {
@@ -107,6 +126,227 @@ const useVideoCall = (searchParams) => {
   // Initialize WebRTC when call becomes active
   const webRTCData = useWebRTC(meetingId, currentUser, isCallActive);
 
+  // Get user media for camera
+  const getUserMedia = useCallback(async (constraints = { video: true, audio: true }) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      localStreamRef.current = stream;
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+      
+      // Set initial states based on stream tracks
+      const videoTrack = stream.getVideoTracks()[0];
+      const audioTrack = stream.getAudioTracks()[0];
+      
+      if (videoTrack) {
+        setIsVideoOn(videoTrack.enabled);
+      }
+      if (audioTrack) {
+        setIsAudioOn(audioTrack.enabled);
+      }
+      
+      return stream;
+    } catch (error) {
+      console.error('Error accessing media devices:', error);
+      return null;
+    }
+  }, []);
+
+  // Get screen sharing stream
+  const getScreenShare = useCallback(async () => {
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: 'always',
+          displaySurface: 'monitor'
+        },
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          sampleRate: 44100
+        }
+      });
+      
+      localScreenStreamRef.current = screenStream;
+      
+      // Keep camera stream separate when screen sharing
+      if (!cameraStreamRef.current && localStreamRef.current) {
+        cameraStreamRef.current = localStreamRef.current;
+      }
+
+      if (localScreenRef.current) {
+        localScreenRef.current.srcObject = screenStream;
+      }
+
+      // Listen for screen share end (user clicks stop sharing in browser)
+      const videoTrack = screenStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.onended = () => {
+          console.log('Screen share ended by user');
+          stopScreenShare();
+        };
+      }
+      
+      return screenStream;
+    } catch (error) {
+      console.error('Error accessing screen share:', error);
+      return null;
+    }
+  }, []);
+
+  // Stop screen sharing
+  const stopScreenShare = useCallback(() => {
+    if (localScreenStreamRef.current) {
+      localScreenStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+      });
+      localScreenStreamRef.current = null;
+    }
+    
+    if (localScreenRef.current) {
+      localScreenRef.current.srcObject = null;
+    }
+    
+    setIsScreenSharing(false);
+    setScreenSharingUser(null);
+    cameraStreamRef.current = null;
+    
+    // Notify other participants via WebRTC
+    if (webRTCData?.socket) {
+      webRTCData.socket.emit('screen-share-stopped', {
+        userId: currentUser?.id
+      });
+    }
+  }, [webRTCData, currentUser]);
+
+  // Toggle screen sharing
+  const toggleScreenShare = useCallback(async () => {
+    try {
+      if (isScreenSharing) {
+        stopScreenShare();
+      } else {
+        // Start screen sharing
+        const screenStream = await getScreenShare();
+        if (screenStream) {
+          setIsScreenSharing(true);
+          setScreenSharingUser(currentUser?.id);
+          
+          // Notify other participants via WebRTC
+          if (webRTCData?.socket) {
+            webRTCData.socket.emit('screen-share-started', {
+              userId: currentUser?.id,
+              username: currentUser?.username
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling screen share:', error);
+    }
+  }, [isScreenSharing, getScreenShare, stopScreenShare, currentUser, webRTCData]);
+
+  // Toggle video
+  const toggleVideo = useCallback((forceState = null) => {
+    if (localStreamRef.current) {
+      const videoTrack = localStreamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        const newState = forceState !== null ? forceState : !videoTrack.enabled;
+        videoTrack.enabled = newState;
+        setIsVideoOn(newState);
+        
+        // Notify peers about video state change via WebRTC
+        if (webRTCData?.socket) {
+          webRTCData.socket.emit('video-toggle', {
+            userId: currentUser?.id,
+            isVideoOn: newState
+          });
+        }
+      }
+    }
+  }, [currentUser, webRTCData]);
+
+  // Toggle audio
+  const toggleAudio = useCallback((forceState = null) => {
+    if (localStreamRef.current) {
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        const newState = forceState !== null ? forceState : !audioTrack.enabled;
+        audioTrack.enabled = newState;
+        setIsAudioOn(newState);
+        
+        // Notify peers about audio state change via WebRTC
+        if (webRTCData?.socket) {
+          webRTCData.socket.emit('audio-toggle', {
+            userId: currentUser?.id,
+            isAudioOn: newState
+          });
+        }
+      }
+    }
+  }, [currentUser, webRTCData]);
+
+  // Send meeting message
+  const sendMeetingMessage = useCallback((message) => {
+    if (!message?.trim()) return;
+    
+    const newMessage = {
+      id: Date.now(),
+      text: message.trim(),
+      sender: currentUser?.username || 'You',
+      timestamp: new Date(),
+      isLocal: true
+    };
+    
+    setMeetingMessages(prev => [...prev, newMessage]);
+    
+    // Emit to other participants via WebRTC
+    if (webRTCData?.socket) {
+      webRTCData.socket.emit('chat-message', {
+        text: message.trim(),
+        sender: currentUser?.username || 'Anonymous',
+        timestamp: newMessage.timestamp
+      });
+    }
+  }, [currentUser, webRTCData]);
+
+  // Convert peers Map to participants array for sidebar
+  const participants = useMemo(() => {
+    const participantArray = [];
+    
+    // Add current user
+    if (currentUser) {
+      participantArray.push({
+        id: currentUser.id,
+        username: currentUser.username,
+        isVideoOn: isVideoOn,
+        isAudioOn: isAudioOn,
+        isScreenSharing: isScreenSharing,
+        isLocal: true
+      });
+    }
+    
+    // Add remote peers
+    if (peers && peers.size > 0) {
+      peers.forEach((peerData, socketId) => {
+        participantArray.push({
+          id: socketId,
+          username: peerData.user?.username || 'Participant',
+          isVideoOn: peerData.user?.isVideoOn ?? true,
+          isAudioOn: peerData.user?.isAudioOn ?? true,
+          isScreenSharing: screenSharingUser === socketId,
+          isLocal: false
+        });
+      });
+    }
+    
+    return participantArray;
+  }, [peers, currentUser, isVideoOn, isAudioOn, isScreenSharing, screenSharingUser]);
+
+  // Get participant count
+  const participantCount = participants.length;
+
   // Call duration timer
   useEffect(() => {
     let interval;
@@ -115,21 +355,137 @@ const useVideoCall = (searchParams) => {
         setCallDuration(prev => prev + 1);
       }, 1000);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
   }, [isCallActive]);
 
-  const startCall = () => {
+  // Start call with media setup
+  const startCall = useCallback(async () => {
     console.log("🚀 Starting call with user:", currentUser);
-    setIsCallActive(true);
-    setCallDuration(0);
-  };
+    
+    try {
+      const stream = await getUserMedia();
+      if (stream) {
+        setIsCallActive(true);
+        setCallDuration(0);
+      } else {
+        console.error('Failed to get user media');
+      }
+    } catch (error) {
+      console.error('Error starting call:', error);
+    }
+  }, [currentUser, getUserMedia]);
 
-  const endCall = () => {
+  // End call with cleanup
+  const endCall = useCallback(() => {
+    // Stop all streams
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
+    }
+    
+    if (localScreenStreamRef.current) {
+      localScreenStreamRef.current.getTracks().forEach(track => track.stop());
+      localScreenStreamRef.current = null;
+    }
+    
+    // Clear refs
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+    if (localScreenRef.current) {
+      localScreenRef.current.srcObject = null;
+    }
+    
+    cameraStreamRef.current = null;
+    
+    // Reset states
     setIsCallActive(false);
     setCallDuration(0);
-  };
+    setIsScreenSharing(false);
+    setScreenSharingUser(null);
+    setPeers(new Map());
+    setMeetingMessages([]);
+    setIsVideoOn(true);
+    setIsAudioOn(true);
+  }, []);
+
+  // Listen for incoming chat messages and other events
+  useEffect(() => {
+    if (!webRTCData?.socket) return;
+
+    const socket = webRTCData.socket;
+
+    // Handle incoming chat messages
+    const handleChatMessage = ({ text, sender, timestamp }) => {
+      const newMessage = {
+        id: Date.now() + Math.random(), // Ensure unique ID
+        text,
+        sender,
+        timestamp: new Date(timestamp),
+        isLocal: false
+      };
+      
+      setMeetingMessages(prev => [...prev, newMessage]);
+    };
+
+    // Handle peer screen sharing events
+    const handlePeerScreenShareStarted = ({ userId, username }) => {
+      console.log('Peer started screen sharing:', userId);
+      setScreenSharingUser(userId);
+    };
+
+    const handlePeerScreenShareStopped = ({ userId }) => {
+      console.log('Peer stopped screen sharing:', userId);
+      setScreenSharingUser(prev => prev === userId ? null : prev);
+    };
+
+    // Handle peer media toggle events
+    const handlePeerVideoToggle = ({ userId, isVideoOn }) => {
+      setPeers(prev => {
+        const newPeers = new Map(prev);
+        const peer = newPeers.get(userId);
+        if (peer && peer.user) {
+          peer.user.isVideoOn = isVideoOn;
+          newPeers.set(userId, peer);
+        }
+        return newPeers;
+      });
+    };
+
+    const handlePeerAudioToggle = ({ userId, isAudioOn }) => {
+      setPeers(prev => {
+        const newPeers = new Map(prev);
+        const peer = newPeers.get(userId);
+        if (peer && peer.user) {
+          peer.user.isAudioOn = isAudioOn;
+          newPeers.set(userId, peer);
+        }
+        return newPeers;
+      });
+    };
+
+    // Attach event listeners
+    socket.on('chat-message', handleChatMessage);
+    socket.on('peer-screen-share-started', handlePeerScreenShareStarted);
+    socket.on('peer-screen-share-stopped', handlePeerScreenShareStopped);
+    socket.on('peer-video-toggle', handlePeerVideoToggle);
+    socket.on('peer-audio-toggle', handlePeerAudioToggle);
+
+    return () => {
+      socket.off('chat-message', handleChatMessage);
+      socket.off('peer-screen-share-started', handlePeerScreenShareStarted);
+      socket.off('peer-screen-share-stopped', handlePeerScreenShareStopped);
+      socket.off('peer-video-toggle', handlePeerVideoToggle);
+      socket.off('peer-audio-toggle', handlePeerAudioToggle);
+    };
+  }, [webRTCData?.socket]);
 
   return {
+    // Original properties
     isCallActive,
     callDuration,
     userRole,
@@ -139,7 +495,34 @@ const useVideoCall = (searchParams) => {
     isLoading: isLoading || userLoading,
     startCall,
     endCall,
-    // Spread WebRTC data
+    
+    // Enhanced properties for screen sharing and controls
+    peers,
+    isVideoOn,
+    isAudioOn,
+    isScreenSharing,
+    screenSharingUser,
+    meetingMessages,
+    participants,
+    participantCount,
+    
+    // Refs
+    localVideoRef,
+    localScreenRef,
+    
+    // Streams
+    localStream: localStreamRef.current,
+    localScreenStream: localScreenStreamRef.current,
+    cameraStream: cameraStreamRef.current,
+    
+    // Action functions
+    toggleVideo,
+    toggleAudio,
+    toggleScreenShare,
+    sendMeetingMessage,
+    getUserMedia,
+    
+    // Spread WebRTC data (socket, etc.)
     ...webRTCData
   };
 };
