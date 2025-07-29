@@ -15,6 +15,7 @@ import ProjectDetailsCard from "../../components/Other/ProjectDeailsCard";
 import SettingsPage from "../../pages/SettingsPage";
 import Chat from "../Chat";
 import { motion, AnimatePresence } from "framer-motion";
+import CreateWebhookConfig from "./CreateWebhookConfig ";
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -145,7 +146,17 @@ export default function ProjectDashboard() {
                 >
                   <ManageTeam projectId={projectId} />
                 </motion.div>
-              ) : activeComponent === "assignedTasks" ? (
+              ):
+              activeComponent === "integrations" ? (
+                <motion.div 
+                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+                  layout
+                  transition={{ duration: 0.3 }}
+                >
+                  <CreateWebhookConfig projectId={projectId} />
+                </motion.div>
+              )
+               : activeComponent === "assignedTasks" ? (
                 <motion.div 
                   className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
                   layout
