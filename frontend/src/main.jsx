@@ -7,7 +7,7 @@ import client from "./apolloClient";
 import { AuthProvider } from "./components/authContext";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { BrowserRouter as Router } from "react-router-dom";
-
+ 
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
