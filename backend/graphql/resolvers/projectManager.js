@@ -8,6 +8,32 @@ const Team = require("../../models/Teams");
 const { createDefaultGroupsForProject } = require("../../services/groupService");
 const crypto = require("crypto");  // ✅ NEW: For generating random secret
 
+/**
+ * Helper to normalize repo input to "username/repo" format
+ * @param {string} githubRepo - Raw user input, e.g., full URL or shorthand
+ * @returns {string} - normalized repo name, e.g. "gaurav0330/Testing-Webhook"
+ */
+function normalizeRepoName(githubRepo) {
+  try {
+    if (typeof githubRepo !== "string") throw new Error("GitHub repo must be a string");
+
+    if (githubRepo.startsWith("http")) {
+      // Example input: https://github.com/gaurav0330/Testing-Webhook.git
+      const url = new URL(githubRepo);
+      let pathname = url.pathname; // e.g., "/gaurav0330/Testing-Webhook.git"
+      pathname = pathname.replace(/^\//, "").replace(/\.git$/, ""); // remove leading slash and ".git" suffix
+      if (!pathname.includes("/")) throw new Error("Invalid GitHub repo URL format");
+      return pathname;
+    } else {
+      // Assume input like "gaurav0330/Testing-Webhook"
+      // Also normalize by removing trailing ".git" if present
+      return githubRepo.replace(/\.git$/, "");
+    }
+  } catch (error) {
+    throw new ApolloError(`Invalid GitHub repo format: ${error.message}`, "BAD_USER_INPUT");
+  }
+}
+
 const projectResolvers = {
   Query: {
     getAllProjects: async (_, __, { user }) => {
@@ -213,28 +239,37 @@ const projectResolvers = {
 
     // ✅ NEW: Resolver for createWebhookConfig mutation
     createWebhookConfig: async (_, { projectId, githubRepo }, context) => {
-      // Auth check: Ensure user is manager (using your context)
+      // Auth check: Only Project Managers allowed
       if (!context.user || context.user.role !== "Project_Manager") {
         throw new ApolloError("Unauthorized: Only managers can set up webhooks", "FORBIDDEN");
       }
 
+      // Validate project existence
       const project = await Project.findById(projectId);
-      if (!project) throw new ApolloError("Project not found", "NOT_FOUND");
+      if (!project) {
+        throw new ApolloError("Project not found", "NOT_FOUND");
+      }
 
-      // Generate unique secret (32 bytes, hex)
+      // Normalize the repo value to "username/repo"
+      const normalizedRepo = normalizeRepoName(githubRepo);
+
+      // Generate a secure random secret (32 bytes hex)
       const secret = crypto.randomBytes(32).toString("hex");
 
-      // Save to project
-      project.githubRepo = githubRepo;
+      // Save the normalized repo name and secret in the project document
+      project.githubRepo = normalizedRepo;
       project.githubWebhookSecret = secret;
       await project.save();
 
-      // Your app's webhook URL (hardcode or from env; use production URL)
-      const webhookUrl = process.env.APP_URL 
-        ? `${process.env.APP_URL}/api/github/webhook` 
-        : "http://localhost:5000/api/github/webhook";  // Fallback for dev
+      // Construct your webhook URL from environment variable or fallback to localhost (dev)
+      const webhookUrl = process.env.APP_URL
+        ? `${process.env.APP_URL.replace(/\/$/, "")}/api/github/webhook`
+        : "http://localhost:5000/api/github/webhook";
 
-      return { url: webhookUrl, secret };
+      return {
+        url: webhookUrl,
+        secret,
+      };
     },
   },
 };
