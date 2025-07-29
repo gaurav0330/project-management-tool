@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc, Loader } from "lucide-react";
+import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc, Loader ,Clipboard} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
 
 // 🔹 GraphQL Query to Fetch Tasks
 const GET_TASKS_FOR_MEMBER = gql`
@@ -17,6 +18,7 @@ const GET_TASKS_FOR_MEMBER = gql`
       status
       dueDate
       createdAt
+      taskId
 
     }
   }
@@ -34,8 +36,20 @@ const GET_USER = gql`
   }
 `;
 
+const GET_PROJECT_BY_ID = gql`
+  query GetProjectById($id: ID!) {
+    getProjectById(id: $id) {
+      id
+      githubRepo
+      githubWebhookSecret
+    }
+  }
+`;
+
+
 // 🔹 Extract memberId from JWT token
 const getMemberIdFromToken = () => {
+
   const token = localStorage.getItem("token");
   if (!token) return null;
 
@@ -82,7 +96,9 @@ const UserDisplay = ({ userId }) => {
 };
 
 // Task Card Component
-const TaskCard = ({ task, index, projectId, navigate }) => {
+
+const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
+  // Determine priority color gradient
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "High": return "from-red-500 to-red-600";
@@ -92,18 +108,34 @@ const TaskCard = ({ task, index, projectId, navigate }) => {
     }
   };
 
+  // Determine status badge colors
   const getStatusColor = (status) => {
     switch (status) {
       case "Done":
-      case "Completed": return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
-      case "In Progress": return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
-      case "Pending Approval": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
+      case "Completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
+      case "In Progress":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300";
+      case "Pending Approval":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
     }
   };
 
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && 
-                   task.status !== "Done" && task.status !== "Completed";
+  // Check if overdue (dueDate in past and not done)
+  const isOverdue =
+    task.dueDate &&
+    new Date(task.dueDate) < new Date() &&
+    task.status !== "Done" &&
+    task.status !== "Completed";
+
+  // Copy helper with toast feedback
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success('Copied to clipboard!'))
+      .catch(() => toast.error('Failed to copy!'));
+  };
 
   return (
     <motion.div
@@ -113,9 +145,9 @@ const TaskCard = ({ task, index, projectId, navigate }) => {
       whileHover={{ y: -4 }}
       className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
     >
-      {/* Priority Strip */}
+      {/* Priority strip */}
       <div className={`h-1 bg-gradient-to-r ${getPriorityColor(task.priority)}`} />
-      
+
       <div className="p-6">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -137,28 +169,34 @@ const TaskCard = ({ task, index, projectId, navigate }) => {
           <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
             <Flag className="w-4 h-4" />
             <span className="font-medium">Priority:</span>
-            <span className={`px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}>
+            <span
+              className={`px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}
+            >
               {task.priority}
             </span>
           </div>
 
           {task.dueDate && (
-            <div className={`flex items-center gap-3 text-sm ${isOverdue ? 'text-red-600 dark:text-red-400' : 'text-txt-secondary-light dark:text-txt-secondary-dark'}`}>
+            <div
+              className={`flex items-center gap-3 text-sm ${
+                isOverdue ? "text-red-600 dark:text-red-400" : "text-txt-secondary-light dark:text-txt-secondary-dark"
+              }`}
+            >
               <Calendar className="w-4 h-4" />
               <span className="font-medium">Due:</span>
-              <span className={isOverdue ? 'font-semibold' : ''}>
+              <span className={isOverdue ? "font-semibold" : ""}>
                 {new Date(task.dueDate).toLocaleDateString()}
-                {isOverdue && ' (Overdue)'}
+                {isOverdue && " (Overdue)"}
               </span>
             </div>
           )}
 
-          {/* Updated Assigned By section */}
           {task.createdBy && (
             <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
               <User className="w-4 h-4" />
               <span className="font-medium">Assigned By:</span>
-              <UserDisplay userId={task.createdBy} />
+              <span>{task.createdBy}</span>
+              {/* You can replace with UserDisplay component if desired */}
             </div>
           )}
 
@@ -168,6 +206,54 @@ const TaskCard = ({ task, index, projectId, navigate }) => {
             <span>{new Date(task.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
+
+        {/* Conditionally show Git info */}
+        {showGitOptions && (
+          <div className="mb-6 space-y-2">
+            <label className="block text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+              Task ID
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={task.taskId || task.id}
+                className="flex-grow rounded-md border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-3 py-2 font-mono text-sm text-txt-primary-light dark:text-txt-primary-dark"
+              />
+              <button
+                type="button"
+                onClick={() => copyToClipboard(task.taskId || task.id)}
+                className="bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-3 py-2 rounded-md font-semibold transition-colors duration-200"
+                aria-label="Copy Task ID"
+              >
+                <Clipboard className="w-4 h-4" />
+              </button>
+            </div>
+
+            
+            <label className="block text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+              Commit Command
+            </label>
+            <div className="flex items-center gap-2">
+  <div className="flex-grow border border-bg-accent-light dark:border-bg-accent-dark rounded-md px-3 py-2">
+    <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark font-mono select-text">
+      {`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`}
+    </p>
+  </div>
+  <button
+    type="button"
+    onClick={() =>
+      copyToClipboard(`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`)
+    }
+    aria-label="Copy commit command"
+    className="flex items-center gap-1 bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-3 py-1 rounded-md font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
+  >
+    <Clipboard className="w-4 h-4" />
+  </button>
+</div>
+
+          </div>
+        )}
 
         {/* Action Button */}
         <motion.button
@@ -183,6 +269,10 @@ const TaskCard = ({ task, index, projectId, navigate }) => {
     </motion.div>
   );
 };
+
+
+
+
 
 // Filter Select Component
 const FilterSelect = ({ value, onChange, options, icon }) => (
@@ -304,6 +394,32 @@ export default function MyTasksPage() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const memberId = getMemberIdFromToken();
+  
+
+  const [githubRepo, setGithubRepo] = useState(null);
+const [githubWebhookSecret, setGithubWebhookSecret] = useState(null);
+const [showGitOptions, setShowGitOptions] = useState(false);
+
+const { data: projectData, loading: projectLoading } = useQuery(GET_PROJECT_BY_ID, {
+  variables: { id: projectId },
+  skip: !projectId,
+  fetchPolicy: 'network-only',
+});
+
+useEffect(() => {
+  if (projectData?.getProjectById) {
+    const { githubRepo, githubWebhookSecret } = projectData.getProjectById;
+    setGithubRepo(githubRepo);
+    setGithubWebhookSecret(githubWebhookSecret);
+
+    // Show copy options only if both values exist and are non-empty
+    setShowGitOptions(
+      githubRepo && githubWebhookSecret &&
+      githubRepo.trim() !== '' && githubWebhookSecret.trim() !== ''
+    );
+  }
+}, [projectData]);
+
 
   // 🔹 Fetch tasks using Apollo Client
   const { data, loading, error, refetch } = useQuery(GET_TASKS_FOR_MEMBER, {
@@ -312,6 +428,9 @@ export default function MyTasksPage() {
     pollInterval: 30000, // Refresh every 30 seconds
   });
 
+
+  //Fetching githubRepo and githubWebhookSecret
+  
   // State Management
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -621,6 +740,7 @@ export default function MyTasksPage() {
                   index={index}
                   projectId={projectId}
                   navigate={navigate}
+                  showGitOptions={showGitOptions}  // pass flag here
                 />
               ))}
             </motion.div>

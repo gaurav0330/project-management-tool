@@ -187,11 +187,12 @@ const taskService = {
         title: task.title,
         description: task.description,
         status: task.status,
-        priority: task.priority,
+        priority: task.priority,  
         createdBy: task.createdBy._id.toString(),
         assignedTo: task.assignedTo._id.toString(),
         dueDate: task.dueDate.toISOString(),
         project: task.project ? task.project.toString() : null,
+        taskId: task.taskId || null, // Include taskId if exists
         createdAt: task.createdAt.toISOString(),
         updatedAt: task.updatedAt.toISOString(),
       }));

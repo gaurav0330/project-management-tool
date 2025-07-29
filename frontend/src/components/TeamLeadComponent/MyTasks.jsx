@@ -1,13 +1,13 @@
-import React, { useState } from "react";
-import { useQuery, gql } from "@apollo/client";
+import React, { useState, useEffect } from "react";
+import { useQuery, gql, useLazyQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { jwtDecode } from "jwt-decode";
-import { 
-  FaSearch, 
-  FaPlus, 
-  FaTasks, 
+import {jwtDecode} from "jwt-decode";
+import {
+  FaSearch,
+  FaPlus,
+  FaTasks,
   FaCalendarAlt,
   FaClock,
   FaCheckCircle,
@@ -21,7 +21,8 @@ import {
   FaUser,
   FaProjectDiagram,
   FaBullseye,
-  FaFlag
+  FaFlag,
+  FaCopy
 } from "react-icons/fa";
 
 // GraphQL Query for fetching tasks assigned to a Team Lead
@@ -46,10 +47,20 @@ const GET_TASKS_FOR_LEAD = gql`
       }
       updatedAt
       remarks
+      taskId
     }
   }
 `;
 
+const GET_PROJECT_BY_ID = gql`
+  query GetProjectById($id: ID!) {
+    getProjectById(id: $id) {
+      id
+      githubRepo
+      githubWebhookSecret
+    }
+  }
+`;
 
 const priorityOrder = { High: 1, Medium: 2, Low: 3 };
 const statusOrder = { Pending: 1, "In Progress": 2, Completed: 3 };
@@ -74,55 +85,120 @@ const MyTasks = () => {
     fetchPolicy: "network-only",
   });
 
+  // State for project data cache { [projectId]: { githubRepo, githubWebhookSecret } }
+  const [projectDataMap, setProjectDataMap] = useState({});
+
+  // Lazy query to fetch project by ID
+  const [fetchProject, { data: projectQueryData }] = useLazyQuery(GET_PROJECT_BY_ID);
+
+  // When data (tasks) changes, fetch projects info for unique project IDs
+  useEffect(() => {
+    if (data?.getTasksForLead) {
+      const uniqueProjectIds = [
+        ...new Set(data.getTasksForLead.map((task) => task.project).filter(Boolean)),
+      ];
+
+      // For each projectId not yet in projectDataMap, fetch project
+      uniqueProjectIds.forEach((projectId) => {
+        if (!projectDataMap[projectId]) {
+          fetchProject({ variables: { id: projectId } }).then((res) => {
+            if (res.data?.getProjectById) {
+              setProjectDataMap((prev) => ({
+                ...prev,
+                [projectId]: res.data.getProjectById,
+              }));
+            }
+          }).catch(() => {
+            // silently ignore errors
+          });
+        }
+      });
+    }
+  }, [data, fetchProject, projectDataMap]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortPriority, setSortPriority] = useState("");
   const [sortStatus, setSortStatus] = useState("");
   const [viewMode, setViewMode] = useState("table"); // table or cards
 
-  // Helper functions
+  // Copy to clipboard utilities & UI feedback
+  const [copiedTaskId, setCopiedTaskId] = useState(null);
+  const [copiedCommit, setCopiedCommit] = useState(null);
+
+  const copyText = async (text, type, taskId) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === "taskId") {
+        setCopiedTaskId(taskId);
+        setTimeout(() => setCopiedTaskId(null), 2000);
+      } else if (type === "commit") {
+        setCopiedCommit(taskId);
+        setTimeout(() => setCopiedCommit(null), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
-      case 'Medium': return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'Low': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+      case "High":
+        return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
+      case "Low":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
-      case 'In Progress': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
-      case 'Pending': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
-      default: return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+      case "Completed":
+        return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
+      case "In Progress":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
+      case "Pending":
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+      default:
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'Completed': return <FaCheckCircle className="w-4 h-4" />;
-      case 'In Progress': return <FaClock className="w-4 h-4" />;
-      case 'Pending': return <FaExclamationTriangle className="w-4 h-4" />;
-      default: return <FaExclamationTriangle className="w-4 h-4" />;
+      case "Completed":
+        return <FaCheckCircle className="w-4 h-4" />;
+      case "In Progress":
+        return <FaClock className="w-4 h-4" />;
+      case "Pending":
+        return <FaExclamationTriangle className="w-4 h-4" />;
+      default:
+        return <FaExclamationTriangle className="w-4 h-4" />;
     }
   };
 
   const getPriorityIcon = (priority) => {
     switch (priority) {
-      case 'High': return <FaFlag className="w-3 h-3" />;
-      case 'Medium': return <FaBullseye className="w-3 h-3" />;
-      case 'Low': return <FaBullseye className="w-3 h-3" />;
-      default: return <FaBullseye className="w-3 h-3" />;
+      case "High":
+        return <FaFlag className="w-3 h-3" />;
+      case "Medium":
+        return <FaBullseye className="w-3 h-3" />;
+      case "Low":
+        return <FaBullseye className="w-3 h-3" />;
+      default:
+        return <FaBullseye className="w-3 h-3" />;
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "No deadline";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -142,7 +218,10 @@ const MyTasks = () => {
             transition={{ duration: 0.5 }}
           >
             <div className="relative">
-              <FaSpinner className="w-8 h-8 text-brand-primary-500 animate-spin" />
+              <FaSpinner
+                className="w-8 h-8 text-brand-primary-500 animate-spin"
+                aria-label="Loading spinner"
+              />
               <div className="absolute inset-0 w-8 h-8 border-2 border-brand-primary-200 dark:border-brand-primary-800 rounded-full animate-pulse"></div>
             </div>
             <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark">
@@ -163,9 +242,13 @@ const MyTasks = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            role="alert"
           >
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaExclamationTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <FaExclamationTriangle
+                className="w-8 h-8 text-red-600 dark:text-red-400"
+                aria-hidden="true"
+              />
             </div>
             <h3 className="font-heading text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark mb-2">
               Error Loading Tasks
@@ -173,10 +256,7 @@ const MyTasks = () => {
             <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
               {error.message}
             </p>
-            <button
-              onClick={() => refetch()}
-              className="btn-primary"
-            >
+            <button onClick={() => refetch()} className="btn-primary">
               Try Again
             </button>
           </motion.div>
@@ -233,16 +313,6 @@ const MyTasks = () => {
                 Track and manage your assigned tasks
               </p>
             </div>
-            
-            <motion.button
-              onClick={() => navigate('/create-task')}
-              className="btn-primary flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <FaPlus className="w-4 h-4" />
-              Add New Task
-            </motion.button>
           </div>
         </motion.div>
 
@@ -263,6 +333,7 @@ const MyTasks = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 text-txt-primary-light dark:text-txt-primary-dark font-body transition-all duration-200"
+                aria-label="Search tasks by title or description"
               />
             </div>
 
@@ -271,6 +342,7 @@ const MyTasks = () => {
               className="px-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 text-txt-primary-light dark:text-txt-primary-dark font-body transition-all duration-200"
               onChange={(e) => setSortPriority(e.target.value)}
               value={sortPriority}
+              aria-label="Sort by Priority"
             >
               <option value="">Sort by Priority</option>
               <option value="High">High → Low</option>
@@ -282,6 +354,7 @@ const MyTasks = () => {
               className="px-4 py-3 bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 text-txt-primary-light dark:text-txt-primary-dark font-body transition-all duration-200"
               onChange={(e) => setSortStatus(e.target.value)}
               value={sortStatus}
+              aria-label="Sort by Status"
             >
               <option value="">Sort by Status</option>
               <option value="Pending">Pending → Completed</option>
@@ -292,7 +365,7 @@ const MyTasks = () => {
           {/* Results Info */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200/20 dark:border-gray-700/20">
             <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-              {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} found
+              {filteredTasks.length} task{filteredTasks.length !== 1 ? "s" : ""} found
               {searchTerm && ` for "${searchTerm}"`}
             </p>
             <div className="flex items-center gap-2">
@@ -317,45 +390,49 @@ const MyTasks = () => {
               value: tasks.length,
               icon: FaTasks,
               color: "blue",
-              gradient: "from-blue-500 to-blue-600"
+              gradient: "from-blue-500 to-blue-600",
             },
             {
               title: "Pending",
-              value: tasks.filter(t => t.status === "Pending").length,
+              value: tasks.filter((t) => t.status === "Pending").length,
               icon: FaClock,
               color: "gray",
-              gradient: "from-gray-500 to-gray-600"
+              gradient: "from-gray-500 to-gray-600",
             },
             {
               title: "In Progress",
-              value: tasks.filter(t => t.status === "In Progress").length,
+              value: tasks.filter((t) => t.status === "In Progress").length,
               icon: FaProjectDiagram,
               color: "yellow",
-              gradient: "from-yellow-500 to-orange-500"
+              gradient: "from-yellow-500 to-orange-500",
             },
             {
               title: "Completed",
-              value: tasks.filter(t => t.status === "Completed").length,
+              value: tasks.filter((t) => t.status === "Completed").length,
               icon: FaCheckCircle,
               color: "green",
-              gradient: "from-green-500 to-emerald-500"
-            }
+              gradient: "from-green-500 to-emerald-500",
+            },
           ].map((stat, index) => (
             <motion.div
               key={stat.title}
               className="bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-6 hover:shadow-xl transition-all duration-300"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.4, 
+              transition={{
+                duration: 0.4,
                 delay: 0.3 + index * 0.1,
-                ease: "easeOut"
+                ease: "easeOut",
               }}
               whileHover={{ scale: 1.02, y: -2 }}
+              role="region"
+              aria-label={`${stat.title} statistic`}
             >
               <div className="flex items-center justify-between">
-                <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center shadow-lg`}>
-                  <stat.icon className="text-white text-lg" />
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center shadow-lg`}
+                >
+                  <stat.icon className="text-white text-lg" aria-hidden="true" />
                 </div>
                 <div className="text-right">
                   <p className="font-heading text-2xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
@@ -370,151 +447,210 @@ const MyTasks = () => {
           ))}
         </motion.div>
 
-        {/* Tasks Table/Cards */}
-        <AnimatePresence mode="wait">
-          {filteredTasks.length > 0 ? (
-            <motion.div
-              key="tasks-content"
-              className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg overflow-hidden"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+        {/* Tasks Table */}
+      {/* Tasks Cards */}
+<AnimatePresence mode="wait">
+  {filteredTasks.length > 0 ? (
+    <motion.div
+      key="tasks-cards"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+    >
+      {filteredTasks.map((task, index) => {
+        // Find project data for this task.project
+        const projectInfo = task.project ? projectDataMap[task.project] : null;
+        const showGitInfo =
+          projectInfo &&
+          projectInfo.githubRepo &&
+          projectInfo.githubRepo.trim() !== "" &&
+          projectInfo.githubWebhookSecret &&
+          projectInfo.githubWebhookSecret.trim() !== "";
+
+        const commitMessage = `git commit -m "Implemented feature - Closes ${task.taskId}"`;
+
+        return (
+          <motion.div
+            key={task.id}
+            className={`
+              bg-bg-primary-light dark:bg-bg-primary-dark
+              border border-gray-200/20 dark:border-gray-700/20
+              rounded-2xl p-6 flex flex-col gap-4 shadow hover:shadow-xl
+              transition-all duration-300 relative
+            `}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.08 }}
+            whileHover={{ scale: 1.02, y: -2 }}
+          >
+            {/* Overdue badge */}
+            {isOverdue(task.dueDate) && (
+              <div className="absolute right-4 top-4 text-xs px-2 py-1 rounded bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300 font-semibold shadow">
+                <FaExclamationTriangle className="inline mr-1" />
+                Overdue
+              </div>
+            )}
+
+            {/* Task title/desc */}
+            <div>
+              <p className="font-heading text-lg text-txt-primary-light dark:text-txt-primary-dark flex items-center gap-2 font-bold">
+                {task.title}
+              </p>
+              {task.description && (
+                <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-sm mt-1">
+                  {task.description}
+                </p>
+              )}
+            </div>
+
+            {/* Info row */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${getPriorityColor(task.priority)}`}>
+                {getPriorityIcon(task.priority)} {task.priority}
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-bg-accent-light dark:bg-bg-accent-dark border dark:border-gray-700">
+                <FaCalendarAlt className="w-4" />
+                <span className={isOverdue(task.dueDate) ? "text-red-500 font-semibold" : ""}>
+                  {formatDate(task.dueDate)}
+                </span>
+              </span>
+              <span className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                {getStatusIcon(task.status)} {task.status}
+              </span>
+            </div>
+
+            {/* TaskID & Git commit if exists */}
+            <div className="py-1  space-y-2">
+  {showGitInfo && task.taskId ? (
+    <>
+      {/* Task ID Block */}
+      <div className="font-semibold text-gray-700 dark:text-gray-200 ">Task ID</div>
+      <div className="border rounded p-2 space-y-1">
+        
+        <div className="flex items-center gap-2">
+          <span className="break-all">{task.taskId}</span>
+          <button
+            onClick={() => copyText(task.taskId, "taskId", task.id)}
+            aria-label={`Copy task ID ${task.taskId}`}
+            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <FaCopy className="w-3.5 h-3.5" />
+          </button>
+          {copiedTaskId === task.id && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-green-600 dark:text-green-400 text-xs"
             >
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-bg-accent-light dark:bg-bg-accent-dark border-b border-gray-200/20 dark:border-gray-700/20">
-                    <tr>
-                      <th className="text-left p-4 font-heading font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                        Task
-                      </th>
-                      <th className="text-left p-4 font-heading font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                        Priority
-                      </th>
-                      <th className="text-left p-4 font-heading font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                        Due Date
-                      </th>
-                      <th className="text-left p-4 font-heading font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                        Status
-                      </th>
-                      <th className="text-left p-4 font-heading font-semibold text-txt-primary-light dark:text-txt-primary-dark">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTasks.map((task, index) => (
-                      <motion.tr
-                        key={task.id}
-                        className="border-b border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-colors duration-200"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <td className="p-4">
-                          <div>
-                            <p className="font-body font-medium text-txt-primary-light dark:text-txt-primary-dark flex items-center gap-2">
-                              {task.title}
-                              {isOverdue(task.dueDate) && (
-                                <span className="text-red-500 text-xs">⚠️ Overdue</span>
-                              )}
-                            </p>
-                            {task.description && (
-                              <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark mt-1 line-clamp-1">
-                                {task.description}
-                              </p>
-                            )}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                            {getPriorityIcon(task.priority)}
-                            {task.priority}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <FaCalendarAlt className="w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark" />
-                            <span className={`font-body text-txt-primary-light dark:text-txt-primary-dark ${
-                              isOverdue(task.dueDate) ? 'text-red-500 font-semibold' : ''
-                            }`}>
-                              {formatDate(task.dueDate)}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                            {getStatusIcon(task.status)}
-                            {task.status}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2">
-                            <motion.button 
-                              className="p-2 text-brand-primary-500 hover:bg-brand-primary-50 dark:hover:bg-brand-primary-900/20 rounded-lg transition-colors duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <FaEye className="w-4 h-4" />
-                            </motion.button>
-                            <motion.button 
-                              className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <FaEdit className="w-4 h-4" />
-                            </motion.button>
-                            <motion.button 
-                              className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              <FaTrash className="w-4 h-4" />
-                            </motion.button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="empty-state"
-              className="text-center py-16"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-12 max-w-md mx-auto">
-                <div className="w-20 h-20 bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaTasks className="w-10 h-10 text-brand-primary-500" />
-                </div>
-                <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-3">
-                  {searchTerm ? "No Tasks Found" : "No Tasks Yet"}
-                </h3>
-                <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
-                  {searchTerm 
-                    ? `No tasks match your search "${searchTerm}". Try adjusting your search terms.`
-                    : "You don't have any assigned tasks yet. Tasks will appear here when they're assigned to you."
-                  }
-                </p>
-                {!searchTerm && (
-                  <motion.button
-                    onClick={() => navigate('/tasks')}
-                    className="btn-primary flex items-center gap-2 mx-auto"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <FaTasks className="w-4 h-4" />
-                    Browse All Tasks
-                  </motion.button>
-                )}
-              </div>
-            </motion.div>
+              Copied!
+            </motion.span>
           )}
-        </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Commit Message Block */}
+      <div className=" text-gray-700 dark:text-gray-200 ">Commit Message</div>
+      <div className="border rounded p-2 space-y-1">
+        
+        <div className="flex items-center gap-2">
+          <code className="break-all">{commitMessage}</code>
+          <button
+            onClick={() => copyText(commitMessage, "commit", task.id)}
+            aria-label={`Copy git commit message for task ID ${task.taskId}`}
+            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            <FaCopy className="w-3.5 h-3.5" />
+          </button>
+          {copiedCommit === task.id && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-green-600 dark:text-green-400 text-xs"
+            >
+              Copied!
+            </motion.span>
+          )}
+        </div>
+      </div>
+    </>
+  ) : (
+    <span className="italic text-txt-secondary-light dark:text-txt-secondary-dark">
+      No Git info
+    </span>
+  )}
+</div>
+
+            {/* Action buttons */}
+            <div className="flex mt-2 gap-2">
+              <motion.button
+                className="p-2 text-brand-primary-500 hover:bg-brand-primary-50 dark:hover:bg-brand-primary-900/20 rounded-lg transition-colors duration-200"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={`View task ${task.title}`}
+              >
+                <FaEye className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors duration-200"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={`Edit task ${task.title}`}
+              >
+                <FaEdit className="w-4 h-4" />
+              </motion.button>
+              <motion.button
+                className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={`Delete task ${task.title}`}
+              >
+                <FaTrash className="w-4 h-4" />
+              </motion.button>
+            </div>
+          </motion.div>
+        );
+      })}
+    </motion.div>
+  ) : (
+    // ... Your empty state here stays unchanged ...
+    <motion.div
+      key="empty-state"
+      className="text-center py-16"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.5 }}
+    >
+      {/* ...empty state card as in your code... */}
+      <div className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-12 max-w-md mx-auto">
+        <div className="w-20 h-20 bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 rounded-full flex items-center justify-center mx-auto mb-6">
+          <FaTasks className="w-10 h-10 text-brand-primary-500" />
+        </div>
+        <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-3">
+          {searchTerm ? "No Tasks Found" : "No Tasks Yet"}
+        </h3>
+        <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
+          {searchTerm
+            ? `No tasks match your search "${searchTerm}". Try adjusting your search terms.`
+            : "You don't have any assigned tasks yet. Tasks will appear here when they're assigned to you."}
+        </p>
+        {!searchTerm && (
+          <motion.button
+            onClick={() => navigate("/tasks")}
+            className="btn-primary flex items-center gap-2 mx-auto"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FaTasks className="w-4 h-4" />
+            Browse All Tasks
+          </motion.button>
+        )}
+      </div>
+    </motion.div>
+  )}
+</AnimatePresence>
+
       </div>
     </div>
   );
