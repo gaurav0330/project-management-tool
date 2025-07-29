@@ -341,15 +341,32 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
       );
     });
 
-    socketRef.current.on('participant-video-changed', ({ socketId, isVideoOn }) => {
-      setParticipants(prev => 
-        prev.map(p => 
-          p.socketId === socketId 
-            ? { ...p, user: { ...p.user, isVideoOn } }
-            : p
-        )
-      );
-    });
+   socketRef.current.on('participant-video-changed', ({ socketId, isVideoOn }) => {
+  setParticipants(prev => 
+    prev.map(p => 
+      p.socketId === socketId 
+        ? { ...p, user: { ...p.user, isVideoOn } }
+        : p
+    )
+  );
+
+  // ✅ Also update peers
+  setPeers(prev => {
+    const newPeers = new Map(prev);
+    const peerData = newPeers.get(socketId);
+    if (peerData) {
+      newPeers.set(socketId, {
+        ...peerData,
+        user: {
+          ...peerData.user,
+          isVideoOn
+        }
+      });
+    }
+    return newPeers;
+  });
+});
+
 
     // Handle meeting messages
     socketRef.current.on('meeting-message-received', (message) => {

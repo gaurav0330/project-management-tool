@@ -159,3 +159,16 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--interactive-hover-light);
 }
+
+/* ✅ Modern Animations (extended for speaking indicator) */
+@layer utilities {
+  .speaking {
+    animation: pulse 1.5s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } /* Using brand-accent-500 (green) for visibility */
+  70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
