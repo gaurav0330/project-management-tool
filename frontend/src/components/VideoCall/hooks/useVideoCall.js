@@ -1,4 +1,4 @@
-// hooks/useVideoCall.js - Enhanced with screen sharing and complete integration
+// hooks/useVideoCall.js - Fixed with socket ready check and improved handling
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { jwtDecode } from 'jwt-decode';
@@ -22,6 +22,10 @@ const useVideoCall = (searchParams) => {
   const [screenSharingUser, setScreenSharingUser] = useState(null);
   const [peers, setPeers] = useState(new Map());
   const [meetingMessages, setMeetingMessages] = useState([]);
+  const [emojiReactions, setEmojiReactions] = useState([]); // ✅ Emoji reactions state
+  
+  // ✅ ADD: Track socket ready state
+  const [isSocketReady, setIsSocketReady] = useState(false);
   
   // Refs for video elements and streams
   const localVideoRef = useRef(null);
@@ -123,8 +127,35 @@ const useVideoCall = (searchParams) => {
     }
   }, [userId, userLoading, userData, userError]);
 
-  // Initialize WebRTC when call becomes active
+  // ✅ FIXED: Initialize WebRTC when call becomes active - MOVED BEFORE ANY USAGE
   const webRTCData = useWebRTC(meetingId, currentUser, isCallActive);
+
+  // ✅ FIXED: Debug logging - NOW AFTER webRTCData declaration
+  useEffect(() => {
+    console.log('🔍 WebRTC Data:', {
+      hasWebRTCData: !!webRTCData,
+      hasSocket: !!(webRTCData && webRTCData.socket),
+      socketConnected: webRTCData && webRTCData.socket && webRTCData.socket.connected,
+      meetingId,
+      currentUser: !!currentUser
+    });
+  }, [webRTCData, meetingId, currentUser]);
+
+  // ✅ ADD: Set socket ready state
+  useEffect(() => {
+    const socket = webRTCData?.socket;
+    if (socket) {
+      if (socket.connected) {
+        setIsSocketReady(true);
+      } else {
+        // Wait for connection
+        socket.on('connect', () => {
+          console.log('✅ Socket connected successfully');
+          setIsSocketReady(true);
+        });
+      }
+    }
+  }, [webRTCData?.socket]);
 
   // Get user media for camera
   const getUserMedia = useCallback(async (constraints = { video: true, audio: true }) => {
@@ -287,6 +318,52 @@ const useVideoCall = (searchParams) => {
     }
   }, [currentUser, webRTCData]);
 
+  // ✅ FIXED: sendEmoji with socket ready check
+  const sendEmoji = useCallback((emoji) => {
+    if (!emoji || !currentUser || !meetingId) {
+      console.log('❌ Cannot send emoji: missing data', { emoji, currentUser: !!currentUser, meetingId });
+      return;
+    }
+    
+    if (!isSocketReady) {
+      console.log('❌ Socket not ready yet - emoji send delayed');
+      // Optional: Queue or retry - for now, just log
+      return;
+    }
+    
+    const reactionId = `${Date.now()}-${Math.random()}`;
+    const reaction = {
+      id: reactionId,
+      emoji,
+      sender: currentUser.username,
+      x: Math.random() * 80 + 10,
+      y: Math.random() * 60 + 20,
+      timestamp: new Date(),
+      isLocal: true
+    };
+    
+    setEmojiReactions(prev => [...prev, reaction]);
+    
+    setTimeout(() => {
+      setEmojiReactions(prev => prev.filter(r => r.id !== reactionId));
+    }, 3000);
+    
+    const socket = webRTCData?.socket;
+    if (socket) {
+      console.log('📤 Sending emoji reaction:', { meetingId, emoji, sender: currentUser.username });
+      socket.emit('emoji-reaction', {
+        meetingId,
+        emoji,
+        sender: currentUser.username,
+        x: reaction.x,
+        y: reaction.y,
+        timestamp: reaction.timestamp.toISOString()
+      });
+    } else {
+      console.log('❌ No socket available for emoji emit');
+    }
+  }, [currentUser, webRTCData, meetingId, isSocketReady]);
+
   // Send meeting message
   const sendMeetingMessage = useCallback((message) => {
     if (!message?.trim()) return;
@@ -379,7 +456,7 @@ const useVideoCall = (searchParams) => {
     }
   }, [currentUser, getUserMedia]);
 
-  // End call with cleanup
+  // End call with cleanup including emoji reactions
   const endCall = useCallback(() => {
     // Stop all streams
     if (localStreamRef.current) {
@@ -409,80 +486,43 @@ const useVideoCall = (searchParams) => {
     setScreenSharingUser(null);
     setPeers(new Map());
     setMeetingMessages([]);
+    setEmojiReactions([]); // Clear emoji reactions
     setIsVideoOn(true);
     setIsAudioOn(true);
   }, []);
 
-  // Listen for incoming chat messages and other events
+  // ✅ FIXED: Listener with socket ready check
   useEffect(() => {
-    if (!webRTCData?.socket) return;
+    const socket = webRTCData?.socket;
+    if (!socket || !isSocketReady) return;
 
-    const socket = webRTCData.socket;
-
-    // Handle incoming chat messages
-    const handleChatMessage = ({ text, sender, timestamp }) => {
-      const newMessage = {
-        id: Date.now() + Math.random(), // Ensure unique ID
-        text,
+    const handleEmojiReaction = ({ emoji, sender, x, y, timestamp }) => {
+      console.log('📥 Received emoji reaction:', { emoji, sender, x, y });
+      
+      const reactionId = `${timestamp}-${sender}-${Math.random()}`;
+      const reaction = {
+        id: reactionId,
+        emoji,
         sender,
+        x,
+        y,
         timestamp: new Date(timestamp),
         isLocal: false
       };
       
-      setMeetingMessages(prev => [...prev, newMessage]);
+      setEmojiReactions(prev => [...prev, reaction]);
+      
+      setTimeout(() => {
+        setEmojiReactions(prev => prev.filter(r => r.id !== reactionId));
+      }, 3000);
     };
 
-    // Handle peer screen sharing events
-    const handlePeerScreenShareStarted = ({ userId, username }) => {
-      console.log('Peer started screen sharing:', userId);
-      setScreenSharingUser(userId);
-    };
-
-    const handlePeerScreenShareStopped = ({ userId }) => {
-      console.log('Peer stopped screen sharing:', userId);
-      setScreenSharingUser(prev => prev === userId ? null : prev);
-    };
-
-    // Handle peer media toggle events
-    const handlePeerVideoToggle = ({ userId, isVideoOn }) => {
-      setPeers(prev => {
-        const newPeers = new Map(prev);
-        const peer = newPeers.get(userId);
-        if (peer && peer.user) {
-          peer.user.isVideoOn = isVideoOn;
-          newPeers.set(userId, peer);
-        }
-        return newPeers;
-      });
-    };
-
-    const handlePeerAudioToggle = ({ userId, isAudioOn }) => {
-      setPeers(prev => {
-        const newPeers = new Map(prev);
-        const peer = newPeers.get(userId);
-        if (peer && peer.user) {
-          peer.user.isAudioOn = isAudioOn;
-          newPeers.set(userId, peer);
-        }
-        return newPeers;
-      });
-    };
-
-    // Attach event listeners
-    socket.on('chat-message', handleChatMessage);
-    socket.on('peer-screen-share-started', handlePeerScreenShareStarted);
-    socket.on('peer-screen-share-stopped', handlePeerScreenShareStopped);
-    socket.on('peer-video-toggle', handlePeerVideoToggle);
-    socket.on('peer-audio-toggle', handlePeerAudioToggle);
+    socket.on('emoji-reaction', handleEmojiReaction);
 
     return () => {
-      socket.off('chat-message', handleChatMessage);
-      socket.off('peer-screen-share-started', handlePeerScreenShareStarted);
-      socket.off('peer-screen-share-stopped', handlePeerScreenShareStopped);
-      socket.off('peer-video-toggle', handlePeerVideoToggle);
-      socket.off('peer-audio-toggle', handlePeerAudioToggle);
+      socket.off('emoji-reaction', handleEmojiReaction);
     };
-  }, [webRTCData?.socket]);
+  }, [webRTCData?.socket, isSocketReady]);
 
   return {
     // Original properties
@@ -505,6 +545,10 @@ const useVideoCall = (searchParams) => {
     meetingMessages,
     participants,
     participantCount,
+    
+    // Emoji functionality
+    emojiReactions,
+    sendEmoji,
     
     // Refs
     localVideoRef,

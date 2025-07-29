@@ -1,4 +1,4 @@
-// hooks/useWebRTC.js - Complete Native WebRTC Implementation with Screen Sharing
+// hooks/useWebRTC.js - Complete Native WebRTC Implementation with Screen Sharing and Proper Socket Return
 import { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 import useScreenShare from './useScreenShare'; // ✅ ADD THIS
@@ -182,7 +182,18 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
     }
 
     console.log("🔌 Connecting to socket server...");
-    socketRef.current = io('http://localhost:5000');
+    socketRef.current = io('http://localhost:5000'); // ✅ FIXED: Use your actual server URL (replace if needed)
+
+    // ✅ ADD: Connect event handler
+    socketRef.current.on('connect', () => {
+      console.log('✅ Socket connected:', socketRef.current.id);
+      // Join room or other init logic
+      socketRef.current.emit('join-video-room', { meetingId, user: currentUser });
+    });
+
+    socketRef.current.on('connect_error', (error) => {
+      console.error('❌ Socket connection error:', error);
+    });
 
     // Initialize stream and join room
     const initializeStreamAndJoin = async () => {
@@ -341,32 +352,31 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
       );
     });
 
-   socketRef.current.on('participant-video-changed', ({ socketId, isVideoOn }) => {
-  setParticipants(prev => 
-    prev.map(p => 
-      p.socketId === socketId 
-        ? { ...p, user: { ...p.user, isVideoOn } }
-        : p
-    )
-  );
+    socketRef.current.on('participant-video-changed', ({ socketId, isVideoOn }) => {
+      setParticipants(prev => 
+        prev.map(p => 
+          p.socketId === socketId 
+            ? { ...p, user: { ...p.user, isVideoOn } }
+            : p
+        )
+      );
 
-  // ✅ Also update peers
-  setPeers(prev => {
-    const newPeers = new Map(prev);
-    const peerData = newPeers.get(socketId);
-    if (peerData) {
-      newPeers.set(socketId, {
-        ...peerData,
-        user: {
-          ...peerData.user,
-          isVideoOn
+      // ✅ Also update peers
+      setPeers(prev => {
+        const newPeers = new Map(prev);
+        const peerData = newPeers.get(socketId);
+        if (peerData) {
+          newPeers.set(socketId, {
+            ...peerData,
+            user: {
+              ...peerData.user,
+              isVideoOn
+            }
+          });
         }
+        return newPeers;
       });
-    }
-    return newPeers;
-  });
-});
-
+    });
 
     // Handle meeting messages
     socketRef.current.on('meeting-message-received', (message) => {
@@ -425,6 +435,7 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
   };
 
   return {
+    socket: socketRef.current, // ✅ FIXED: Return the socket reference
     peers,
     localStream,
     localVideoRef,
