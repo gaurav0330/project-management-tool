@@ -1,6 +1,6 @@
-// components/CallHeader.jsx
-import React from 'react';
-import { ArrowLeft, Users, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Users, MessageSquare, Clipboard } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const CallHeader = ({ 
   meetingId, 
@@ -13,10 +13,24 @@ const CallHeader = ({
   onToggleChat, 
   participantsCount 
 }) => {
+  const [copySuccess, setCopySuccess] = useState(false);
+
   const formatDuration = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const onCopyUrl = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+        toast.success('URL copied to clipboard!');
+      })
+      .catch(err => {
+        console.error('Failed to copy URL:', err);
+      });
   };
 
   return (
@@ -38,6 +52,15 @@ const CallHeader = ({
             {formatDuration(callDuration)}
           </div>
         )}
+
+<button
+          onClick={onCopyUrl}
+          title="Copy URL"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark text-txt-primary-light dark:text-txt-primary-dark hover:bg-brand-primary-600 hover:text-white transition-colors"
+        >
+          <Clipboard className="w-4 h-4" />
+          {copySuccess ? 'Copied!' : 'Copy URL'}
+        </button>
       </div>
 
       <div className="flex items-center gap-4">
@@ -59,6 +82,8 @@ const CallHeader = ({
           <MessageSquare className="w-4 h-4" />
           Chat
         </button>
+
+        
       </div>
     </header>
   );
