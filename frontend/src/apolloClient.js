@@ -3,8 +3,12 @@ import { setContext } from "@apollo/client/link/context";
 
 // GraphQL API Endpoint
 const httpLink = createHttpLink({
-  uri: "http://localhost:5000/graphql", 
+  uri:
+    process.env.NODE_ENV === "production"
+      ? process.env.REACT_APP_BACKEND_URL + "/graphql"
+      : "http://localhost:5000/graphql",
 });
+
 
 // Middleware to Attach JWT Token to Headers
 const authLink = setContext(() => {

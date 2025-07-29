@@ -4,14 +4,16 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
+const crypto = require("crypto");
+
 const typeDefs = require("./graphql/typeDefs");
 const resolvers = require("./graphql/resolvers");
 const authMiddleware = require("./middleware/authmiddleware");
-const setupSocket = require("./socket"); // Your existing chat setup
-const setupVideoSignaling = require("./socket/videoSignal"); // ✅ ADD THIS LINE
-const crypto = require("crypto"); // For webhook signature verification
-const taskService = require("./services/taskService"); // ✅ NEW: Import for direct service call (adjust path if needed)
-const Project = require("./models/Project"); // ✅ NEW: Import Project model for dynamic secret fetch (adjust path if needed)
+const setupSocket = require("./socket"); // Chat setup
+const setupVideoSignaling = require("./socket/videoSignal"); // Video signaling setup
+const taskService = require("./services/taskService");
+const Project = require("./models/Project");
+
 
 dotenv.config();
 
@@ -20,49 +22,54 @@ const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    // Use FRONTEND_URL in production for CORS, fallback to localhost in development
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL
+        : "http://localhost:5173",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
+  transports: ["websocket", "polling"], // Fallback transports
+  pingInterval: 10000, // 10 seconds
+  pingTimeout: 5000, // 5 seconds
 });
 
-// Set up Socket.io for chat
+// Setup Socket.io handlers
 setupSocket(io);
-
-// ✅ ADD THIS LINE - Set up video calling signaling
 setupVideoSignaling(io);
 
-// --- NEW: GitHub Webhook Secret from .env (add GITHUB_WEBHOOK_SECRET=your-secret to your .env file) ---
 const GITHUB_SECRET = process.env.GITHUB_WEBHOOK_SECRET || "your-default-secret";
 
-// --- NEW: Helper to extract task refs like "Closes FE-UI-101" ---
 function extractTaskRefs(msg = "") {
-  return [...msg.matchAll(/(?:Closes|Fixes)\s+([A-Z\-0-9]+)/gi)].map(m => m[1]);
+  return [...msg.matchAll(/(?:Closes|Fixes)\s+([A-Z\-0-9]+)/gi)].map(
+    (m) => m[1]
+  );
 }
 
-// --- NEW: Webhook Route (with dynamic async verification inside) ---
+// Github webhook route with dynamic secret verification
 app.post(
   "/api/github/webhook",
-  express.json(),  // Parse JSON first (verification moved inside for async)
+  express.json(),
   async (req, res) => {
     try {
-      const buf = Buffer.from(JSON.stringify(req.body));  // Re-create buf from body
+      const buf = Buffer.from(JSON.stringify(req.body));
       const signature = req.headers["x-hub-signature-256"];
       if (!signature) {
         console.error("Missing x-hub-signature-256 header");
         throw new Error("No signature");
       }
 
-      // Parse repo from payload
-      const repoFullName = req.body.repository?.full_name;  // e.g., "gauravjikar/test-repo"
+      const repoFullName = req.body.repository?.full_name;
       if (!repoFullName) throw new Error("No repo in payload");
 
-      // Fetch secret from DB based on repo
       const project = await Project.findOne({ githubRepo: repoFullName });
-      const secret = project ? project.githubWebhookSecret : GITHUB_SECRET;  // Fallback to global if no match
+      const secret = project ? project.githubWebhookSecret : GITHUB_SECRET;
       if (!secret) throw new Error("No secret found for this repo");
 
-      const expectedSignature = "sha256=" + crypto.createHmac("sha256", secret).update(buf).digest("hex");
+      const expectedSignature =
+        "sha256=" + crypto.createHmac("sha256", secret).update(buf).digest("hex");
+
       console.log("Received Signature:", signature);
       console.log("Expected Signature:", expectedSignature);
       console.log("Repo:", repoFullName);
@@ -74,7 +81,6 @@ app.post(
       }
       console.log("Signature verified successfully");
 
-      // Proceed with event processing
       const event = req.headers["x-github-event"];
       let refs = [];
       let actor = "";
@@ -86,19 +92,22 @@ app.post(
         });
       }
 
-      if ((event === "pull_request" || event === "pull_request_review") && req.body.pull_request) {
+      if (
+        (event === "pull_request" || event === "pull_request_review") &&
+        req.body.pull_request
+      ) {
         actor = req.body.sender?.login;
         refs.push(...extractTaskRefs(req.body.pull_request.title || ""));
         refs.push(...extractTaskRefs(req.body.pull_request.body || ""));
       }
 
-      // ✅ CHANGED: Direct DB update via service (bypasses GraphQL auth)
+      // Update tasks by calling the service directly (bypass GraphQL auth)
       for (let taskId of refs) {
         try {
           await taskService.closeTask(taskId, actor);
-          // Optional: If you want real-time notifications, add io.emit here or inside closeTask
+          // Optional: io.emit() here for real-time frontend notifications
         } catch (serviceErr) {
-          console.error('Service error for task', taskId, serviceErr);
+          console.error("Service error for task", taskId, serviceErr);
         }
       }
 
@@ -115,7 +124,9 @@ const apolloServer = new ApolloServer({
   resolvers,
   context: async ({ req }) => {
     const authContext = await authMiddleware({ req });
-    console.log("Context in ApolloServer:", authContext);
+    if (process.env.NODE_ENV !== "production") {
+      console.log("Context in ApolloServer:", authContext);
+    }
     return authContext;
   },
 });
@@ -131,12 +142,31 @@ async function startServer() {
 
   console.log("✅ MongoDB Connected Successfully");
 
-  httpServer.listen(5000, () => {
-    console.log(`🚀 Server running at http://localhost:5000${apolloServer.graphqlPath}`);
-    console.log(`📡 Socket.io listening on ws://localhost:5000`);
-    console.log(`🎥 Video signaling ready`); // ✅ ADD THIS LOG
-    console.log(`🔗 GitHub webhook ready at http://localhost:5000/api/github/webhook`); // NEW LOG
+  const PORT = process.env.PORT || 5000;
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}${apolloServer.graphqlPath}`);
+    console.log(`📡 Socket.io listening on ws://localhost:${PORT}`);
+    console.log(`🎥 Video signaling ready`);
+    console.log(`🔗 GitHub webhook ready at http://localhost:${PORT}/api/github/webhook`);
   });
 }
 
 startServer();
+
+// Optional: Production-only express settings
+if (process.env.NODE_ENV === "production") {
+  // Serve frontend static files here if you bundle frontend with backend
+  // app.use(express.static('frontend_build_path'));
+
+  // Catch-all route to serve frontend (if applicable)
+  app.get("*", (req, res) => {
+    res.send("Backend API is live");
+    // Or serve index.html if monorepo frontend + backend: res.sendFile('index.html');
+  });
+
+  // Basic error handling middleware
+  app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send("Something broke!");
+  });
+}
