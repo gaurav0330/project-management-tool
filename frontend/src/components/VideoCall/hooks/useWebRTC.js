@@ -183,10 +183,10 @@ const useWebRTC = (meetingId, currentUser, isCallActive) => {
 
     console.log("🔌 Connecting to socket server...");
     
-   const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.VITE_SOCKET_URL
-    : "http://localhost:5000";
+  const SOCKET_URL =
+  import.meta.env.PROD
+    ? import.meta.env.VITE_SOCKET_URL
+    : "ws://localhost:5000";
 
 socketRef.current = io(SOCKET_URL);// ✅ FIXED: Use your actual server URL (replace if needed)
 

@@ -1,13 +1,13 @@
 import { io } from "socket.io-client";
 
 const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.VITE_SOCKET_URL
+  import.meta.env.PROD
+    ? import.meta.env.VITE_SOCKET_URL
     : "ws://localhost:5000";
 
 const socket = io(SOCKET_URL, {
   transports: ["websocket"],
-  autoConnect: true, // Ensure it's connecting automatically
+  autoConnect: true,
 });
 
 // Debugging connection
