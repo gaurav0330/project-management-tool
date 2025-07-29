@@ -1,4 +1,4 @@
-// components/ActiveCallInterface.jsx - Complete integration with screen sharing
+// components/ActiveCallInterface.jsx - Complete integration with screen sharing and emoji reactions
 import React, { useState } from 'react';
 import { Monitor } from 'lucide-react';
 import VideoGrid from './VideoGrid';
@@ -26,7 +26,9 @@ const ActiveCallInterface = ({
   isScreenSharing,
   toggleScreenShare,
   cameraStream, // Camera stream when screen sharing
-  localScreenStream // Screen share stream
+  localScreenStream, // Screen share stream
+  sendEmoji, // ✅ NEW: Emoji sending function
+  emojiReactions // ✅ NEW: Emoji reactions array
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
@@ -38,7 +40,8 @@ const ActiveCallInterface = ({
     screenSharingUser,
     isScreenSharing,
     hasLocalScreenStream: !!localScreenStream,
-    hasCameraStream: !!cameraStream
+    hasCameraStream: !!cameraStream,
+    hasEmojiReactions: !!emojiReactions && emojiReactions.length > 0 // ✅ NEW: Log emoji reactions
   });
 
   const handleToggleMute = () => {
@@ -68,6 +71,8 @@ const ActiveCallInterface = ({
             isScreenSharing={isScreenSharing}
             cameraStream={cameraStream}
             localScreenStream={localScreenStream}
+            sendEmoji={sendEmoji} // ✅ NEW: Pass emoji sending function
+            emojiReactions={emojiReactions} // ✅ NEW: Pass emoji reactions
             onToggleCamera={() => {
               console.log('Toggle camera requested');
             }}
@@ -85,6 +90,7 @@ const ActiveCallInterface = ({
             showChat={showChat}
             onToggleParticipants={onToggleParticipants}
             onToggleChat={onToggleChat}
+            onSendEmoji={sendEmoji} // ✅ NEW: Pass emoji sending function to controls
           />
 
           {/* Screen Sharing Status Indicator - Only show when not in screen share mode */}

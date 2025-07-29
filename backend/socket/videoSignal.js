@@ -1,11 +1,11 @@
-// socket/videoSignal.js - Complete with Enhanced Screen Sharing
+// socket/videoSignal.js - Complete with Enhanced Screen Sharing and Emoji Reactions
 const Meeting = require('../models/Meeting');
 
 function setupVideoSignaling(io) {
   // In-memory store for active rooms and participants
   const activeRooms = new Map(); // meetingId -> Map(socketId -> userInfo)
   
-  console.log('🎥 Video signaling server initialized with screen sharing support');
+  console.log('🎥 Video signaling server initialized with screen sharing and emoji support');
 
   io.on('connection', (socket) => {
     console.log(`🔵 Video client connected: ${socket.id}`);
@@ -184,6 +184,33 @@ function setupVideoSignaling(io) {
         { meetingId },
         { lastActivity: new Date() }
       ).catch(err => console.error('Error updating meeting activity:', err));
+    });
+
+    // ✅ UPDATED: Handle emoji reactions with proper validation
+    socket.on('emoji-reaction', ({ meetingId, emoji, sender, x, y, timestamp }) => {
+      console.log(`😀 Emoji reaction in ${meetingId} from ${sender}: ${emoji} at position (${x}, ${y})`);
+      
+      // ✅ IMPORTANT: Verify the user is in the meeting room
+      if (activeRooms.has(meetingId) && activeRooms.get(meetingId).has(socket.id)) {
+        // Broadcast emoji reaction to all OTHER participants in the meeting
+        socket.to(meetingId).emit('emoji-reaction', {
+          emoji,
+          sender,
+          x,
+          y,
+          timestamp
+        });
+
+        console.log(`✅ Broadcasted emoji ${emoji} to room ${meetingId}`);
+
+        // Update meeting activity
+        Meeting.findOneAndUpdate(
+          { meetingId },
+          { lastActivity: new Date() }
+        ).catch(err => console.error('Error updating meeting activity:', err));
+      } else {
+        console.log(`❌ User ${socket.id} not found in meeting ${meetingId}`);
+      }
     });
 
     // Handle manual leave

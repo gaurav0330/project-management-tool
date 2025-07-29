@@ -9,6 +9,26 @@ const PreCallSetup = ({ currentUser, onStartCall, localVideoRef }) => {
   const previewVideoRef = useRef(null);
   const streamRef = useRef(null);
 
+   const emojiAnimationStyles = `
+    @keyframes emojiFloat {
+      0% {
+        opacity: 1;
+        transform: translateY(0) scale(0.5);
+      }
+      20% {
+        transform: translateY(-20px) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100px) scale(0.8);
+      }
+    }
+    
+    .emoji-float {
+      animation: emojiFloat 3s ease-out forwards;
+    }
+  `;
+  
   useEffect(() => {
     initializePreviewCamera();
     

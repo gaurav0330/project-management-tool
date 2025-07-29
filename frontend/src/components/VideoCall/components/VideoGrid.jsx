@@ -1,11 +1,13 @@
 // components/VideoCall/components/VideoGrid.jsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react'; // ✅ ADD: useMemo for optimization
 import { Monitor, VideoOff, Maximize2, Users, Camera, MicOff, Share, Eye, Play, Mic } from 'lucide-react';
 
 const VideoGrid = ({ 
   peers, localVideoRef, currentUser, isVideoOn, isAudioOn = true,
   screenSharingUser, isScreenSharing, cameraStream, localScreenStream,
-  onToggleCamera, speakingUsers = new Set(), isLocalSpeaking = false, socket
+  onToggleCamera, speakingUsers = new Set(), isLocalSpeaking = false, socket,
+  sendEmoji, // ✅ NEW
+  emojiReactions, // ✅ NEW
 }) => {
   const remoteVideoRefs = useRef(new Map());
   const cameraSidebarRef = useRef(null);
@@ -25,6 +27,16 @@ const VideoGrid = ({
   const analyserRefs = useRef(new Map());
   const localAnalyserRef = useRef(null);
   const animationFrameRefs = useRef(new Map());
+
+  // ✅ ADD: Debug rendering only when reactions change (prevents log spam)
+  useEffect(() => {
+    if (emojiReactions.length > 0) {
+      console.log('🖼️ Emoji reactions updated:', emojiReactions);
+    }
+  }, [emojiReactions]); // Only logs when reactions array changes
+
+  // ✅ ADD: Memoize emoji list to prevent unnecessary re-renders
+  const memoizedEmojis = useMemo(() => emojiReactions, [emojiReactions]);
 
   // Audio analysis setup
   const setupAudioAnalysis = (stream, socketId = 'local') => {
@@ -334,6 +346,24 @@ const VideoGrid = ({
               </div>
             )}
 
+            {/* ✅ FIXED: Emoji Reactions Overlay for Screen Sharing */}
+            {memoizedEmojis.length > 0 && (
+              <div className="absolute inset-0 pointer-events-none z-[9999]"> {/* ✅ FIXED: Higher z-index */}
+                {memoizedEmojis.map((reaction) => (
+                  <div
+                    key={reaction.id}
+                    className="absolute pointer-events-none text-4xl emoji-float" // ✅ Use global class
+                    style={{
+                      left: `${Math.min(100, Math.max(0, reaction.x))}%`, // ✅ FIXED: Clamp to 0-100%
+                      top: `${Math.min(100, Math.max(0, reaction.y))}%`, // ✅ FIXED: Clamp to 0-100%
+                    }}
+                  >
+                    {reaction.emoji}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Controls */}
             <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
               <div className="bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-lg flex items-center gap-3">
@@ -497,6 +527,24 @@ const VideoGrid = ({
   // Normal video layout
   return (
     <div className={getGridClass()}>
+      {/* ✅ FIXED: Emoji Reactions Overlay for Normal Video Layout */}
+      {memoizedEmojis.length > 0 && (
+        <div className="absolute inset-0 pointer-events-none z-[9999]"> {/* ✅ FIXED: Higher z-index */}
+          {memoizedEmojis.map((reaction) => (
+            <div
+              key={reaction.id}
+              className="absolute pointer-events-none text-4xl emoji-float" // ✅ Use global class
+              style={{
+                left: `${Math.min(100, Math.max(0, reaction.x))}%`, // ✅ FIXED: Clamp to 0-100%
+                top: `${Math.min(100, Math.max(0, reaction.y))}%`, // ✅ FIXED: Clamp to 0-100%
+              }}
+            >
+              {reaction.emoji}
+            </div>
+          ))}
+        </div>
+      )}
+
       {peerArray.map(([socketId, peerData]) => {
         const isPeerAudioOn = peerData?.user?.isAudioOn !== false;
         const isRemoteSpeaking = isPeerAudioOn && effectiveSpeakingUsers.has(socketId);
@@ -517,8 +565,29 @@ const VideoGrid = ({
   );
 };
 
-// Voice animated container
+// Voice animated container - Fixed CSS
 const VoiceAnimatedContainer = ({ children, voiceStrength, isActive, className }) => {
+  // ✅ ADD: Voice pulse animation styles
+  const voicePulseStyles = `
+    @keyframes voicePulse { 
+      0%, 100% { opacity: 1; } 
+      50% { opacity: 0.8; } 
+    }
+  `;
+
+  // ✅ ADD: Inject voice pulse CSS
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = voicePulseStyles;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      if (document.head.contains(styleElement)) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
+
   const getAnimationStyle = () => {
     if (!isActive || voiceStrength === 0) {
       return { borderColor: 'rgb(34, 197, 94)', borderWidth: '2px', boxShadow: 'none', transform: 'scale(1)' };
@@ -555,7 +624,6 @@ const VoiceAnimatedContainer = ({ children, voiceStrength, isActive, className }
           })}
         </div>
       )}
-      <style jsx>{`@keyframes voicePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }`}</style>
     </div>
   );
 };

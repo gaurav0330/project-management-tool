@@ -1,4 +1,4 @@
-// components/VideoCall/VideoCall.jsx - Complete with Screen Sharing Support
+// components/VideoCall/VideoCall.jsx - Complete with Screen Sharing Support and Emoji Feature
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Video, ArrowLeft } from "lucide-react";
@@ -7,11 +7,13 @@ import ActiveCallInterface from "./components/ActiveCallInterface";
 import CallHeader from "./components/CallHeader";
 import useVideoCall from "./hooks/useVideoCall";
 
+
 const VideoCall = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [showParticipants, setShowParticipants] = useState(false);
   const [showChat, setShowChat] = useState(false);
+
 
   const {
     isCallActive,
@@ -34,10 +36,14 @@ const VideoCall = () => {
     localStream,
     screenSharingUser, // ✅ ADDED: Screen sharing user tracker
     isScreenSharing, // ✅ ADDED: Current user screen sharing state
-    toggleScreenShare // ✅ ADDED: Screen sharing toggle function
+    toggleScreenShare, // ✅ ADDED: Screen sharing toggle function
+    sendEmoji, // ✅ NEW: Add emoji sending function
+    emojiReactions // ✅ NEW: Add emoji reactions state
   } = useVideoCall(searchParams);
 
+
   console.log('📱 VideoCall component - hasLocalStream:', !!localStream);
+
 
   if (isLoading) {
     return (
@@ -46,6 +52,7 @@ const VideoCall = () => {
       </div>
     );
   }
+
 
   if (!meetingId) {
     return (
@@ -68,6 +75,7 @@ const VideoCall = () => {
     );
   }
 
+
   return (
     <div className="h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body overflow-hidden">
       <CallHeader
@@ -81,6 +89,7 @@ const VideoCall = () => {
         onToggleChat={() => setShowChat(!showChat)}
         participantsCount={participantCount || 0}
       />
+
 
       {!isCallActive ? (
         <PreCallSetup 
@@ -108,10 +117,13 @@ const VideoCall = () => {
           screenSharingUser={screenSharingUser} // ✅ ADDED: Pass screen sharing user
           isScreenSharing={isScreenSharing} // ✅ ADDED: Pass screen sharing state
           toggleScreenShare={toggleScreenShare} // ✅ ADDED: Pass screen sharing toggle
+          sendEmoji={sendEmoji} // ✅ NEW: Pass emoji sending function
+          emojiReactions={emojiReactions} // ✅ NEW: Pass emoji reactions state
         />
       )}
     </div>
   );
 };
+
 
 export default VideoCall;
