@@ -4,9 +4,8 @@ import {
   Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle, 
   TrendingUp, Github,Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft , MessageSquare
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/UI/sheet";
+import { Button } from "@/components/UI/button";
 import { cn } from "../../../lib/utils";
 
 const Sidebar = ({ setActiveComponent, onStateChange }) => {
