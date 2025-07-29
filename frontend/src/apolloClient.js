@@ -3,12 +3,10 @@ import { setContext } from "@apollo/client/link/context";
 
 // GraphQL API Endpoint
 const httpLink = createHttpLink({
-  uri:
-    process.env.NODE_ENV === "production"
-      ? process.env.VITE_BACKEND_URL + "/graphql" 
-      : "https://project-management-tool-af4j.onrender.com/graphql",
+  uri: import.meta.env.PROD
+    ? import.meta.env.VITE_BACKEND_URL + "/graphql"
+    : "http://localhost:5000/graphql",
 });
-
 
 // Middleware to Attach JWT Token to Headers
 const authLink = setContext(() => {
