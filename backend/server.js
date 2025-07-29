@@ -22,14 +22,10 @@ const httpServer = http.createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    // Use FRONTEND_URL in production for CORS, fallback to localhost in development
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
-        : "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
+  origin: process.env.FRONTEND_URL, // must match deployed frontend, e.g., https://project-management-tool-two-jet.vercel.app
+  methods: ["GET", "POST"],
+  credentials: true,
+},
   transports: ["websocket", "polling"], // Fallback transports
   pingInterval: 10000, // 10 seconds
   pingTimeout: 5000, // 5 seconds
@@ -163,6 +159,7 @@ if (process.env.NODE_ENV === "production") {
     res.send("Backend API is live");
     // Or serve index.html if monorepo frontend + backend: res.sendFile('index.html');
   });
+  
 
   // Basic error handling middleware
   app.use((err, req, res, next) => {

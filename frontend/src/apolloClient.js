@@ -5,8 +5,8 @@ import { setContext } from "@apollo/client/link/context";
 const httpLink = createHttpLink({
   uri:
     process.env.NODE_ENV === "production"
-      ? process.env.REACT_APP_BACKEND_URL + "/graphql"
-      : "http://localhost:5000/graphql",
+      ? process.env.VITE_BACKEND_URL + "/graphql" 
+      : "https://project-management-tool-af4j.onrender.com/graphql",
 });
 
 
