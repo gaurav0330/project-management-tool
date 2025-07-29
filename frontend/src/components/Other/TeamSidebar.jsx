@@ -16,8 +16,8 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
+} from "@/components/UI/sheet";
+import { Button } from "@/components/UI/button";
 import { cn } from "../../../lib/utils";
 
 const TEAM_MENU = [
