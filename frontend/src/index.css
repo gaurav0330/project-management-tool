@@ -173,22 +173,85 @@
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
-/* ✅ Emoji Animation Styles (Added Globally) */
-@keyframes emojiFloat {
+/* ✅ Balloon-Like Emoji Animation Styles (Added Globally) */
+@keyframes balloonRise {
   0% {
-    opacity: 1;
-    transform: translateY(0) scale(0.5);
+    opacity: 0;
+    transform: translateY(50px) translateX(0) scale(0.8); /* Start further down for pronounced bottom-to-top */
   }
-  20% {
-    transform: translateY(-20px) scale(1);
+  10% {
+    opacity: 1;
+    transform: translateY(30px) translateX(5px) scale(1); /* Gentle sway right, rising */
+  }
+  30% {
+    transform: translateY(-20px) translateX(-3px) scale(1); /* Sway left, continuing upward */
+  }
+  50% {
+    transform: translateY(-100px) translateX(4px) scale(1); /* Sway right, midway up */
+  }
+  70% {
+    transform: translateY(-180px) translateX(-2px) scale(1); /* Sway left, nearing top */
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(-250px) translateX(1px) scale(1); /* Almost off-screen */
   }
   100% {
     opacity: 0;
-    transform: translateY(-100px) scale(0.8);
+    transform: translateY(-300px) translateX(0) scale(0.9); /* Fully risen to top and faded */
   }
 }
 
 .emoji-float {
-  animation: emojiFloat 3s ease-out forwards;
+  animation: balloonRise 6s ease-in-out forwards; /* Slower speed (6s) for gentle balloon float */
   z-index: 9999 !important; /* Ensure high z-index to appear on top */
 }
+
+/* ✅ NEW: Random Crossing Paths for Emojis (Veering left/right to cross) */
+@keyframes randomCross {
+  0% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-8px); /* Veer left early */
+  }
+  60% {
+    transform: translateX(10px); /* Cross to right midway */
+  }
+  90% {
+    transform: translateX(-5px); /* Veer back slightly */
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.emoji-random-cross {
+  animation: randomCross 6s ease-in-out forwards; /* Matches rise duration for synchronized crossing/random paths */
+}
+
+/* ✅ Simplified Sender Name Animation */
+@keyframes senderRise {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(-40px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+}
+
+.emoji-sender-float {
+  animation: senderRise 6s ease-in-out forwards; /* Match balloon speed */
+  z-index: 9999 !important;
+}
+
