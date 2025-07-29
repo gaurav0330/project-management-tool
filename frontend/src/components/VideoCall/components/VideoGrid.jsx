@@ -1,5 +1,5 @@
 // components/VideoCall/components/VideoGrid.jsx
-import React, { useEffect, useRef, useState, useMemo } from 'react'; // ✅ ADD: useMemo for optimization
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Monitor, VideoOff, Maximize2, Users, Camera, MicOff, Share, Eye, Play, Mic } from 'lucide-react';
 
 const VideoGrid = ({ 
@@ -7,7 +7,7 @@ const VideoGrid = ({
   screenSharingUser, isScreenSharing, cameraStream, localScreenStream,
   onToggleCamera, speakingUsers = new Set(), isLocalSpeaking = false, socket,
   sendEmoji, // ✅ NEW
-  emojiReactions, // ✅ NEW
+  emojiReactions, // ✅ NEW: Assume each reaction has { id, emoji, x, y, sender: username }
 }) => {
   const remoteVideoRefs = useRef(new Map());
   const cameraSidebarRef = useRef(null);
@@ -272,6 +272,67 @@ const VideoGrid = ({
 
   const screenSharerInfo = getScreenSharerInfo();
 
+  // ✅ UPDATED: Function to render 5 simultaneous floating emojis + sender name
+const renderEmojiBurst = (reaction) => {
+  const elements = [];
+  const minVertDist = 5; // Minimum vertical distance between rows (in %)
+  const minHorzDist = 5; // Minimum horizontal distance between emojis in a row (in %)
+
+  // Define pyramid layout offsets (bottom to top for floating effect):
+  // Bottom row (starting lowest): 3 emojis
+  // Middle row: 2 emojis
+  // Top row: 1 emoji
+  // All will float upward from their initial positions
+  const layout = [
+    // Top row (highest initial position)
+    { x: 0, y: 0 }, // Centered
+
+    // Middle row (below top)
+    { x: -minHorzDist / 2, y: minVertDist },
+    { x: minHorzDist / 2, y: minVertDist },
+
+    // Bottom row (lowest, widest)
+    { x: -minHorzDist, y: 2 * minVertDist },
+    { x: 0, y: 2 * minVertDist },
+    { x: minHorzDist, y: 2 * minVertDist },
+  ];
+
+  layout.forEach((offset, i) => {
+    // Apply random crossing class to all for dynamic paths
+    elements.push(
+      <div
+        key={`${reaction.id}-${i}`}
+        className="absolute pointer-events-none text-4xl emoji-float emoji-random-cross"
+        style={{
+          left: `${Math.min(100, Math.max(0, reaction.x + offset.x))}%`,
+          top: `${Math.min(100, Math.max(0, reaction.y + offset.y))}%`,
+        }}
+      >
+        {reaction.emoji}
+      </div>
+    );
+  });
+
+  // Add sender name display below the pyramid
+  elements.push(
+    <div
+      key={`${reaction.id}-sender`}
+      className="absolute pointer-events-none text-sm text-white bg-black/60 px-2 py-1 rounded emoji-sender-float"
+      style={{
+        left: `${Math.min(100, Math.max(0, reaction.x))}%`,
+        top: `${Math.min(100, Math.max(0, reaction.y + 3 * minVertDist))}%`, // Positioned below the bottom row
+      }}
+    >
+      {reaction.sender || 'Anonymous'}
+    </div>
+  );
+
+  return elements;
+};
+
+
+
+
   // Render screen sharing layout
   if (screenSharingUser || isScreenSharing) {
     const screenSharingPeer = peerArray.find(([socketId]) => socketId === screenSharingUser);
@@ -346,21 +407,10 @@ const VideoGrid = ({
               </div>
             )}
 
-            {/* ✅ FIXED: Emoji Reactions Overlay for Screen Sharing */}
+            {/* ✅ UPDATED: Emoji Reactions with 5 Simultaneous Floating Emojis */}
             {memoizedEmojis.length > 0 && (
-              <div className="absolute inset-0 pointer-events-none z-[9999]"> {/* ✅ FIXED: Higher z-index */}
-                {memoizedEmojis.map((reaction) => (
-                  <div
-                    key={reaction.id}
-                    className="absolute pointer-events-none text-4xl emoji-float" // ✅ Use global class
-                    style={{
-                      left: `${Math.min(100, Math.max(0, reaction.x))}%`, // ✅ FIXED: Clamp to 0-100%
-                      top: `${Math.min(100, Math.max(0, reaction.y))}%`, // ✅ FIXED: Clamp to 0-100%
-                    }}
-                  >
-                    {reaction.emoji}
-                  </div>
-                ))}
+              <div className="absolute inset-0 pointer-events-none z-[9999]">
+                {memoizedEmojis.map((reaction) => renderEmojiBurst(reaction))}
               </div>
             )}
 
@@ -527,21 +577,10 @@ const VideoGrid = ({
   // Normal video layout
   return (
     <div className={getGridClass()}>
-      {/* ✅ FIXED: Emoji Reactions Overlay for Normal Video Layout */}
+      {/* ✅ UPDATED: Emoji Reactions with 5 Simultaneous Floating Emojis */}
       {memoizedEmojis.length > 0 && (
-        <div className="absolute inset-0 pointer-events-none z-[9999]"> {/* ✅ FIXED: Higher z-index */}
-          {memoizedEmojis.map((reaction) => (
-            <div
-              key={reaction.id}
-              className="absolute pointer-events-none text-4xl emoji-float" // ✅ Use global class
-              style={{
-                left: `${Math.min(100, Math.max(0, reaction.x))}%`, // ✅ FIXED: Clamp to 0-100%
-                top: `${Math.min(100, Math.max(0, reaction.y))}%`, // ✅ FIXED: Clamp to 0-100%
-              }}
-            >
-              {reaction.emoji}
-            </div>
-          ))}
+        <div className="absolute inset-0 pointer-events-none z-[9999]">
+          {memoizedEmojis.map((reaction) => renderEmojiBurst(reaction))}
         </div>
       )}
 
