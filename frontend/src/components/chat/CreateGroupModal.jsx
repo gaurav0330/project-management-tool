@@ -102,31 +102,34 @@ const CreateGroupModal = ({ isOpen, onClose, projectId, currentUser, refetchGrou
             Select Members:
           </h4>
           {usersLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-interactive-primary-light dark:border-interactive-primary-dark"></div>
-            </div>
-          ) : usersData?.getUsersByProjectId?.length === 0 ? (
-            <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-center py-4">No users available in this project.</p>
-          ) : (
-            <div className="max-h-48 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-              {usersData?.getUsersByProjectId?.map((user) => (
-                <label
-                  key={user.id}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-primary-50/50 dark:hover:bg-brand-primary-900/30 cursor-pointer transition"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedMembers.includes(user.id)}
-                    onChange={() => handleMemberToggle(user.id)}
-                    className="w-5 h-5 rounded border-brand-primary-300 dark:border-brand-primary-700 text-brand-primary-600 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                  />
-                  <span className="flex-1 text-txt-primary-light dark:text-txt-primary-dark">
-                    {user.username} <span className="text-txt-secondary-light dark:text-txt-secondary-dark">({user.role})</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
+  <div className="flex items-center justify-center py-4">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-interactive-primary-light dark:border-interactive-primary-dark"></div>
+  </div>
+) : usersData?.getUsersByProjectId?.filter(user => user.id !== currentUser.id).length === 0 ? (
+  <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-center py-4">No users available in this project.</p>
+) : (
+  <div className="max-h-48 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+    {usersData?.getUsersByProjectId
+      ?.filter(user => user.id !== currentUser.id) // Exclude current user here
+      .map((user) => (
+        <label
+          key={user.id}
+          className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-primary-50/50 dark:hover:bg-brand-primary-900/30 cursor-pointer transition"
+        >
+          <input
+            type="checkbox"
+            checked={selectedMembers.includes(user.id)}
+            onChange={() => handleMemberToggle(user.id)}
+            className="w-5 h-5 rounded border-brand-primary-300 dark:border-brand-primary-700 text-brand-primary-600 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
+          />
+          <span className="flex-1 text-txt-primary-light dark:text-txt-primary-dark">
+            {user.username} <span className="text-txt-secondary-light dark:text-txt-secondary-dark">({user.role})</span>
+          </span>
+        </label>
+    ))}
+  </div>
+)}
+
         </div>
 
         {/* ✅ Improved: Buttons with Gradients and Hover Effects */}

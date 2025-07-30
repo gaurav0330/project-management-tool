@@ -146,7 +146,7 @@ const Chat = ({ projectId }) => {
     if (!canStartVideoCall()) return;
 
     const meetingId = `${selectedGroup.id}_${Date.now()}`;
-    const meetingUrl = `${window.location.origin}/videocall?meeting=${encodeURIComponent(meetingId)}&group=${selectedGroup.id}`;
+    const meetingUrl = `https://project-management-tool-two-jet.vercel.app/videocall?meeting=${encodeURIComponent(meetingId)}&group=${selectedGroup.id}`;
 
     const vcMsg = `[Video Call Invitation] Join this meeting: ${meetingUrl}`;
     await sendMessage({
@@ -227,6 +227,7 @@ const Chat = ({ projectId }) => {
               messagesLoading={messagesLoading}
               currentUser={currentUser}
               formatTime={formatTime}
+              messagesEndRef={messagesEndRef}
             />
             <div ref={messagesEndRef} />
             <MessageForm
