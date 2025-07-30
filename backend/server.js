@@ -48,64 +48,74 @@ function extractTaskRefs(msg = "") {
 }
 
 // Github webhook route with dynamic secret verification
+// Github webhook route with raw body parsing for signature verification
 app.post(
   "/api/github/webhook",
-  express.json(),
+  express.raw({ type: 'application/json' }), // Get raw buffer instead of parsed JSON
   async (req, res) => {
     try {
-      const buf = req.body;
+      const rawBody = req.body; // This is now a Buffer
       const signature = req.headers["x-hub-signature-256"];
+      
       if (!signature) {
         console.error("Missing x-hub-signature-256 header");
-        throw new Error("No signature");
+        return res.status(400).json({ error: "No signature provided" });
       }
 
-      const repoFullName = req.body.repository?.full_name;
-      if (!repoFullName) throw new Error("No repo in payload");
+      // Parse the JSON from raw body for processing
+      const payload = JSON.parse(rawBody.toString());
+      
+      const repoFullName = payload.repository?.full_name;
+      if (!repoFullName) {
+        return res.status(400).json({ error: "No repository in payload" });
+      }
 
       const project = await Project.findOne({ githubRepo: repoFullName });
       const secret = project ? project.githubWebhookSecret : GITHUB_SECRET;
-      if (!secret) throw new Error("No secret found for this repo");
+      
+      if (!secret) {
+        return res.status(400).json({ error: "No secret found for this repo" });
+      }
 
+      // Now this will work correctly with the raw buffer
       const expectedSignature =
-        "sha256=" + crypto.createHmac("sha256", secret).update(buf).digest("hex");
+        "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
 
       console.log("Received Signature:", signature);
       console.log("Expected Signature:", expectedSignature);
       console.log("Repo:", repoFullName);
-      console.log("Raw Body (first 100 chars):", buf.toString().substring(0, 100));
 
       if (signature !== expectedSignature) {
         console.error("Signature mismatch!");
-        throw new Error("Invalid signature");
+        return res.status(401).json({ error: "Invalid signature" });
       }
+      
       console.log("Signature verified successfully");
 
       const event = req.headers["x-github-event"];
       let refs = [];
       let actor = "";
 
-      if (event === "push" && req.body.commits) {
-        req.body.commits.forEach((commit) => {
-          actor = commit.author.name || req.body.sender?.login;
+      if (event === "push" && payload.commits) {
+        payload.commits.forEach((commit) => {
+          actor = commit.author.name || payload.sender?.login;
           refs.push(...extractTaskRefs(commit.message));
         });
       }
 
       if (
         (event === "pull_request" || event === "pull_request_review") &&
-        req.body.pull_request
+        payload.pull_request
       ) {
-        actor = req.body.sender?.login;
-        refs.push(...extractTaskRefs(req.body.pull_request.title || ""));
-        refs.push(...extractTaskRefs(req.body.pull_request.body || ""));
+        actor = payload.sender?.login;
+        refs.push(...extractTaskRefs(payload.pull_request.title || ""));
+        refs.push(...extractTaskRefs(payload.pull_request.body || ""));
       }
 
-      // Update tasks by calling the service directly (bypass GraphQL auth)
+      // Update tasks
       for (let taskId of refs) {
         try {
           await taskService.closeTask(taskId, actor);
-          // Optional: io.emit() here for real-time frontend notifications
         } catch (serviceErr) {
           console.error("Service error for task", taskId, serviceErr);
         }
@@ -118,6 +128,7 @@ app.post(
     }
   }
 );
+
 
 const apolloServer = new ApolloServer({
   typeDefs,
