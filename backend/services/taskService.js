@@ -1,5 +1,6 @@
 const Task = require("../models/Task");
 const User = require("../models/User");
+const Profile = require("../models/Profile");
 
 const taskService = {
   getTaskById: async (taskId) => {
@@ -331,17 +332,21 @@ const taskService = {
     if (!task) throw new Error("Task not found");
 
     const oldStatus = task.status;
-    task.status = "Completed";  // Matches your enum; change to "Done" if preferred
+    task.status = "Under Review";  // Matches your enum; change to "Done" if preferred
 
     task.closedBy = closedBy;  // String (GitHub username) - this field is fine as string per your model
 
     // ✅ FIXED: Find User ID by closedBy (GitHub username) for history.updatedBy (ObjectId)
-    let updatedById = null;
-    const user = await User.findOne({ username: closedBy });  // Assume username matches GitHub login
-    if (user) {
-      updatedById = user._id;  // Use real ObjectId
+    
+    // const updatedById = await profile.findOne({  });  // Assume username matches GitHub login
+
+    const profile = await Profile.findOne({ GithubUsername : closedBy }).populate('user');  // Assume username matches GitHub login
+    
+    let updatedById = null;  // Default to null if no user found
+    if (profile && profile.user) {
+      updatedById = profile.user._id;  // Get User's ObjectId
     } else {
-      console.warn(`No user found for closedBy: ${closedBy} - using null for history`);
+      console.warn(`No user/profile found for closedBy: ${closedBy} - using null for history`);
       // Optional: Create a guest user or skip history push if critical
     }
 

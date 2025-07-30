@@ -53,7 +53,7 @@ app.post(
   express.json(),
   async (req, res) => {
     try {
-      const buf = Buffer.from(JSON.stringify(req.body));
+      const buf = req.body;
       const signature = req.headers["x-hub-signature-256"];
       if (!signature) {
         console.error("Missing x-hub-signature-256 header");
