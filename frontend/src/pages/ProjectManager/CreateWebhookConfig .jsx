@@ -131,12 +131,12 @@ const CreateWebhookConfig = () => {
             id="webhookUrl"
             type="text"
             readOnly
-            value={response.url}
+            value={"https://project-management-tool-af4j.onrender.com/api/github/webhook"}
             className="flex-grow rounded-l-lg border-0 bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-4 font-mono text-base text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
           />
           <button
             type="button"
-            onClick={() => copyToClipboard(response.url)}
+            onClick={() => copyToClipboard("https://project-management-tool-af4j.onrender.com/api/github/webhook")}
             aria-label="Copy Webhook URL"
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-4 rounded-r-lg font-semibold transition-colors duration-200"
           >
