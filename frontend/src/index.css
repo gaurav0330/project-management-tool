@@ -173,6 +173,10 @@
   100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
 
+
+
+
+/* ✅ Modern Emoji Animation Styles */
 /* ✅ Balloon-Like Emoji Animation Styles (Added Globally) */
 @keyframes balloonRise {
   0% {

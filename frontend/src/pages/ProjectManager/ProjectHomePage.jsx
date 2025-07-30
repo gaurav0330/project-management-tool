@@ -38,6 +38,7 @@ export default function ProjectDashboard() {
   
   const { loading, error, data } = useQuery(GET_PROJECT_BY_ID, {
     variables: { id: projectId },
+    
   });
   
   const [activeComponent, setActiveComponent] = useState("overview");
@@ -46,6 +47,9 @@ export default function ProjectDashboard() {
   const [contentWidth, setContentWidth] = useState("calc(100vw - 16rem)"); // Track content width
 
   const project = data?.getProjectById;
+  const category = project?.category ;
+
+  
 
   // Handle sidebar state change with smooth animation
   const handleSidebarStateChange = (collapsed, hovering) => {
@@ -76,6 +80,8 @@ export default function ProjectDashboard() {
       <Sidebar 
         setActiveComponent={setActiveComponent} 
         onStateChange={handleSidebarStateChange}
+        category={category}
+
       />
 
       {/* Main Content Area with Smooth Transitions */}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "../../../lib/utils";
 
-const Sidebar = ({ setActiveComponent, onStateChange }) => {
+const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setRole] = useState(null);
   const [activeItem, setActiveItem] = useState("");
@@ -55,7 +55,9 @@ const Sidebar = ({ setActiveComponent, onStateChange }) => {
         icon: FolderKanban,
         links: [
           { txt: "Project Home", icon: Briefcase, comp: "projectHome" },
-          {txt: "Integrations" , icon: Github, comp: "integrations" },
+          ...(category === "development"
+            ? [{ txt: "Integrations", icon: Github, comp: "integrations" }]
+            : []),
           { txt: "Manage Lead", icon: UserCog, comp: "managelead" },
           { txt: "Manage Tasks", icon: ClipboardList, comp: "assignedTasks" },
           { txt: "Manage Team", icon: Users, comp: "manageteam" },
