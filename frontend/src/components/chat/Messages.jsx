@@ -48,10 +48,7 @@ const Messages = ({ messagesData, messagesLoading, currentUser, formatTime }) =>
               <div className={`
                 relative z-0 shadow-md rounded-3xl px-6 py-3 backdrop-blur-md
                 text-base font-body whitespace-pre-line break-words transition-all duration-300
-                ${isSelf
-                  ? "bg-brand-accent-500 text-bg-primary-light" // Plain color for self messages
-                  : "bg-bg-accent-light/80 dark:bg-bg-accent-dark/90 text-txt-primary-light dark:text-txt-primary-dark"
-                }
+                "bg-bg-accent-light/80 dark:bg-bg-accent-dark/90 text-txt-primary-light dark:text-white"
                 ${isSelf ? "ml-10" : "mr-10"}
               `}>
                 <div className="flex items-center gap-3 mb-2">

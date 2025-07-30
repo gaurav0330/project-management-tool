@@ -30,8 +30,8 @@ const ActiveCallInterface = ({
   sendEmoji, // ✅ NEW: Emoji sending function
   emojiReactions // ✅ NEW: Emoji reactions array
 }) => {
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(false);
 
   console.log('🖥️ ActiveCallInterface props:', {
     peersCount: peers.size,

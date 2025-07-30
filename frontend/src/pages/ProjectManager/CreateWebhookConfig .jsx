@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { gql, useQuery, useMutation } from '@apollo/client';
 import toast from 'react-hot-toast';
-import { Clipboard } from 'lucide-react';
+import { Clipboard ,Eye, EyeOff , BookAIcon} from 'lucide-react';
 import Modal from '../../components/projects/GuideModal'; // Make sure this path is correct relative to your file structure
 
 // Query: fetch existing project info
@@ -32,6 +32,7 @@ const CreateWebhookConfig = () => {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
 
   // Step 1: Query project info
   const { data, loading: loadingQuery } = useQuery(GET_PROJECT_BY_ID, {
@@ -86,144 +87,148 @@ const CreateWebhookConfig = () => {
 
   return (
     <>
-      <div className="max-w-md mx-auto p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-2xl shadow-lg font-body text-txt-primary-light dark:text-txt-primary-dark">
-        <h1 className="text-3xl font-heading font-semibold mb-6 text-heading-primary-light dark:text-heading-primary-dark tracking-tight">
-          Webhook Configuration
-        </h1>
+     <div className="max-w-2xl mx-auto p-10 bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-3xl shadow-2xl font-body text-txt-primary-light dark:text-txt-primary-dark border border-bg-accent-light dark:border-bg-accent-dark">
+  <h1 className="text-4xl font-heading font-bold mb-8 tracking-tight text-heading-primary-light dark:text-heading-primary-dark text-center">
+    Webhook Configuration
+  </h1>
 
-        {/* Project ID */}
-        <div className="mb-6">
-          <label
-            htmlFor="projectId"
-            className="block mb-2 text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark"
-          >
-            Project ID
-          </label>
+  {/* Project ID */}
+  <div className="mb-8">
+    <label
+      htmlFor="projectId"
+      className="block mb-2 text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark"
+    >
+      Project ID
+    </label>
+    <input
+      id="projectId"
+      type="text"
+      value={projectId}
+      readOnly
+      className="w-full cursor-not-allowed rounded-lg border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-4 font-mono text-base text-txt-muted-light dark:text-txt-muted-dark shadow-sm"
+    />
+  </div>
+
+  {/* Error */}
+  {error && (
+    <p className="mb-6 text-error font-semibold text-center text-base select-none border border-error/20 rounded-lg py-2 bg-error/5">
+      {error}
+    </p>
+  )}
+
+  {response ? (
+    <div
+      className="space-y-6 bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl border border-bg-primary-light dark:border-bg-primary-dark p-8"
+      aria-live="polite"
+    >
+      {/* Webhook URL */}
+      <div>
+        <label htmlFor="webhookUrl" className="block mb-2 text-base font-semibold text-heading-accent-light dark:text-heading-accent-dark">
+          Webhook URL
+        </label>
+        <div className="flex rounded-lg overflow-hidden shadow">
           <input
-            id="projectId"
+            id="webhookUrl"
             type="text"
-            value={projectId}
             readOnly
-            className="w-full cursor-not-allowed rounded-md border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-3 font-mono text-sm text-txt-muted-light dark:text-txt-muted-dark shadow-sm"
+            value={response.url}
+            className="flex-grow rounded-l-lg border-0 bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-4 font-mono text-base text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
           />
-        </div>
-
-        {/* Error */}
-        {error && (
-          <p className="mb-6 text-error font-semibold text-center text-sm select-none">
-            {error}
-          </p>
-        )}
-
-        {/* Show webhook config if exists */}
-        {response ? (
-          <div
-            className="mt-4 space-y-8 bg-bg-accent-light dark:bg-bg-accent-dark rounded-lg border border-bg-primary-light dark:border-bg-primary-dark p-6"
-            aria-live="polite"
+          <button
+            type="button"
+            onClick={() => copyToClipboard(response.url)}
+            aria-label="Copy Webhook URL"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-4 rounded-r-lg font-semibold transition-colors duration-200"
           >
-            {/* Webhook URL */}
-            <div>
-              <label
-                htmlFor="webhookUrl"
-                className="block mb-2 text-sm font-semibold text-heading-accent-light dark:text-heading-accent-dark"
-              >
-                Webhook URL
-              </label>
-              <div className="flex rounded-md shadow-sm">
-                <input
-                  id="webhookUrl"
-                  type="text"
-                  readOnly
-                  value={response.url}
-                  className="flex-grow rounded-l-md border border-bg-primary-light dark:border-bg-primary-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-3 font-mono text-sm text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(response.url)}
-                  aria-label="Copy Webhook URL"
-                  className="flex items-center gap-2 bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-4 py-3 rounded-r-md font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                >
-                  <Clipboard className="w-4 h-4" /> 
-                </button>
-              </div>
-            </div>
-
-            {/* Webhook Secret */}
-            <div>
-              <label
-                htmlFor="webhookSecret"
-                className="block mb-2 text-sm font-semibold text-heading-accent-light dark:text-heading-accent-dark"
-              >
-                Secret
-              </label>
-              <div className="flex rounded-md shadow-sm">
-                <input
-                  id="webhookSecret"
-                  type="text"
-                  readOnly
-                  value={response.secret}
-                  className="flex-grow rounded-l-md border border-bg-primary-light dark:border-bg-primary-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-3 font-mono text-sm text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => copyToClipboard(response.secret)}
-                  aria-label="Copy Webhook Secret"
-                  className="flex items-center gap-2 bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-4 py-3 rounded-r-md font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                >
-                  <Clipboard className="w-4 h-4" /> 
-                </button>
-              </div>
-            </div>
-
-            <div className="text-center text-xs text-txt-secondary-light dark:text-txt-secondary-dark select-none mt-2">
-              Webhook configuration is already set for this project.
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Input + Create */}
-            <div className="mb-6">
-              <label
-                htmlFor="githubRepo"
-                className="block mb-2 text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark"
-              >
-                GitHub Repository URL
-              </label>
-              <input
-                id="githubRepo"
-                type="text"
-                placeholder="https://github.com/username/repo.git"
-                value={githubRepoInput}
-                onChange={e => setGithubRepoInput(e.target.value)}
-                className="w-full rounded-md border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-3 font-mono text-sm text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-                disabled={loadingMutation}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={loadingMutation || !githubRepoInput}
-              className={`w-full py-3 rounded-md font-button font-semibold mb-4
-                ${loadingMutation || !githubRepoInput
-                  ? 'bg-interactive-primary-light dark:bg-interactive-primary-dark cursor-not-allowed opacity-60'
-                  : 'bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-bg-primary-light dark:text-bg-primary-dark'}
-                transition-colors duration-200`}
-            >
-              {loadingMutation ? 'Creating...' : 'Create Webhook Config'}
-            </button>
-          </>
-        )}
-
-        {/* Guide button */}
-        <button
-          type="button"
-          onClick={() => setIsGuideOpen(true)}
-          className="mt-2 w-full py-2 rounded-md font-button font-semibold border border-brand-primary-500 text-brand-primary-500 hover:bg-brand-primary-50 dark:hover:bg-brand-primary-900 transition-colors duration-200"
-        >
-          Show Guide
-        </button>
+            <Clipboard className="w-5 h-5" />
+          </button>
+        </div>
       </div>
+
+      {/* Webhook Secret */}
+      <div>
+        <label htmlFor="webhookSecret" className="block mb-2 text-base font-semibold text-heading-accent-light dark:text-heading-accent-dark">
+          Secret
+        </label>
+        <div className="flex rounded-lg overflow-hidden shadow">
+          <input
+            id="webhookSecret"
+            type={showSecret ? "text" : "password"}
+            readOnly
+            value={response.secret}
+            className="flex-grow rounded-l-lg border-0 bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-4 font-mono text-base text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => setShowSecret((s) => !s)}
+            aria-label={showSecret ? "Hide Secret" : "Show Secret"}
+            className="px-4 py-4 bg-gray-100 dark:bg-gray-800 border-x border-bg-accent-light dark:border-bg-accent-dark flex items-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+          >
+            {showSecret ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(response.secret)}
+            aria-label="Copy Webhook Secret"
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white px-6 py-4 rounded-r-lg font-semibold transition-colors duration-200"
+          >
+            <Clipboard className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="text-center text-sm text-txt-secondary-light dark:text-txt-secondary-dark select-none mt-2">
+        Webhook configuration is already set for this project.
+      </div>
+    </div>
+  ) : (
+    <>
+      {/* Input + Create */}
+      <div className="mb-8">
+        <label htmlFor="githubRepo" className="block mb-2 text-base font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+          GitHub Repository URL
+        </label>
+        <input
+          id="githubRepo"
+          type="text"
+          placeholder="https://github.com/username/repo.git"
+          value={githubRepoInput}
+          onChange={e => setGithubRepoInput(e.target.value)}
+          className="w-full rounded-lg border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-4 py-4 font-mono text-base text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+          disabled={loadingMutation}
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleCreate}
+        disabled={loadingMutation || !githubRepoInput}
+        className={`w-full py-4 rounded-lg font-button font-semibold mb-6 text-base
+          ${
+            loadingMutation || !githubRepoInput
+              ? 'bg-indigo-200 dark:bg-indigo-950 text-indigo-400 dark:text-indigo-600 cursor-not-allowed opacity-60'
+              : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white'
+          }
+          transition-colors duration-200`}
+      >
+        {loadingMutation ? 'Creating...' : 'Create Webhook Config'}
+      </button>
+    </>
+  )}
+
+  <div className="mt-2 flex flex-col items-center">
+    <button
+      type="button"
+      onClick={() => setIsGuideOpen(true)}
+      className="w-full py-3 rounded-lg font-button font-semibold border border-yellow-400 text-yellow-700 dark:text-yellow-200 dark:border-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900 transition-colors duration-200 text-base shadow-sm"
+    >
+      <BookAIcon className="inline w-5 h-5 mr-2" />
+      Show Guide
+    </button>
+  </div>
+</div>
+
+
 
       {/* Modal */}
       <Modal
