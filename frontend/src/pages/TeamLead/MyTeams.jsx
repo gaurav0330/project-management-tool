@@ -31,6 +31,24 @@ const GET_TEAMS_BY_PROJECT_AND_LEAD = gql`
   }
 `;
 
+
+const GET_TEAM_MEMBERS = gql`
+  query GetTeamMembers($teamLeadId: ID!, $projectId: ID!) {
+    getTeamMembers(teamLeadId: $teamLeadId, projectId: $projectId) {
+      teamMemberId
+      memberRole
+      user {
+        id
+        username
+        email
+        role
+      }
+    }
+  }
+`;
+
+
+
 // Function to decode JWT and get leadId
 export const getTokenLeadId = () => {
   try {
@@ -61,6 +79,17 @@ const MyTeams = () => {
     skip: !projectId || !leadId,
     fetchPolicy: "cache-and-network",
   });
+
+  // Function to Get Team Members
+  const { loading: teamMembersLoading, error: teamMembersError, data: teamMembersData } = useQuery(GET_TEAM_MEMBERS, {
+    variables: { teamLeadId: leadId, projectId },
+    skip: !leadId || !projectId,
+    fetchPolicy: "cache-and-network",
+  })
+  const teamMembers = teamMembersData?.getTeamMembers || [];
+  const NumberOfTeamMember = teamMembers.length;
+
+  
 
   // Filter and sort teams
   const processedTeams = React.useMemo(() => {
@@ -346,6 +375,8 @@ const MyTeams = () => {
                     projectId={projectId} 
                     navigate={navigate}
                     viewMode={viewMode}
+                    teamMembers={teamMembers}
+                    NumberOfTeamMember={NumberOfTeamMember}
                   />
                 </motion.div>
               ))}
