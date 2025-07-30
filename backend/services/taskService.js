@@ -332,7 +332,7 @@ const taskService = {
     if (!task) throw new Error("Task not found");
 
     const oldStatus = task.status;
-    task.status = "Under Review";  // Matches your enum; change to "Done" if preferred
+    task.status = "Pending Approval";  // Matches your enum; change to "Done" if preferred
 
     task.closedBy = closedBy;  // String (GitHub username) - this field is fine as string per your model
 

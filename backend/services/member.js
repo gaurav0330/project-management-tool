@@ -78,7 +78,7 @@ const memberService = {
       }
 
       // ✅ Allowed Status Transitions
-      const validStatuses = ["To Do", "In Progress", "Completed" , "Pending Approval", "Under Review" , "Done"];
+      const validStatuses = ["To Do", "In Progress", "Completed" , "Pending Approval"];
       if (!validStatuses.includes(status)) {
         return { success: false, message: "Invalid task status", task: null };
       }
@@ -159,7 +159,7 @@ const memberService = {
       task.status = "Pending Approval";
       task.history.push({
         updatedBy: user.id,
-        oldStatus: "Done",
+        oldStatus: task.status,
         newStatus: "Pending Approval",
       });
 
@@ -208,11 +208,11 @@ const memberService = {
       }
 
       // ✅ Change status to "Under Review"
-      task.status = "Under Review";
+      task.status = "Pending Approval";
       task.history.push({
         updatedBy: user.id,
-        oldStatus: "Pending Approval",
-        newStatus: "Under Review",
+        oldStatus: task.status,
+        newStatus: "Pending Approval",
       });
 
       await task.save();

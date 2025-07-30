@@ -438,7 +438,7 @@ rejectTaskService: async (taskId, reason, user) => {
       const task = await Task.findById(taskId);
       if (!task) throw new ApolloError("Task not found", "NOT_FOUND");
 
-      task.status = "Needs Review";
+      task.status = "Needs Revision";
       await task.save();
 
       return { success: true, message: "Task review requested!", task };
