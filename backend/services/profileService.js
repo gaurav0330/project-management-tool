@@ -7,8 +7,14 @@ const profileService = {
     return await profile.save();
   },
   updateProfile: async (userId, updates) => {
-    return await Profile.findOneAndUpdate({ user: userId }, updates, { new: true });
-  },
+  // Remove undefined keys so they don't overwrite
+  const filteredUpdates = {};
+  Object.keys(updates).forEach(key => {
+    if (updates[key] !== undefined) filteredUpdates[key] = updates[key];
+  });
+  return await Profile.findOneAndUpdate({ user: userId }, filteredUpdates, { new: true });
+},
+
   getProfileByUserId: async (userId) => {
     return await Profile.findOne({ user: userId }).populate('user');
   },
