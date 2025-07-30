@@ -10,7 +10,7 @@ import {
   FaArrowRight
 } from "react-icons/fa";
 
-const TeamCard = ({ team, projectId, navigate, viewMode = "grid" }) => {
+const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMember}) => {
   const { isDark } = useTheme();
 
   const formatDate = (dateString) => {
@@ -161,11 +161,13 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" }) => {
           </p>
         )}
 
+
+        
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-3 text-center">
             <p className="font-heading text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark">
-              {Math.floor(Math.random() * 8) + 2} {/* Mock member count */}
+              {NumberOfTeamMember} {/* Mock member count */}
             </p>
             <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
               Members
@@ -180,6 +182,8 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" }) => {
             </p>
           </div>
         </div>
+          
+
 
         {/* Action Buttons */}
         <div className="flex gap-3">

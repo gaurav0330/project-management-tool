@@ -14,7 +14,7 @@ function setupSocket(io) {
       console.log(`🟢 Received sendMessage event for group: ${groupId}`);
       console.log(`📨 Message Content: ${content}`);
       console.log(`👤 Sender ID: ${senderId}, Username: ${userName}`);
-    
+       
       try {
         const message = await sendMessage(groupId, senderId, content);
         

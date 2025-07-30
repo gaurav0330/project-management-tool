@@ -162,15 +162,30 @@ const Messages = ({
 
                     {/* Message content */}
                     {isVideoCallInvite ? (
-                      <a
-                        href={msg.content.split("Join this meeting: ")[1] || "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg w-full justify-center gap-3 transform hover:scale-105 transition-all duration-200"
-                      >
-                        <Video className="w-5 h-5" />
-                        <span>Join Video Call</span>
-                      </a>
+                      (
+                        <div className="flex flex-col space-y-2">
+                          {/* Invitation Title */}
+                          <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                            📹 Video Call Invitation
+                          </p>
+                      
+                          {/* Optional description */}
+                          <p className="text-xs text-emerald-500 dark:text-emerald-300 mb-2">
+                            Click below to join the ongoing video meeting.
+                          </p>
+                      
+                          {/* Join button */}
+                          <a
+                            href={msg.content.split("Join this meeting: ")[1] || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg w-full justify-center gap-3 transform hover:scale-105 transition-all duration-200"
+                          >
+                            <Video className="w-5 h-5" />
+                            <span>Join Video Call</span>
+                          </a>
+                        </div>
+                      )
                     ) : (
                       <div className="leading-relaxed mb-2">{renderContentWithLinks(msg.content)}</div>
                     )}

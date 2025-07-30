@@ -8,6 +8,7 @@ const taskTypeDefs = require("./task");
 const analyticsTypeDefs = require("./analytics");
 const chatTypeDefs = require("./chat");
 const meetingTypes = require("./meetings");
+const profileTypeDefs = require("./Profile");
 
 const typeDefs = [
   userTypeDefs,
@@ -18,7 +19,8 @@ const typeDefs = [
   taskTypeDefs,
   analyticsTypeDefs,
   chatTypeDefs,
-  meetingTypes
+  meetingTypes,
+  profileTypeDefs,
 ];
 
 module.exports = typeDefs;
