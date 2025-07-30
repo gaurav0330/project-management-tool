@@ -5,7 +5,7 @@ import { XIcon } from "lucide-react";
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile(
     $userId: ID!
-    $availability: String
+    $availability: Availability
     $workload: Int
     $skills: [SkillInput!]
     $GithubUsername: String
@@ -76,19 +76,20 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const validSkills = skills.filter((s) => s.name.trim() !== "");
+
+    const validSkillsRaw = skills.filter(s => s.name.trim() !== "");
+    const validSkills = validSkillsRaw.map(({ __typename, ...rest }) => rest);
+
     updateProfile({
       variables: {
         userId,
         availability,
-        workload: parseInt(workload),
+        workload: parseInt(workload, 10),
         skills: validSkills,
         GithubUsername,
       },
     });
   };
-
-  
 
   return (
     <div
@@ -101,7 +102,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
         onClick={(e) => e.stopPropagation()}
         className="bg-white dark:bg-gray-900 w-full max-w-xl mx-4 rounded-xl shadow-lg p-6 relative overflow-y-auto max-h-[90vh]"
       >
-        {/* Close button */}
         <button
           className="absolute top-3 right-3 text-gray-500 hover:text-red-600 dark:text-gray-400"
           onClick={onClose}
@@ -114,7 +114,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-gray-800 dark:text-gray-100">
-          {/* GitHub Username */}
           <div>
             <label className="block mb-1 font-medium">GitHub Username</label>
             <input
@@ -126,7 +125,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
             />
           </div>
 
-          {/* Skills Section */}
           <div>
             <label className="block mb-2 font-medium">Skills</label>
             {skills.map((skill, index) => (
@@ -169,7 +167,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
             </button>
           </div>
 
-          {/* Availability */}
           <div>
             <label className="block mb-1 font-medium">Availability</label>
             <select
@@ -185,7 +182,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
             </select>
           </div>
 
-          {/* Workload */}
           <div>
             <label className="block mb-1 font-medium">Workload (0-100)</label>
             <input
@@ -198,14 +194,12 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
             />
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="text-red-600 text-sm">
               Error: {error.message}
             </div>
           )}
 
-          {/* Buttons */}
           <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
