@@ -1,17 +1,15 @@
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery, gql } from "@apollo/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { gql } from "@apollo/client";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode"; // Fixed import, remove braces
 import TeamCard from "../../components/Other/TeamCard";
 import { 
   FaPlus, 
   FaSearch, 
   FaUsers, 
   FaCalendarAlt,
-  FaFilter,
   FaSortAmountDown,
   FaTh,
   FaList,
@@ -19,7 +17,7 @@ import {
   FaSpinner
 } from "react-icons/fa";
 
-// GraphQL Query
+// GraphQL Query to get teams by project and lead
 const GET_TEAMS_BY_PROJECT_AND_LEAD = gql`
   query GetTeamsByProjectAndLead($projectId: ID!, $leadId: ID!) {
     getTeamsByProjectAndLead(projectId: $projectId, leadId: $leadId) {
@@ -31,30 +29,11 @@ const GET_TEAMS_BY_PROJECT_AND_LEAD = gql`
   }
 `;
 
-
-const GET_TEAM_MEMBERS = gql`
-  query GetTeamMembers($teamLeadId: ID!, $projectId: ID!) {
-    getTeamMembers(teamLeadId: $teamLeadId, projectId: $projectId) {
-      teamMemberId
-      memberRole
-      user {
-        id
-        username
-        email
-        role
-      }
-    }
-  }
-`;
-
-
-
 // Function to decode JWT and get leadId
 export const getTokenLeadId = () => {
   try {
     const token = localStorage.getItem("token");
     if (!token) return null;
-    
     const decoded = jwtDecode(token);
     return decoded.id || null;
   } catch (error) {
@@ -68,11 +47,10 @@ const MyTeams = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const leadId = getTokenLeadId();
-  
+
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid"); // grid or list
-  const [showFilters, setShowFilters] = useState(false);
 
   const { loading, error, data, refetch } = useQuery(GET_TEAMS_BY_PROJECT_AND_LEAD, {
     variables: { projectId, leadId },
@@ -80,21 +58,10 @@ const MyTeams = () => {
     fetchPolicy: "cache-and-network",
   });
 
-  // Function to Get Team Members
-  const { loading: teamMembersLoading, error: teamMembersError, data: teamMembersData } = useQuery(GET_TEAM_MEMBERS, {
-    variables: { teamLeadId: leadId, projectId },
-    skip: !leadId || !projectId,
-    fetchPolicy: "cache-and-network",
-  })
-  const teamMembers = teamMembersData?.getTeamMembers || [];
-  const NumberOfTeamMember = teamMembers.length;
-
-  
-
   // Filter and sort teams
   const processedTeams = React.useMemo(() => {
     if (!data?.getTeamsByProjectAndLead) return [];
-    
+
     let filteredTeams = data.getTeamsByProjectAndLead.filter((team) =>
       team.teamName.toLowerCase().includes(search.toLowerCase()) ||
       team.description?.toLowerCase().includes(search.toLowerCase())
@@ -163,10 +130,7 @@ const MyTeams = () => {
             <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-4">
               {error.message}
             </p>
-            <button
-              onClick={() => refetch()}
-              className="btn-primary"
-            >
+            <button onClick={() => refetch()} className="btn-primary">
               Try Again
             </button>
           </motion.div>
@@ -199,7 +163,7 @@ const MyTeams = () => {
                 Manage and organize your project teams
               </p>
             </div>
-            
+
             <motion.button
               onClick={handleCreateTeam}
               className="btn-primary flex items-center gap-2"
@@ -212,65 +176,6 @@ const MyTeams = () => {
           </div>
         </motion.div>
 
-  {/* Team Stats */}
-        {teams.length > 0 && (
-          <motion.div
-            className="mt-8 bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
-              Team Overview
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-brand-primary-50 dark:bg-brand-primary-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaUsers className="w-8 h-8 text-brand-primary-600 dark:text-brand-primary-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-brand-primary-700 dark:text-brand-primary-300">
-                      {teams.length}
-                    </p>
-                    <p className="font-body text-sm text-brand-primary-600 dark:text-brand-primary-400">
-                      Total Teams
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaCalendarAlt className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-green-700 dark:text-green-300">
-                      {teams.filter(team => {
-                        const createdDate = new Date(team.createdAt);
-                        const lastWeek = new Date();
-                        lastWeek.setDate(lastWeek.getDate() - 7);
-                        return createdDate >= lastWeek;
-                      }).length}
-                    </p>
-                    <p className="font-body text-sm text-green-600 dark:text-green-400">
-                      Created This Week
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-4">
-                <div className="flex items-center gap-3">
-                  <FaUsers className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                  <div>
-                    <p className="font-heading text-2xl font-bold text-purple-700 dark:text-purple-300">
-                      {teams.length > 0 ? Math.ceil(teams.length * 2.5) : 0}
-                    </p>
-                    <p className="font-body text-sm text-purple-600 dark:text-purple-400">
-                      Est. Team Members
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
         {/* Search and Controls Bar */}
         <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6 mb-8"
@@ -330,7 +235,7 @@ const MyTeams = () => {
           {/* Results Info */}
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200/20 dark:border-gray-700/20">
             <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-              {teams.length} team{teams.length !== 1 ? 's' : ''} found
+              {teams.length} team{teams.length !== 1 ? "s" : ""} found
               {search && ` for "${search}"`}
             </p>
             <div className="flex items-center gap-2">
@@ -348,8 +253,8 @@ const MyTeams = () => {
             <motion.div
               key="teams-content"
               className={`grid gap-6 ${
-                viewMode === "grid" 
-                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+                viewMode === "grid"
+                  ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                   : "grid-cols-1"
               }`}
               initial={{ opacity: 0 }}
@@ -363,20 +268,18 @@ const MyTeams = () => {
                   key={team.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ 
-                    duration: 0.4, 
+                  transition={{
+                    duration: 0.4,
                     delay: index * 0.1,
-                    ease: "easeOut"
+                    ease: "easeOut",
                   }}
                   layout
                 >
-                  <TeamCard 
-                    team={team} 
-                    projectId={projectId} 
+                  <TeamCard
+                    team={team}
+                    projectId={projectId}
                     navigate={navigate}
                     viewMode={viewMode}
-                    teamMembers={teamMembers}
-                    NumberOfTeamMember={NumberOfTeamMember}
                   />
                 </motion.div>
               ))}
@@ -398,10 +301,9 @@ const MyTeams = () => {
                   {search ? "No Teams Found" : "No Teams Yet"}
                 </h3>
                 <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
-                  {search 
+                  {search
                     ? `No teams match your search "${search}". Try adjusting your search terms.`
-                    : "You haven't created any teams yet. Start building your first team to collaborate effectively."
-                  }
+                    : "You haven't created any teams yet. Start building your first team to collaborate effectively."}
                 </p>
                 {!search && (
                   <motion.button
