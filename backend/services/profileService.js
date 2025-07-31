@@ -2,10 +2,11 @@ const Profile = require('../models/Profile');
 
 
 const profileService = {
-  createProfile: async (userId, skills = [], GithubUsername) => {
-    const profile = new Profile({ user: userId, skills, GithubUsername });
+  createProfile: async (userId, skills = [], GithubUsername, availability = 'available', workload = 0) => {
+    const profile = new Profile({ user: userId, skills, GithubUsername, availability, workload });
     return await profile.save();
-  },
+  }
+  ,
   updateProfile: async (userId, updates) => {
   // Remove undefined keys so they don't overwrite
   const filteredUpdates = {};

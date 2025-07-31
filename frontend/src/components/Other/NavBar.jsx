@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MdHome, MdNotifications } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import { useQuery, gql } from "@apollo/client";
 import logo from "../../assets/logo.png";
 import ThemeToggle from "../ThemeToggle";
@@ -10,7 +10,7 @@ import LogoutButton from "./Logout";
 import { Edit2Icon } from "lucide-react";
 import EditProfile from "../authComponent/EditProfile";
 
-// Updated query as per your latest request
+// Queries
 const GET_PROFILE = gql`
   query GetProfile($userId: ID!) {
     getProfile(userId: $userId) {
@@ -29,6 +29,17 @@ const GET_PROFILE = gql`
         name
         proficiency
       }
+    }
+  }
+`;
+
+const GET_USER = gql`
+  query GetUser($userId: ID!) {
+    getUser(userId: $userId) {
+      id
+      username
+      email
+      role
     }
   }
 `;
@@ -53,6 +64,7 @@ export default function Navbar() {
         const { id, role } = jwtDecode(token);
         setUserId(id);
         setUserRole(role);
+        // console.log("Decoded userId:", id, "Role:", role);
       } catch (error) {
         console.error("Token decode error:", error);
       }
@@ -70,7 +82,13 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch profile data (includes user data embedded)
+  // Fetch USER data for Navbar
+  const { data: userQueryData, loading: userLoading } = useQuery(GET_USER, {
+    variables: { userId },
+    skip: !userId,
+  });
+
+  // Fetch PROFILE data for edit modal
   const { data: profileQueryData, loading: profileLoading, refetch: refetchProfile } = useQuery(GET_PROFILE, {
     variables: { userId },
     skip: !userId,
@@ -114,12 +132,11 @@ export default function Navbar() {
   // Update profileData state after edit
   const handleProfileUpdated = (updatedProfile) => {
     setProfileData(updatedProfile);
-    
-    // Optionally refetch data here: refetchProfile();
+    // Optionally refetchProfile();
   };
 
-  // Extract user info from profileData.user if available
-  const user = profileData?.user || {};
+  // Get user info from GET_USER query
+  const user = userQueryData?.getUser || {};
 
   return (
     <>
@@ -129,7 +146,6 @@ export default function Navbar() {
           <div className="flex items-center cursor-pointer" onClick={() => navigate("/")}>
             <img src={logo} alt="Logo" className="h-8" />
           </div>
-
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-4">
             {token ? (
@@ -139,7 +155,6 @@ export default function Navbar() {
                   <MdNotifications size={20} className="text-txt-primary-light dark:text-txt-primary-dark" />
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-
                 {/* Dashboard Button */}
                 <button
                   className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 text-white rounded-md transition"
@@ -148,7 +163,6 @@ export default function Navbar() {
                 >
                   <MdHome size={20} />
                 </button>
-
                 {/* User Profile Dropdown */}
                 <div className="relative" ref={dropdownRef}>
                   {/* User Info Button */}
@@ -160,18 +174,17 @@ export default function Navbar() {
                     aria-controls="user-menu"
                   >
                     <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center font-semibold select-none">
-                      {profileLoading ? "…" : (user.username?.charAt(0).toUpperCase() || "U")}
+                      {userLoading ? "…" : (user.username?.charAt(0).toUpperCase() || "U")}
                     </div>
                     <div className="text-left hidden lg:block">
                       <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
-                        {profileLoading ? "Loading..." : user.username || "User"}
+                        {userLoading ? "Loading..." : user.username || "User"}
                       </p>
                       <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-                        {profileLoading ? "..." : user.role || "Member"}
+                        {userLoading ? "..." : user.role || "Member"}
                       </p>
                     </div>
                   </button>
-
                   {/* Dropdown menu */}
                   {dropdownOpen && (
                     <div
@@ -191,7 +204,6 @@ export default function Navbar() {
                     </div>
                   )}
                 </div>
-
                 <LogoutButton />
                 <ThemeToggle />
               </>
@@ -210,7 +222,6 @@ export default function Navbar() {
               </>
             )}
           </div>
-
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
             <ThemeToggle />
@@ -223,7 +234,6 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-
         {/* Mobile Menu */}
         {mobileOpen && (
           <div className="md:hidden bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg">
@@ -262,7 +272,6 @@ export default function Navbar() {
           </div>
         )}
       </nav>
-
       {/* Edit Profile Modal */}
       {isEditProfileOpen && userId && (
         <EditProfile

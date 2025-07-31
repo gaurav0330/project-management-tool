@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useMutation, gql } from "@apollo/client";
 import { XIcon } from "lucide-react";
 
+// Queries
 const UPDATE_PROFILE = gql`
   mutation UpdateProfile(
     $userId: ID!
@@ -18,10 +19,32 @@ const UPDATE_PROFILE = gql`
       GithubUsername: $GithubUsername
     ) {
       GithubUsername
-      skills {
-        name
-        proficiency
-      }
+      skills { name proficiency }
+      availability
+      workload
+      createdAt
+    }
+  }
+`;
+
+const CREATE_PROFILE = gql`
+  mutation CreateProfile(
+    $userId: ID!
+    $availability: Availability
+    $workload: Int
+    $skills: [SkillInput!]
+    $GithubUsername: String
+  ) {
+    createProfile(
+      userId: $userId
+      availability: $availability
+      workload: $workload
+      skills: $skills
+      GithubUsername: $GithubUsername
+    ) {
+      id
+      GithubUsername
+      skills { name proficiency }
       availability
       workload
       createdAt
@@ -32,32 +55,56 @@ const UPDATE_PROFILE = gql`
 const proficiencyOptions = ["beginner", "intermediate", "advanced"];
 const availabilityOptions = ["available", "busy", "offline"];
 
-export default function EditProfile({ userId, initialProfile, onClose, onUpdated }) {
+export default function EditProfile({
+  userId,
+  initialProfile,
+  onClose,
+  onUpdated,
+}) {
+  // Form State
   const [GithubUsername, setGithubUsername] = useState("");
-  const [skills, setSkills] = useState([]);
+  const [skills, setSkills] = useState([{ name: "", proficiency: "beginner" }]);
   const [availability, setAvailability] = useState("available");
   const [workload, setWorkload] = useState(0);
 
-  const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE, {
-    onCompleted(data) {
-      if (onUpdated) onUpdated(data.updateProfile);
-      onClose();
-    },
-  });
+  // Mutations
+  const [updateProfile, { loading: updating, error: updateError }] =
+    useMutation(UPDATE_PROFILE, {
+      onCompleted(data) {
+        if (onUpdated) onUpdated(data.updateProfile);
+        onClose();
+      },
+    });
 
+  const [createProfile, { loading: creating, error: createError }] =
+    useMutation(CREATE_PROFILE, {
+      onCompleted(data) {
+        if (onUpdated) onUpdated(data.createProfile);
+        onClose();
+      },
+    });
+
+  // Handle Initial Profile
   useEffect(() => {
     if (initialProfile) {
       setGithubUsername(initialProfile.GithubUsername || "");
       setSkills(
-        initialProfile.skills.length
+        initialProfile.skills && initialProfile.skills.length
           ? initialProfile.skills
           : [{ name: "", proficiency: "beginner" }]
       );
       setAvailability(initialProfile.availability || "available");
       setWorkload(initialProfile.workload ?? 0);
+    } else {
+      // Reset for New Profile
+      setGithubUsername("");
+      setSkills([{ name: "", proficiency: "beginner" }]);
+      setAvailability("available");
+      setWorkload(0);
     }
   }, [initialProfile]);
 
+  // Skill handlers
   const handleSkillChange = (index, field, value) => {
     const newSkills = [...skills];
     newSkills[index] = { ...newSkills[index], [field]: value };
@@ -69,27 +116,33 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
   };
 
   const removeSkill = (index) => {
-    if (skills.length > 1) {
-      setSkills(skills.filter((_, i) => i !== index));
+    if (skills.length > 1) setSkills(skills.filter((_, i) => i !== index));
+  };
+
+  // Form submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validSkillsRaw = skills.filter((s) => s.name.trim() !== "");
+    const validSkills = validSkillsRaw.map(({ __typename, ...rest }) => rest);
+
+    const variables = {
+      userId,
+      availability,
+      workload: parseInt(workload, 10),
+      skills: validSkills,
+      GithubUsername,
+    };
+
+    if (!initialProfile) {
+      createProfile({ variables });
+    } else {
+      updateProfile({ variables });
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const validSkillsRaw = skills.filter(s => s.name.trim() !== "");
-    const validSkills = validSkillsRaw.map(({ __typename, ...rest }) => rest);
-
-    updateProfile({
-      variables: {
-        userId,
-        availability,
-        workload: parseInt(workload, 10),
-        skills: validSkills,
-        GithubUsername,
-      },
-    });
-  };
+  // UI
+  const loading = updating || creating;
+  const error = updateError || createError;
 
   return (
     <div
@@ -110,8 +163,14 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
         </button>
 
         <h2 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">
-          Edit Profile
+          {initialProfile ? "Edit Profile" : "Create Profile"}
         </h2>
+
+        {!initialProfile && (
+          <div className="mb-6 bg-blue-100 text-blue-900 px-4 py-2 rounded">
+            Please enter your information to create your profile.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-5 text-gray-800 dark:text-gray-100">
           <div>
@@ -124,7 +183,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
               required
             />
           </div>
-
           <div>
             <label className="block mb-2 font-medium">Skills</label>
             {skills.map((skill, index) => (
@@ -166,7 +224,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
               + Add Skill
             </button>
           </div>
-
           <div>
             <label className="block mb-1 font-medium">Availability</label>
             <select
@@ -181,7 +238,6 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
               ))}
             </select>
           </div>
-
           <div>
             <label className="block mb-1 font-medium">Workload (0-100)</label>
             <input
@@ -193,13 +249,11 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
               className="w-full p-2 border rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800"
             />
           </div>
-
           {error && (
             <div className="text-red-600 text-sm">
               Error: {error.message}
             </div>
           )}
-
           <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
@@ -214,7 +268,9 @@ export default function EditProfile({ userId, initialProfile, onClose, onUpdated
               className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? "Saving..." : "Save Changes"}
+              {loading
+                ? (initialProfile ? "Saving..." : "Creating...")
+                : (initialProfile ? "Save Changes" : "Create Profile")}
             </button>
           </div>
         </form>
