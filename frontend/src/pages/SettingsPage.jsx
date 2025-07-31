@@ -45,6 +45,15 @@ const DELETE_PROJECT = gql`
   }
 `;
 
+const UPDATE_PROJECT_STATUS = gql`
+  mutation UpdateProjectStatus($projectId: ID!, $status: String!) {
+    updateProjectStatus(projectId: $projectId, status: $status) {
+      success
+      message
+    }
+  }
+`;
+
 const LEAVE_PROJECT = gql`
   mutation LeaveProject($projectId: ID!) {
     leaveProject(projectId: $projectId)
@@ -675,10 +684,116 @@ const UserProfile = () => {
   );
 };
 
+const ProjectStatusUpdater = ({ projectId }) => {
+  const [userRole, setUserRole] = useState(null);
+  const [currentStatus, setCurrentStatus] = useState(""); // optionally show current status if available
+  const [newStatus, setNewStatus] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const statusOptions = [
+    "In Progress",
+    "On Hold",
+    "Completed",
+    "Cancelled",
+    "Delayed"
+  ];
+  const [updateProjectStatus] = useMutation(UPDATE_PROJECT_STATUS);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decodedUser = jwtDecode(token);
+        setUserRole(decodedUser.role);
+      } catch (error) {
+        console.error("Invalid token", error);
+      }
+    }
+    // Optionally set the current status if you have a way to fetch it
+  }, []);
+
+  // Only show if Project Manager
+  if (userRole !== "Project_Manager") return null;
+
+  const handleUpdateStatus = async () => {
+    if (!newStatus) {
+      toast.error("Please select a status.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { data } = await updateProjectStatus({
+        variables: { projectId, status: newStatus }
+      });
+
+      if (data?.updateProjectStatus?.success) {
+        toast.success(data.updateProjectStatus.message || "Project status updated!", {
+          icon: "✅",
+        });
+        setCurrentStatus(newStatus);
+      } else {
+        toast.error(data?.updateProjectStatus?.message || "Failed to update status");
+      }
+    } catch (err) {
+      toast.error("Error updating status");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="card h-fit">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl">
+          <Database className="w-6 h-6 text-yellow-700 dark:text-yellow-400" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+            Update Project Status
+          </h3>
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            Change the current status of this project
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mb-5">
+        <select
+          className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 font-medium w-full bg-bg-primary-light dark:bg-bg-primary-dark text-txt-primary-light dark:text-txt-primary-dark"
+          value={newStatus}
+          onChange={e => setNewStatus(e.target.value)}
+        >
+          <option value="">Select Status</option>
+          {statusOptions.map((status) => (
+            <option key={status} value={status}>
+              {status}
+            </option>
+          ))}
+        </select>
+        <EnhancedButton
+          variant="success"
+          icon={Save}
+          loading={isLoading}
+          disabled={!newStatus || isLoading}
+          onClick={handleUpdateStatus}
+        >
+          Update
+        </EnhancedButton>
+      </div>
+      {currentStatus && (
+        <div className="text-sm text-green-600 dark:text-green-400">
+          Current Status: <span className="font-bold">{currentStatus}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SettingsPage = ({ projectId }) => {
   return (
     <div className="min-h-screen page-bg">
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 4000,
@@ -692,7 +807,6 @@ const SettingsPage = ({ projectId }) => {
           },
         }}
       />
-      
       <div className="section-container dashboard-padding">
         {/* Enhanced Header */}
         <motion.div
@@ -713,7 +827,6 @@ const SettingsPage = ({ projectId }) => {
               </p>
             </div>
           </div>
-          
           <div className="h-1 bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 rounded-full"></div>
         </motion.div>
 
@@ -733,7 +846,6 @@ const SettingsPage = ({ projectId }) => {
             >
               <UserProfile />
             </motion.div>
-
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -752,11 +864,18 @@ const SettingsPage = ({ projectId }) => {
             >
               <NotificationSettings />
             </motion.div>
-
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
+            >
+              {/* --- ADD THE PROJECT STATUS UPDATER HERE --- */}
+              <ProjectStatusUpdater projectId={projectId} />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7 }}
             >
               <DeleteOrLeaveProject projectId={projectId} />
             </motion.div>

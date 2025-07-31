@@ -13,6 +13,15 @@ const crypto = require("crypto");  // ✅ NEW: For generating random secret
  * @param {string} githubRepo - Raw user input, e.g., full URL or shorthand
  * @returns {string} - normalized repo name, e.g. "gaurav0330/Testing-Webhook"
  */
+
+const ALLOWED_STATUSES = [
+  "In Progress",
+  "On Hold",
+  "Completed",
+  "Cancelled",
+  "Delayed",
+];
+
 function normalizeRepoName(githubRepo) {
   try {
     if (typeof githubRepo !== "string") throw new Error("GitHub repo must be a string");
@@ -33,6 +42,7 @@ function normalizeRepoName(githubRepo) {
     throw new ApolloError(`Invalid GitHub repo format: ${error.message}`, "BAD_USER_INPUT");
   }
 }
+
 
 const projectResolvers = {
   Query: {
@@ -271,6 +281,38 @@ const projectResolvers = {
         secret,
       };
     },
+
+ updateProjectStatus: async (_, { projectId, status, reason, notes }, { user }) => {
+      if (!user) {
+        throw new ApolloError("Unauthorized", "UNAUTHORIZED");
+      }
+
+      // Allow only Project Managers to update status
+      if (user.role !== "Project_Manager") {
+        throw new ApolloError("Forbidden: Only Project Managers can update project status", "FORBIDDEN");
+      }
+
+      // Validate status value
+      if (!ALLOWED_STATUSES.includes(status)) {
+        throw new ApolloError(`Invalid status value. Allowed values: ${ALLOWED_STATUSES.join(", ")}`, "BAD_USER_INPUT");
+      }
+
+      // Find project
+      const project = await Project.findById(projectId);
+      if (!project) {
+        throw new ApolloError("Project not found", "NOT_FOUND");
+      }
+      project.status = status;
+
+      await project.save();
+
+      return {
+        success: true,
+        message: "Project status updated successfully",
+        project
+      };
+    }
+
   },
 };
 

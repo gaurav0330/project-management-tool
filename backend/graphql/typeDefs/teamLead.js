@@ -38,7 +38,6 @@ const leadTypeDefs = gql`
     startDate: String!
     endDate: String!
     category: String
-    status: String!
     projectManager: User!
     teamLeads: [TeamLead!]!
     teamMembers: [TeamMember!]!
