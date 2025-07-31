@@ -326,6 +326,7 @@ const taskService = {
       throw new Error(`Error fetching tasks: ${error.message}`);
     }
   },
+  
  closeTask: async (taskId, closedBy) => {
   try {
     const task = await Task.findOne({ taskId });
