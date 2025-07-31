@@ -1,8 +1,7 @@
-// Unified Chat.jsx (Handles Project_Manager, Team_Lead, and Team_Member)
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { useAuth } from "../components/authContext";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import {
   GET_GROUPS,
   GET_GROUPS_FOR_LEAD,
@@ -10,28 +9,28 @@ import {
   GET_MESSAGES,
   SEND_MESSAGE,
 } from "../graphql/chatQueries";
-import { Video } from "lucide-react";
+import { Video, List, MessageSquare } from "lucide-react";
 import toast from 'react-hot-toast';
 
-// Import Modular Components (adjust paths based on your structure, e.g., components/chat/)
 import GroupList from "../components/chat/GroupList";
 import ChatHeader from "../components/chat/ChatHeader";
 import Messages from "../components/chat/Messages";
 import MessageForm from "../components/chat/MessageForm";
 import CreateGroupModal from "../components/chat/CreateGroupModal";
 
-// Utility: Get initials for each group
+import { useWindowSize } from "../hooks/useWindowSize"; // Assuming you place the hook here or adjust path accordingly
+
+
 const getInitials = (name) =>
   name
     ? name
-      .split(" ")
-      .slice(0, 2)
-      .map((w) => w[0])
-      .join("")
-      .toUpperCase()
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase()
     : "??";
 
-// Utility: Get group type label
 const getGroupTypeLabel = (type) => {
   switch (type) {
     case "all": return "All Users";
@@ -42,13 +41,21 @@ const getGroupTypeLabel = (type) => {
   }
 };
 
+
 const Chat = ({ projectId }) => {
   const { userRole } = useAuth();
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [message, setMessage] = useState("");
   const [currentUser, setCurrentUser] = useState(null);
   const messagesEndRef = useRef(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // For create group modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Responsive state for toggling sidebar/chat views on small screens
+  const [showSidebar, setShowSidebar] = useState(true);
+
+  const windowSize = useWindowSize();
+  const isMobile = windowSize.width < 768; // breakpoint for mobile/tablet
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -66,7 +73,7 @@ const Chat = ({ projectId }) => {
     }
   }, []);
 
-  // Query selection based on role
+
   const getGroupsQuery = () => {
     if (!currentUser) return GET_GROUPS;
     switch (userRole) {
@@ -75,9 +82,10 @@ const Chat = ({ projectId }) => {
       case "Team_Member":
         return GET_GROUPS_BY_MEMBER;
       default:
-        return GET_GROUPS; // For Project_Manager
+        return GET_GROUPS;
     }
   };
+
 
   const { data: groupsData, loading: groupsLoading, error: groupsError, refetch: refetchGroups } = useQuery(getGroupsQuery(), {
     variables:
@@ -90,12 +98,13 @@ const Chat = ({ projectId }) => {
     fetchPolicy: "network-only",
   });
 
-  // Refetch groups when currentUser or projectId is ready
+
   useEffect(() => {
     if (currentUser && projectId) {
       refetchGroups();
     }
   }, [currentUser, projectId, refetchGroups]);
+
 
   const {
     data: messagesData,
@@ -108,6 +117,7 @@ const Chat = ({ projectId }) => {
     fetchPolicy: "network-only",
   });
 
+
   const [sendMessage] = useMutation(SEND_MESSAGE, {
     onCompleted: () => {
       setMessage("");
@@ -119,9 +129,11 @@ const Chat = ({ projectId }) => {
     },
   });
 
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesData]);
+
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -131,16 +143,17 @@ const Chat = ({ projectId }) => {
     });
   };
 
-  // Video Call: Conditional based on role and group type
+
   const canStartVideoCall = () => {
     if (userRole === "Project_Manager" || userRole === "Team_Lead") {
-      return true; // Can start in all groups
+      return true;
     }
     if (userRole === "Team_Member") {
-      return selectedGroup?.type === "custom"; // Only in custom groups
+      return selectedGroup?.type === "custom";
     }
     return false;
   };
+
 
   const handleStartVideoCall = async () => {
     if (!canStartVideoCall()) return;
@@ -156,12 +169,14 @@ const Chat = ({ projectId }) => {
     toast.success('Video call invitation sent to the group!');
   };
 
+
   const formatTime = (timestamp) => {
     if (!timestamp) return "";
     const date = new Date(parseInt(timestamp, 10));
     if (isNaN(date)) return "Invalid";
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
+
 
   if (!projectId) {
     return (
@@ -194,66 +209,104 @@ const Chat = ({ projectId }) => {
     );
   }
 
+
   const groups =
     groupsData?.getGroups ||
     groupsData?.getGroupsForLead ||
     groupsData?.getGroupsByMemberId ||
     [];
 
+
   return (
-    <div className="flex h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body">
-      <GroupList
-        groups={groups}
-        selectedGroup={selectedGroup}
-        setSelectedGroup={setSelectedGroup}
-        onCreateGroupClick={() => setIsModalOpen(true)}
-        userRole={userRole}
-        projectId={projectId}
-        getGroupTypeLabel={getGroupTypeLabel}
-        getInitials={getInitials}
-      />
-      <main className="flex-1 flex flex-col relative">
-        {selectedGroup ? (
-          <>
+    <div className="flex h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body relative">
+      {/* Mobile toggler */}
+      {isMobile && (
+  <div className="fixed top-16 left-4 z-50 flex flex-col gap-3 p-1 rounded-lg bg-bg-secondary-light/90 dark:bg-bg-secondary-dark/90 shadow-lg backdrop-blur-sm">
+    <button
+      aria-label="Show Groups List"
+      onClick={() => setShowSidebar(true)}
+      className={`p-3 rounded-lg border border-brand-primary-300 dark:border-brand-primary-700 shadow ${
+        showSidebar ? "bg-brand-primary-600 text-white" : "bg-transparent"
+      }`}
+    >
+      <List size={20} />
+    </button>
+    <button
+      aria-label="Show Chat"
+      onClick={() => setShowSidebar(false)}
+      disabled={!selectedGroup}
+      className={`p-3 rounded-lg border border-brand-primary-300 dark:border-brand-primary-700 shadow ${
+        !showSidebar ? "bg-brand-primary-600 text-white" : "bg-transparent"
+      } ${!selectedGroup ? "opacity-50 cursor-not-allowed" : ""}`}
+    >
+      <MessageSquare size={20} />
+    </button>
+  </div>
+)}
 
-<ChatHeader
-  selectedGroup={selectedGroup}
-  userRole={userRole}
-  handleStartVideoCall={handleStartVideoCall}
-  getGroupTypeLabel={getGroupTypeLabel}
-  canStartVideoCall={canStartVideoCall()}
-  currentUser={currentUser}          // pass currentUser down
-  refetchGroups={refetchGroups}      // pass refetchGroups to refresh after removal
-  refetchMessages={refetchMessages}  // optional
-/>
 
 
+      {/* Sidebar / GroupList */}
+      {(showSidebar || !isMobile) && (
+        <GroupList
+          groups={groups}
+          selectedGroup={selectedGroup}
+          setSelectedGroup={(group) => {
+            setSelectedGroup(group);
+            if (isMobile) setShowSidebar(false); // auto switch to chat on mobile after selection
+          }}
+          onCreateGroupClick={() => setIsModalOpen(true)}
+          userRole={userRole}
+          projectId={projectId}
+          getGroupTypeLabel={getGroupTypeLabel}
+          getInitials={getInitials}
+        />
+      )}
 
-            <Messages
-              messagesData={messagesData}
-              messagesLoading={messagesLoading}
-              currentUser={currentUser}
-              formatTime={formatTime}
-              messagesEndRef={messagesEndRef}
-            />
-            <div ref={messagesEndRef} />
-            <MessageForm
-              message={message}
-              setMessage={setMessage}
-              handleSendMessage={handleSendMessage}
-              currentUser={currentUser}
-            />
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center px-8 bg-transparent">
-            <div className="bg-bg-secondary-light/70 dark:bg-bg-secondary-dark/80 rounded-3xl p-12 shadow-2xl text-center text-txt-muted-light dark:text-txt-muted-dark w-full max-w-lg mx-auto">
-              <svg width="40" height="40" className="mx-auto mb-3 text-brand-primary-400 dark:text-brand-primary-600 opacity-50" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" /><path d="M7 13h10M7 9h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
-              <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1">Select a Chat Group</h3>
-              <p className="text-base font-body">Choose a group from the sidebar to start chatting</p>
+
+      {/* Chat Section */}
+      {(!showSidebar || !isMobile) && (
+        <main className="flex-1 flex flex-col relative min-w-0">
+          {selectedGroup ? (
+            <>
+              <ChatHeader
+                selectedGroup={selectedGroup}
+                userRole={userRole}
+                handleStartVideoCall={handleStartVideoCall}
+                getGroupTypeLabel={getGroupTypeLabel}
+                canStartVideoCall={canStartVideoCall()}
+                currentUser={currentUser}
+                refetchGroups={refetchGroups}
+                refetchMessages={refetchMessages}
+              />
+
+              <Messages
+                messagesData={messagesData}
+                messagesLoading={messagesLoading}
+                currentUser={currentUser}
+                formatTime={formatTime}
+                messagesEndRef={messagesEndRef}
+              />
+              <MessageForm
+                message={message}
+                setMessage={setMessage}
+                handleSendMessage={handleSendMessage}
+                currentUser={currentUser}
+              />
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center px-8 bg-transparent">
+              <div className="bg-bg-secondary-light/70 dark:bg-bg-secondary-dark/80 rounded-3xl p-12 shadow-2xl text-center text-txt-muted-light dark:text-txt-muted-dark w-full max-w-lg mx-auto">
+                <svg width="40" height="40" className="mx-auto mb-3 text-brand-primary-400 dark:text-brand-primary-600 opacity-50" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" /><path d="M7 13h10M7 9h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+                <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1">Select a Chat Group</h3>
+                <p className="text-base font-body">Choose a group from the sidebar to start chatting</p>
+              </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
+      )}
+
+
       <CreateGroupModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, gql, useApolloClient } from "@apollo/client";
-import { jwtDecode } from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 import ReactFlow, {
   Background,
   Controls,
@@ -10,6 +10,8 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import TaskModal from "./TaskModal";
 import NodeLabel from "./NodeLabel";
+import { useWindowSize } from "../../hooks/useWindowSize"; // adjust path if needed
+
 
 const GET_LEADS_BY_PROJECT_ID = gql`
   query GetLeadsByProjectId($projectId: ID!) {
@@ -48,6 +50,7 @@ const GET_LEADS_BY_PROJECT_ID = gql`
   }
 `;
 
+
 const GET_TASKS_BY_MANAGER = gql`
   query GetTasksByManager($managerId: ID!, $projectId: ID!) {
     getTasksByManager(managerId: $managerId, projectId: $projectId) {
@@ -73,6 +76,7 @@ const GET_TASKS_BY_MANAGER = gql`
   }
 `;
 
+
 const GET_TASKS_FOR_MEMBER = gql`
   query GetTasksForMember($memberId: ID!, $projectId: ID!) {
     getTasksForMember(memberId: $memberId, projectId: $projectId) {
@@ -92,6 +96,7 @@ const GET_TASKS_FOR_MEMBER = gql`
   }
 `;
 
+
 const GET_USER = gql`
   query GetUser($userId: ID!) {
     getUser(userId: $userId) {
@@ -103,6 +108,7 @@ const GET_USER = gql`
   }
 `;
 
+
 const ManageTeam = ({ projectId }) => {
   const client = useApolloClient();
   const [expandedManager, setExpandedManager] = useState(false);
@@ -112,6 +118,9 @@ const ManageTeam = ({ projectId }) => {
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [selectedPersonName, setSelectedPersonName] = useState('');
   const [selectedPersonType, setSelectedPersonType] = useState('lead');
+
+  // Use window size hook for responsiveness
+  const windowSize = useWindowSize();
 
   const token = localStorage.getItem("token");
   let managerId = null;
@@ -131,6 +140,7 @@ const ManageTeam = ({ projectId }) => {
   const { loading, error, data } = useQuery(GET_LEADS_BY_PROJECT_ID, {
     variables: { projectId },
   });
+
   const { data: tasksData } = useQuery(GET_TASKS_BY_MANAGER, {
     variables: { managerId, projectId },
     skip: !managerId || !projectId,
@@ -221,18 +231,38 @@ const ManageTeam = ({ projectId }) => {
     }
   };
 
+  // Determine zoom level and container height based on window width for responsiveness
+  const isSmallScreen = windowSize.width < 640; // Tailwind 'sm' breakpoint approx 640px
+  const isMediumScreen = windowSize.width >= 640 && windowSize.width < 1024; // md breakpoint approx 1024px
+
+  // React Flow layout dimensions dynamically
+  const reactFlowHeight = isSmallScreen
+    ? windowSize.height * 0.7
+    : isMediumScreen
+      ? windowSize.height * 0.75
+      : 700;
+
+  const defaultZoom = isSmallScreen ? 0.5 : isMediumScreen ? 0.6 : 0.7;
+
+  // Use nodes and edges with memo, using windowSize in dependencies to recalc layout width
   const { nodes, edges } = useMemo(() => {
     if (loading || error || !data?.getLeadsByProjectId?.success)
       return { nodes: [], edges: [] };
+
     const teamLeads = Array.from(
       new Map(data.getLeadsByProjectId.teamLeads.map((lead) => [lead.user.id, lead])).values()
     );
+
     const spacing = 300;
     const verticalSpacing = 200;
     const memberSpacing = 220;
-    const totalWidth = Math.max(teamLeads.length * spacing * 1.5, 1200);
+    // Adjust totalWidth to be relative to screen width for responsiveness
+    const baseWidth = windowSize.width < 1200 ? windowSize.width * 0.9 : 1200;
+    const totalWidth = Math.max(teamLeads.length * spacing * 1.5, baseWidth);
+
     let nodes = [];
     let edges = [];
+
     nodes.push({
       id: "project",
       data: {
@@ -248,6 +278,7 @@ const ManageTeam = ({ projectId }) => {
       style: { border: "none", background: "transparent" },
       sourcePosition: Position.Bottom,
     });
+
     nodes.push({
       id: manager.id,
       data: {
@@ -268,6 +299,7 @@ const ManageTeam = ({ projectId }) => {
       sourcePosition: Position.Bottom,
       targetPosition: Position.Top,
     });
+
     edges.push({
       id: "project-manager",
       source: "project",
@@ -281,11 +313,13 @@ const ManageTeam = ({ projectId }) => {
         height: 22,
       },
     });
+
     if (expandedManager) {
       teamLeads.forEach((lead, leadIndex) => {
         const leadX = (totalWidth / (teamLeads.length + 1)) * (leadIndex + 1) - 100;
         const leadY = verticalSpacing * 2;
         const hasTeams = lead.teams.length > 0;
+
         nodes.push({
           id: lead.user.id,
           data: {
@@ -309,6 +343,7 @@ const ManageTeam = ({ projectId }) => {
           sourcePosition: Position.Bottom,
           targetPosition: Position.Top,
         });
+
         edges.push({
           id: `manager-${lead.user.id}`,
           source: manager.id,
@@ -322,12 +357,14 @@ const ManageTeam = ({ projectId }) => {
             height: 18,
           },
         });
+
         if (expandedLeads.has(lead.user.id)) {
           lead.teams.forEach((team, teamIndex) => {
             const teamX = leadX + (teamIndex - (lead.teams.length - 1) / 2) * spacing;
             const teamY = leadY + verticalSpacing;
             const teamNodeId = `team-${team.id}`;
             const hasMembers = team.members.length > 0;
+
             nodes.push({
               id: teamNodeId,
               data: {
@@ -347,6 +384,7 @@ const ManageTeam = ({ projectId }) => {
               sourcePosition: Position.Bottom,
               targetPosition: Position.Top,
             });
+
             edges.push({
               id: `lead-${lead.user.id}-team-${team.id}`,
               source: lead.user.id,
@@ -360,6 +398,7 @@ const ManageTeam = ({ projectId }) => {
                 height: 16,
               },
             });
+
             if (expandedTeams.has(team.id)) {
               team.members.forEach((member, memberIndex) => {
                 const memberX = teamX + (memberIndex - (team.members.length - 1) / 2) * memberSpacing;
@@ -384,6 +423,7 @@ const ManageTeam = ({ projectId }) => {
                   style: { border: "none", background: "transparent" },
                   targetPosition: Position.Top,
                 });
+
                 edges.push({
                   id: `team-${team.id}-member-${member.user.id}`,
                   source: teamNodeId,
@@ -404,7 +444,7 @@ const ManageTeam = ({ projectId }) => {
       });
     }
     return { nodes, edges };
-  }, [data, loading, error, manager, expandedManager, expandedLeads, expandedTeams]);
+  }, [data, loading, error, manager, expandedManager, expandedLeads, expandedTeams, windowSize]);
 
   if (loading)
     return (
@@ -440,23 +480,27 @@ const ManageTeam = ({ projectId }) => {
         </div>
       </div>
     );
+
   return (
     <>
-      <div className="h-[900px] w-full max-w-full mx-auto rounded-3xl bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 shadow-2xl p-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-5xl font-bold text-gray-900 dark:text-gray-100 mb-3 font-heading">
+      <div className="max-w-full mx-auto rounded-3xl bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 shadow-2xl p-6 sm:p-8">
+        <div className="mb-6 sm:mb-8 text-center px-4">
+          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-3 font-heading">
             Team Structure
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-xl font-body">
+          <p className="text-gray-600 dark:text-gray-400 text-base sm:text-xl font-body max-w-3xl mx-auto">
             Interactive organizational diagram - Manager → Leads → Teams → Members
           </p>
-          <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-800">
-            <p className="text-blue-800 dark:text-blue-200 text-base font-medium font-body">
+          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-800 max-w-3xl mx-auto">
+            <p className="text-blue-800 dark:text-blue-200 text-sm sm:text-base font-medium font-body">
               💡 <strong className="font-heading">Instructions:</strong> Click on the Manager to see Leads, click on Leads to see Teams, click on Teams to see Members. Click the 📋 button on Team Leads and Members to view their tasks.
             </p>
           </div>
         </div>
-        <div className="h-[700px] bg-white dark:bg-slate-800 rounded-2xl shadow-inner border-2 border-gray-200 dark:border-gray-700">
+        <div
+          className="bg-white dark:bg-slate-800 rounded-2xl shadow-inner border-2 border-gray-200 dark:border-gray-700 mx-4 sm:mx-8"
+          style={{ height: reactFlowHeight, minHeight: 400 }}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -468,7 +512,7 @@ const ManageTeam = ({ projectId }) => {
             panOnScroll={true}
             minZoom={0.2}
             maxZoom={1.5}
-            defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
+            defaultViewport={{ x: 0, y: 0, zoom: defaultZoom }}
             onNodeClick={(event, node) => {
               event.stopPropagation();
             }}
@@ -503,4 +547,4 @@ const ManageTeam = ({ projectId }) => {
   );
 };
 
-export default ManageTeam; 
+export default ManageTeam;
