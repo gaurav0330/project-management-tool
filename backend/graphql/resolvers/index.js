@@ -10,7 +10,7 @@ const analyticsResolvers = require("./analytics");
 const chatResolvers = require("./chat");
 const meetingResolvers = require("./meetings");
 const profileResolvers = require("./Profile");
-
+const AiSuggestresolvers = require("./taskSuggestion");
 const resolvers = {
   Query: {
     ...projectManagerResolvers.Query,
@@ -23,7 +23,8 @@ const resolvers = {
     ...analyticsResolvers.Query   ,
     ...chatResolvers.Query ,
     ...meetingResolvers.Query,
-    ...profileResolvers.Query
+    ...profileResolvers.Query,
+    ...AiSuggestresolvers.Query
 
   },
   Mutation: {
@@ -35,8 +36,8 @@ const resolvers = {
     ...taskResolvers.Mutation,
     ...chatResolvers.Mutation ,
     ...meetingResolvers.Mutation,
-    ...profileResolvers.Mutation
-
+    ...profileResolvers.Mutation,
+    ...AiSuggestresolvers.Mutation
   },
 };
 

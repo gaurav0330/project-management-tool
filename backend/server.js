@@ -14,8 +14,7 @@ const setupVideoSignaling = require("./socket/videoSignal"); // Video signaling 
 const taskService = require("./services/taskService");
 const Project = require("./models/Project");
 
-
-dotenv.config();
+require('dotenv').config();
 
 const app = express();
 const httpServer = http.createServer(app);
