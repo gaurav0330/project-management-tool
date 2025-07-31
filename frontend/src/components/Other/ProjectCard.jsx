@@ -6,21 +6,18 @@ import {
   FaClock,
   FaArrowRight
 } from "react-icons/fa";
-import {jwtDecode} from "jwt-decode"; // fix import
-
-
-
+import { jwtDecode } from "jwt-decode"; // ✅ Fixed import
 import { motion } from "framer-motion";
-import { useWindowSize } from "../../hooks/useWindowSize"; // Adjust path as needed
+import { useWindowSize } from "../../hooks/useWindowSize";
 
-// Map status to badge styles and icons
+// ✅ Status style mapping
 const statusStyles = {
   "In Progress": {
     bg: "bg-orange-100 dark:bg-orange-900/20",
     text: "text-orange-800 dark:text-orange-300",
     icon: "🚀",
   },
-  "Completed": {
+  Completed: {
     bg: "bg-green-100 dark:bg-green-900/20",
     text: "text-green-800 dark:text-green-300",
     icon: "✅",
@@ -30,12 +27,12 @@ const statusStyles = {
     text: "text-yellow-800 dark:text-yellow-300",
     icon: "⏸️",
   },
-  "Cancelled": {
+  Cancelled: {
     bg: "bg-red-100 dark:bg-red-900/20",
     text: "text-red-800 dark:text-red-300",
     icon: "❌",
   },
-  "Delayed": {
+  Delayed: {
     bg: "bg-purple-100 dark:bg-purple-900/20",
     text: "text-purple-800 dark:text-purple-300",
     icon: "⏳",
@@ -51,6 +48,7 @@ const ProjectCard = ({ project }) => {
   const navigate = useNavigate();
   const { width } = useWindowSize();
 
+  // ✅ Get role from JWT
   let role = null;
   const token = localStorage.getItem("token");
 
@@ -63,66 +61,46 @@ const ProjectCard = ({ project }) => {
     }
   }
 
-
+  // ✅ Format date
   const formatDate = (dateInput) => {
     try {
       let date;
 
       if (typeof dateInput === "string") {
-        if (dateInput.includes("T") || dateInput.includes("-")) {
-          date = new Date(dateInput);
-        } else {
-          const timestamp = parseInt(dateInput);
-          date = new Date(timestamp);
-        }
+        date = dateInput.includes("T") ? new Date(dateInput) : new Date(parseInt(dateInput));
       } else if (typeof dateInput === "number") {
-        const timestamp =
-          dateInput.toString().length === 10 ? dateInput * 1000 : dateInput;
-        date = new Date(timestamp);
+        date = new Date(dateInput.toString().length === 10 ? dateInput * 1000 : dateInput);
       } else {
         date = new Date(dateInput);
       }
 
-      if (isNaN(date.getTime())) {
-        return "Invalid Date";
-      }
-
-      return date.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
-    } catch (error) {
-      console.error("Date formatting error:", error);
+      return isNaN(date.getTime())
+        ? "Invalid Date"
+        : date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+    } catch {
       return "Invalid Date";
     }
   };
 
   const handleNavigation = () => {
-    if (role === "Team_Lead") {
-      navigate(`/teamLead/project/${project.id}`);
-    } else if (role === "Project_Manager") {
-      navigate(`/projectHome/${project.id}`);
-    } else if (role === "Team_Member") {
-      navigate(`/teamMember/project/${project.id}`);
-    }
+    if (role === "Team_Lead") navigate(`/teamLead/project/${project.id}`);
+    else if (role === "Project_Manager") navigate(`/projectHome/${project.id}`);
+    else if (role === "Team_Member") navigate(`/teamMember/project/${project.id}`);
   };
 
-  // Responsive classes - adjust layout for small screens
-  const containerClasses =
-    "rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300";
-  // Determine status style or fallback to default
   const style = statusStyles[project.status] || statusStyles.default;
-
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: width >= 768 ? 1.02 : 1 }} // Hover scale on md and up only
+      whileHover={{ scale: width >= 768 ? 1.02 : 1 }}
       transition={{ duration: 0.4 }}
-
-      className={containerClasses}
+      className="rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300"
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4 sm:gap-0">
         <div className="flex-1 min-w-0">
@@ -130,18 +108,6 @@ const ProjectCard = ({ project }) => {
             {project.title}
           </h3>
           <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark line-clamp-3">
-
-      className="rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300 relative"
-    >
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex flex-col flex-1">
-          <h3 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark mb-1 line-clamp-1">
-            {project.title}
-          </h3>
-
-          {/* Status Badge Below Title */}
-          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark line-clamp-2">
-
             {project.description}
           </p>
         </div>
@@ -167,17 +133,14 @@ const ProjectCard = ({ project }) => {
             <strong>End:</strong> {formatDate(project.endDate)}
           </span>
         </div>
-            <div
-            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold select-none mb-2 w-max
-             ${style.bg} ${style.text}`}
-            aria-label={`Project status: ${project.status}`}
-            title={`Status: ${project.status}`}
-          >
-          Status: 
-            <span>{style.icon}</span> {project.status}
-          </div>
+        <div
+          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold select-none w-max ${style.bg} ${style.text}`}
+          aria-label={`Project status: ${project.status}`}
+          title={`Status: ${project.status}`}
+        >
+          Status: <span>{style.icon}</span> {project.status}
+        </div>
       </div>
-      
 
       <button
         onClick={handleNavigation}

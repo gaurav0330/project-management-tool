@@ -89,7 +89,7 @@ function App() {
     <div className="page-bg min-h-screen">
       <Navbar />
       <Toaster position="top-right" />
-      <main className={`mt-16 main-content ${shouldUseContainer ? 'px-24 sm:px-24 md:px-24 section-padding' : ''}`}>
+      <main className={`mt-8 main-content ${shouldUseContainer ? 'px-4 sm:px-24 md:px-24 section-padding' : ''}`}>
         <Routes>
           {/* 🟢 Public Routes */}
           <Route path="/*" element={<Dashboard />} />
