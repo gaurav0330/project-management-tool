@@ -64,11 +64,26 @@ export default function ProjectDashboard() {
       (statusFilter === "All" || project.status === statusFilter)
   );
 
+  // Updated stats to reflect actual status values
   const stats = [
-    { label: "Total Projects", value: projects.length, icon: "📊" },
-    { label: "Active Projects", value: projects.filter(p => p.status === "In Progress").length, icon: "🚀" },
-    { label: "Completed", value: projects.filter(p => p.status === "Completed").length, icon: "✅" },
-    { label: "Pending", value: projects.filter(p => p.status === "Pending").length, icon: "⏳" }
+    { 
+      label: "Total Projects", 
+      value: projects.length, 
+      icon: "📊",
+      color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+    },
+    { 
+      label: "In Progress", 
+      value: projects.filter(p => p.status === "In Progress").length, 
+      icon: "🚀",
+      color: "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800"
+    },
+    { 
+      label: "Completed", 
+      value: projects.filter(p => p.status === "Completed").length, 
+      icon: "✅",
+      color: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+    },
   ];
 
   if (!managerId)
@@ -146,21 +161,22 @@ export default function ProjectDashboard() {
             </div>
           </motion.div>
 
-          <motion.div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Updated Stats Cards with Better Styling */}
+          <motion.div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {stats.map((s, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-6 bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm"
+                className={`rounded-2xl p-6 border ${s.color} flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow duration-200`}
               >
                 <div className="text-3xl">{s.icon}</div>
                 <div>
-                  <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                  <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark font-medium">
                     {s.label}
                   </p>
-                  <p className="text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+                  <p className="text-2xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
                     {s.value}
                   </p>
                 </div>
@@ -180,9 +196,23 @@ export default function ProjectDashboard() {
             {loading ? (
               [...Array(6)].map((_, i) => <SkeletonCard key={i} />)
             ) : filteredProjects.length === 0 ? (
-              <p className="col-span-full text-center text-txt-secondary-light dark:text-txt-secondary-dark text-lg py-20">
-                There are no projects to display.
-              </p>
+              <div className="col-span-full text-center py-20">
+                <div className="text-6xl mb-4">📋</div>
+                <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-lg">
+                  {searchTerm || statusFilter !== "All" 
+                    ? "No projects match your current filters." 
+                    : "No projects found. Create your first project to get started!"
+                  }
+                </p>
+                {(!searchTerm && statusFilter === "All") && (
+                  <button
+                    onClick={() => setActiveComponent("addproject")}
+                    className="mt-4 btn-primary"
+                  >
+                    ➕ Create First Project
+                  </button>
+                )}
+              </div>
             ) : (
               filteredProjects.map((project, i) => (
                 <motion.div
