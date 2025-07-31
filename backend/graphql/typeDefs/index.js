@@ -13,6 +13,7 @@ const AiSuggtypeDefs = require("./taskSuggestion");
 
 // Combine all type definitions into a single array
 
+
 const typeDefs = [
   userTypeDefs,
   leadTypeDefs,
@@ -25,6 +26,7 @@ const typeDefs = [
   meetingTypes,
   profileTypeDefs,
   AiSuggtypeDefs
+
 ];
 
 module.exports = typeDefs;
