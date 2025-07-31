@@ -17,7 +17,7 @@ const MessageForm = ({
 
   return (
     <footer
-      className="sticky bottom-0 z-10 bg-bg-secondary-light/90 dark:bg-bg-secondary-dark/95 backdrop-blur-xl border-t border-brand-primary-100 dark:border-brand-primary-900 px-4 py-4 rounded-t-3xl"
+      className="sticky bottom-0 z-10 bg-bg-secondary-light/90 dark:bg-bg-secondary-dark/95 backdrop-blur-xl border-t border-brand-primary-100 dark:border-brand-primary-900 px-4 py-4 rounded-t-3xl w-full max-w-full"
       aria-label="Message Composer"
       style={{ position: "relative" }}
     >

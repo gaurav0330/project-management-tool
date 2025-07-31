@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
 import {
   Home, FolderKanban, Users, BarChart3, Settings, ChevronDown, ChevronRight,
-  Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle, 
-  TrendingUp, Github,Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft , MessageSquare
+  Menu, UserCog, ClipboardList, UserPlus, Target, CheckCircle,
+  TrendingUp, Github, Calendar, Shield, Briefcase, User, Database, PanelLeftClose, PanelLeft, MessageSquare
 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/Ui/sheet";
+import { Button } from "@/components/UI/button";
+import { Separator } from "@/components/UI/separator";
 import { cn } from "../../../lib/utils";
+import { useWindowSize } from "../../hooks/useWindowSize"; // Using provided hook
 
-const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
+const Sidebar = ({ setActiveComponent, onStateChange, category, NavbarItems }) => {
+  const { width } = useWindowSize();
+  const isMobile = width < 1024; // Tailwind 'lg' breakpoint
+
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setRole] = useState(null);
   const [activeItem, setActiveItem] = useState("");
@@ -22,7 +26,6 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
     if (stored?.role) setRole(stored.role);
   }, []);
 
-  // Notify parent component of state changes
   useEffect(() => {
     if (onStateChange) {
       onStateChange(isCollapsed, isHovering);
@@ -30,9 +33,9 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
   }, [isCollapsed, isHovering, onStateChange]);
 
   const toggleSection = (sectionTitle) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [sectionTitle]: !prev[sectionTitle]
+      [sectionTitle]: !prev[sectionTitle],
     }));
   };
 
@@ -55,9 +58,7 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
         icon: FolderKanban,
         links: [
           { txt: "Project Home", icon: Briefcase, comp: "projectHome" },
-          ...(category === "development"
-            ? [{ txt: "Integrations", icon: Github, comp: "integrations" }]
-            : []),
+          ...(category === "development" ? [{ txt: "Integrations", icon: Github, comp: "integrations" }] : []),
           { txt: "Manage Lead", icon: UserCog, comp: "managelead" },
           { txt: "Manage Tasks", icon: ClipboardList, comp: "assignedTasks" },
           { txt: "Manage Team", icon: Users, comp: "manageteam" },
@@ -67,11 +68,8 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
       {
         title: "Chat & Collaboration",
         icon: MessageSquare,
-        links: [
-          { txt: "Chat", icon: MessageSquare, comp: "chat" },
-        ],
+        links: [{ txt: "Chat", icon: MessageSquare, comp: "chat" }],
       },
-
       {
         title: "Analytics & Reports",
         icon: BarChart3,
@@ -111,9 +109,7 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
       {
         title: "Chat & Collaboration",
         icon: MessageSquare,
-        links: [
-          { txt: "Chat", icon: MessageSquare, comp: "chat" },
-        ],
+        links: [{ txt: "Chat", icon: MessageSquare, comp: "chat" }],
       },
       {
         title: "Project Settings",
@@ -135,9 +131,7 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
       {
         title: "Chat & Collaboration",
         icon: MessageSquare,
-        links: [
-          { txt: "Chat", icon: MessageSquare, comp: "chat" },
-        ],
+        links: [{ txt: "Chat", icon: MessageSquare, comp: "chat" }],
       },
       {
         title: "Project Settings",
@@ -149,8 +143,9 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
 
   const sections = MENU[userRole] || [];
 
+  // Sidebar content reusable for both desktop and mobile
   const MenuBlock = () => (
-    <aside 
+    <aside
       className={cn(
         "flex h-full flex-col backdrop-blur-md border-r transition-all duration-300",
         "bg-bg-secondary-light dark:bg-bg-secondary-dark",
@@ -162,10 +157,12 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
     >
       {/* Header */}
       <div className="h-16 flex items-center justify-center border-b border-gray-200/20 dark:border-gray-700/20 bg-bg-primary-light dark:bg-bg-primary-dark px-3">
-        <div className={cn(
-          "flex items-center transition-all duration-300",
-          shouldShowFull ? "gap-2.5" : "justify-center"
-        )}>
+        <div
+          className={cn(
+            "flex items-center transition-all duration-300",
+            shouldShowFull ? "gap-2.5" : "justify-center"
+          )}
+        >
           <div className="w-7 h-7 bg-brand-primary-600 rounded-lg flex items-center justify-center shadow-sm">
             <Briefcase className="w-3.5 h-3.5 text-white" />
           </div>
@@ -188,11 +185,13 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
             shouldShowFull ? "w-full justify-start gap-2" : "w-10 h-10 p-0 justify-center"
           )}
         >
-          {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          {isCollapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
           {shouldShowFull && (
-            <span className="text-xs font-medium">
-              {isCollapsed ? "Expand" : "Collapse"}
-            </span>
+            <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>
           )}
         </Button>
       </div>
@@ -229,7 +228,7 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
             ) : (
               // Collapsed state - show only icon
               <div className="flex justify-center mb-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-all duration-300"
                   title={title}
                 >
@@ -292,7 +291,7 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
               </div>
             )}
 
-            {/* Subtle Separator */}
+            {/* Separator */}
             {shouldShowFull && i !== sections.length - 1 && (
               <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
             )}
@@ -313,17 +312,19 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
 
       {/* Footer */}
       <div className="p-3 border-t border-gray-200/10 dark:border-gray-700/10 bg-bg-primary-light dark:bg-bg-primary-dark">
-        <div className={cn(
-          "flex items-center rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200/20 dark:border-gray-700/20 transition-all duration-300",
-          shouldShowFull ? "gap-3 px-3 py-2.5" : "justify-center p-2.5"
-        )}>
+        <div
+          className={cn(
+            "flex items-center rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200/20 dark:border-gray-700/20 transition-all duration-300",
+            shouldShowFull ? "gap-3 px-3 py-2.5" : "justify-center p-2.5"
+          )}
+        >
           <div className="w-7 h-7 bg-gradient-to-br from-brand-accent-500 to-brand-accent-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
             <User className="w-3.5 h-3.5 text-white" />
           </div>
           {shouldShowFull && (
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-txt-primary-light dark:text-txt-primary-dark truncate tracking-wide">
-                {userRole?.replace('_', ' ') || 'User'}
+                {userRole?.replace("_", " ") || "User"}
               </p>
               <p className="text-[10px] text-txt-secondary-light dark:text-txt-secondary-dark font-medium">Online</p>
             </div>
@@ -335,29 +336,49 @@ const Sidebar = ({ setActiveComponent, onStateChange , category  }) => {
 
   return (
     <>
-      {/* Mobile toggle button */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button
-            size="icon"
-            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl backdrop-blur-sm"
+      {/* Mobile toggle button and Sheet from right */}
+      {isMobile ? (
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button
+              size="icon"
+              className="fixed top-4 right-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl backdrop-blur-sm"
+              aria-label={isOpen ? "Close sidebar menu" : "Open sidebar menu"}
+            >
+              {isOpen ? <PanelLeftClose size={24} /> : <Menu size={24} />}
+            </Button>
+          </SheetTrigger>
+
+          {/* Sheet sliding in from right */}
+          <SheetContent side="right" className="p-0 w-64 border-l border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark backdrop-blur-md flex flex-col">
+            {/* Sidebar menu */}
+            <MenuBlock />
+
+            {/* Separator */}
+            <Separator />
+
+            {/* Inject Navbar items below sidebar in mobile */}
+            {NavbarItems && (
+              <div className="px-4 py-4 overflow-auto max-h-[calc(100vh-16rem)]">
+                {NavbarItems}
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <>
+          {/* Desktop sidebar on left */}
+          <div
+            className={cn(
+              "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
+              shouldShowFull ? "w-64" : "w-24"
+            )}
           >
-            <Menu size={18} />
-          </Button>
-        </SheetTrigger>
-
-        <SheetContent side="left" className="p-0 w-64 border-r border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark backdrop-blur-md">
-          <MenuBlock />
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop sidebar */}
-      <div className={cn(
-        "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
-        shouldShowFull ? "w-64" : "w-16"
-      )}>
-        <MenuBlock />
-      </div>
+            <MenuBlock />
+          </div>
+          {/* On desktop, Navbar stays separate/independent - you control it outside this Sidebar */}
+        </>
+      )}
     </>
   );
 };

@@ -1,9 +1,8 @@
-// CreateGroupModal.jsx
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import toast from "react-hot-toast";
 import { gql } from "@apollo/client";
-import { X } from "lucide-react"; // ✅ Added for close icon (install lucide-react if not already: npm i lucide-react)
+import { X } from "lucide-react";
 
 const GET_USERS_BY_PROJECT_ID = gql`
   query GetUsersByProjectId($projectId: ID!) {
@@ -42,7 +41,7 @@ const CreateGroupModal = ({ isOpen, onClose, projectId, currentUser, refetchGrou
       setGroupName("");
       setSelectedMembers([]);
       onClose();
-      refetchGroups(); // Refetch groups to show the new one
+      refetchGroups();
     },
     onError: (error) => {
       toast.error(`Failed to create group: ${error.message}`);
@@ -73,21 +72,25 @@ const CreateGroupModal = ({ isOpen, onClose, projectId, currentUser, refetchGrou
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity duration-300">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm transition-opacity duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-group-title"
+    >
       <div className="bg-bg-secondary-light dark:bg-bg-secondary-dark p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 font-body text-txt-primary-light dark:text-txt-primary-dark relative overflow-hidden">
-        {/* ✅ Improved: Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark opacity-70 hover:opacity-100 transition"
+          aria-label="Close Create Group Modal"
         >
           <X className="w-6 h-6" />
         </button>
 
-        <h3 className="text-2xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark mb-6">
+        <h3 id="create-group-title" className="text-2xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark mb-6">
           Create Custom Group
         </h3>
 
-        {/* ✅ Improved: Styled Input with Focus Ring */}
         <input
           type="text"
           value={groupName}
@@ -102,37 +105,35 @@ const CreateGroupModal = ({ isOpen, onClose, projectId, currentUser, refetchGrou
             Select Members:
           </h4>
           {usersLoading ? (
-  <div className="flex items-center justify-center py-4">
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-interactive-primary-light dark:border-interactive-primary-dark"></div>
-  </div>
-) : usersData?.getUsersByProjectId?.filter(user => user.id !== currentUser.id).length === 0 ? (
-  <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-center py-4">No users available in this project.</p>
-) : (
-  <div className="max-h-48 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
-    {usersData?.getUsersByProjectId
-      ?.filter(user => user.id !== currentUser.id) // Exclude current user here
-      .map((user) => (
-        <label
-          key={user.id}
-          className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-primary-50/50 dark:hover:bg-brand-primary-900/30 cursor-pointer transition"
-        >
-          <input
-            type="checkbox"
-            checked={selectedMembers.includes(user.id)}
-            onChange={() => handleMemberToggle(user.id)}
-            className="w-5 h-5 rounded border-brand-primary-300 dark:border-brand-primary-700 text-brand-primary-600 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-          />
-          <span className="flex-1 text-txt-primary-light dark:text-txt-primary-dark">
-            {user.username} <span className="text-txt-secondary-light dark:text-txt-secondary-dark">({user.role})</span>
-          </span>
-        </label>
-    ))}
-  </div>
-)}
-
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-interactive-primary-light dark:border-interactive-primary-dark"></div>
+            </div>
+          ) : usersData?.getUsersByProjectId?.filter(user => user.id !== currentUser.id).length === 0 ? (
+            <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-center py-4">No users available in this project.</p>
+          ) : (
+            <div className="max-h-48 overflow-y-auto space-y-3 pr-2 scrollbar-thin">
+              {usersData?.getUsersByProjectId
+                ?.filter(user => user.id !== currentUser.id)
+                .map((user) => (
+                  <label
+                    key={user.id}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-brand-primary-50/50 dark:hover:bg-brand-primary-900/30 cursor-pointer transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedMembers.includes(user.id)}
+                      onChange={() => handleMemberToggle(user.id)}
+                      className="w-5 h-5 rounded border-brand-primary-300 dark:border-brand-primary-700 text-brand-primary-600 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
+                    />
+                    <span className="flex-1 text-txt-primary-light dark:text-txt-primary-dark">
+                      {user.username} <span className="text-txt-secondary-light dark:text-txt-secondary-dark">({user.role})</span>
+                    </span>
+                  </label>
+                ))}
+            </div>
+          )}
         </div>
 
-        {/* ✅ Improved: Buttons with Gradients and Hover Effects */}
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}

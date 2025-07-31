@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Video } from "lucide-react";
 
-// Helper to render message content with clickable links
 const renderContentWithLinks = (content) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return content.split(urlRegex).map((part, index) => {
@@ -32,7 +31,6 @@ const Messages = ({
   const containerRef = useRef(null);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     if (messagesEndRef?.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -51,7 +49,6 @@ const Messages = ({
     }
   };
 
-  // Check scroll position to show/hide scroll button
   const handleScroll = () => {
     const el = containerRef.current;
     if (!el) return;
@@ -73,9 +70,9 @@ const Messages = ({
       ref={containerRef}
       onScroll={handleScroll}
       className="flex-1 overflow-y-auto px-6 md:px-14 py-8 space-y-6 relative
-        bg-gradient-to-br from-slate-50/80 via-white/60 to-blue-50/40 
+        bg-gradient-to-br from-slate-50/80 via-white/60 to-blue-50/40
         dark:from-slate-900/90 dark:via-slate-800/85 dark:to-slate-900/90
-        scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-brand-primary-300/60 
+        scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-brand-primary-300/60
         dark:scrollbar-thumb-brand-primary-600/60 scrollbar-track-transparent"
       style={{
         backgroundImage: `
@@ -86,10 +83,11 @@ const Messages = ({
         backgroundSize: "100% 100%, 100% 100%, 80px 80px",
         paddingTop: "84px",
       }}
+      aria-live="polite"
+      aria-label="Chat messages"
     >
       {messagesLoading ? (
         <div className="flex flex-col items-center justify-center h-60 space-y-4">
-          {/* You can place a spinner or loading indicator here */}
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-gradient-to-r from-brand-primary-400 to-brand-primary-600 border-t-transparent shadow-lg"></div>
           <p className="text-txt-secondary-light dark:text-txt-secondary-dark font-medium animate-pulse">
             Loading messages...
@@ -138,17 +136,13 @@ const Messages = ({
                       text-base font-body whitespace-pre-line break-words 
                       transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-2xl
                       border border-gray-200 dark:border-slate-600
-                      ${
-                        isSelf 
-                          ? "bg-gradient-to-br from-white/90 via-slate-50/80 to-white/90 dark:from-slate-700/90 dark:via-slate-800/80 dark:to-slate-700/90 text-slate-800 dark:text-slate-100"
-                          : "bg-gradient-to-br from-white/90 via-slate-50/80 to-white/90 dark:from-slate-700/90 dark:via-slate-800/80 dark:to-slate-700/90 text-slate-800 dark:text-slate-100"
+                      ${isSelf 
+                        ? "bg-gradient-to-br from-white/90 via-slate-50/80 to-white/90 dark:from-slate-700/90 dark:via-slate-800/80 dark:to-slate-700/90 text-slate-800 dark:text-slate-100"
+                        : "bg-gradient-to-br from-white/90 via-slate-50/80 to-white/90 dark:from-slate-700/90 dark:via-slate-800/80 dark:to-slate-700/90 text-slate-800 dark:text-slate-100"
                       }
                       ${isSelf ? "ml-8 md:ml-16" : "mr-8 md:mr-16"}
                     `}
-                    
-                    
                   >
-                    {/* Show sender info for others */}
                     {!isSelf && (
                       <div className="flex items-center gap-3 mb-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-800 dark:to-brand-primary-900 text-brand-primary-700 dark:text-brand-primary-200 font-heading font-bold text-sm shadow-sm">
@@ -160,32 +154,25 @@ const Messages = ({
                       </div>
                     )}
 
-                    {/* Message content */}
                     {isVideoCallInvite ? (
-                      (
-                        <div className="flex flex-col space-y-2">
-                          {/* Invitation Title */}
-                          <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
-                            📹 Video Call Invitation
-                          </p>
-                      
-                          {/* Optional description */}
-                          <p className="text-xs text-emerald-500 dark:text-emerald-300 mb-2">
-                            Click below to join the ongoing video meeting.
-                          </p>
-                      
-                          {/* Join button */}
-                          <a
-                            href={msg.content.split("Join this meeting: ")[1] || "#"}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg w-full justify-center gap-3 transform hover:scale-105 transition-all duration-200"
-                          >
-                            <Video className="w-5 h-5" />
-                            <span>Join Video Call</span>
-                          </a>
-                        </div>
-                      )
+                      <div className="flex flex-col space-y-2">
+                        <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                          📹 Video Call Invitation
+                        </p>
+                        <p className="text-xs text-emerald-500 dark:text-emerald-300 mb-2">
+                          Click below to join the ongoing video meeting.
+                        </p>
+                        <a
+                          href={msg.content.split("Join this meeting: ")[1] || "#"}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg w-full justify-center gap-3 transform hover:scale-105 transition-all duration-200"
+                          aria-label="Join Video Call"
+                        >
+                          <Video className="w-5 h-5" />
+                          <span>Join Video Call</span>
+                        </a>
+                      </div>
                     ) : (
                       <div className="leading-relaxed mb-2">{renderContentWithLinks(msg.content)}</div>
                     )}
@@ -196,12 +183,9 @@ const Messages = ({
                       </span>
                     </div>
 
-                    {/* Message Tail */}
                     {isTail && (
                       <div
-                        className={`absolute ${
-                          isSelf ? "bottom-0 -right-2" : "bottom-0 -left-2"
-                        } w-4 h-4 overflow-hidden`}
+                        className={`absolute ${isSelf ? "bottom-0 -right-2" : "bottom-0 -left-2"} w-4 h-4 overflow-hidden`}
                         aria-hidden="true"
                       >
                         <div
@@ -217,8 +201,6 @@ const Messages = ({
                       </div>
                     )}
                   </div>
-
-                  {/* Scroll anchor */}
                   {idx === messagesData.getMessages.length - 1 && <div ref={messagesEndRef} className="h-1" />}
                 </div>
               </div>
@@ -227,17 +209,27 @@ const Messages = ({
         })
       )}
 
-      {/* Scroll to Top Button */}
       {!messagesLoading && messagesData?.getMessages?.length > 0 && (
         <div className="flex justify-center mt-6">
           <button
             type="button"
             onClick={scrollToTop}
             className="px-4 py-2 rounded-full bg-slate-500 hover:bg-slate-700 text-white shadow transition duration-300"
+            aria-label="Scroll to Top"
           >
-            ↑ Scroll to Top
+            &uarr; Scroll to Top
           </button>
         </div>
+      )}
+
+      {showScrollToBottom && (
+        <button
+          onClick={scrollToBottom}
+          className="fixed bottom-20 right-5 bg-brand-primary-600 hover:bg-brand-primary-700 text-white p-3 rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-brand-primary-400"
+          aria-label="Scroll to Bottom"
+        >
+          &#8595;
+        </button>
       )}
     </section>
   );
