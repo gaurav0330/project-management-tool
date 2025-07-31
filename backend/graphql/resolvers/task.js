@@ -68,6 +68,10 @@ const taskResolvers = {
     }
 },
 
+getTasksAssignedToUser: async (_, { userId }) => {
+  return await taskService.getTasksAssignedToUser(userId);
+},
+
   },
 
 };

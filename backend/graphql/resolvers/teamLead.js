@@ -7,6 +7,10 @@ const leadResolvers = {
     getProjectsByLeadId: async (_, args) => {
       return await leadService.getProjectsByLeadId(args.leadId);
     },
+
+    getTeamMembersByTeamId: async (_, { teamId }) => {
+      return await leadService.getTeamMembersByTeamId(teamId);
+    }
   },
  
   Mutation: {

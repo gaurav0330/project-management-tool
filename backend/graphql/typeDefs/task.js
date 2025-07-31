@@ -44,6 +44,18 @@ type Attachment {
     remarks: String
   }
 
+
+   type Task2 {
+    id: ID!
+    project: ID!
+    createdBy: ID!
+    assignedTo: ID!
+    status: String!
+    assignName: String
+  }
+
+
+
   type Query {
     getTaskHistory(taskId: ID!): [TaskHistory]
     getTasksByManager(managerId: ID!, projectId: ID): [Task]
@@ -51,6 +63,7 @@ type Attachment {
     getTasksForMember(memberId: ID!, projectLeadId: ID, projectId: ID): [Task]
     getTasksForLead(teamLeadId: ID!, projectManagerId: ID, projectId: ID): [Task]
     getTaskById(taskId: ID!): Task
+     getTasksAssignedToUser(userId: ID!): [Task2]
   }
 `;
 

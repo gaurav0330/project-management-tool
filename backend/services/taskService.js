@@ -380,5 +380,15 @@ const taskService = {
   }
 },
 
+
+// Get All Tasks For User
+getTasksAssignedToUser : async (userId) => {
+  try {
+    return await Task.find({ assignedTo: userId });
+  } catch (error) {
+    throw new Error("Error fetching tasks: " + error.message);
+  }
+}
+
 };
 module.exports = taskService;
