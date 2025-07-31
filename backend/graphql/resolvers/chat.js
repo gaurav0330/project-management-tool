@@ -1,10 +1,11 @@
-const { createGroup, getGroups ,getGroupsByProjectId } = require("../../services/groupService");
 const { sendMessage, getMessages } = require("../../services/messageService");
 const Message = require("../../models/Message");
 const User = require("../../models/User");
 const Group = require("../../models/Group");
 const Project = require("../../models/Project");
 const mongoose = require("mongoose");
+const { createGroup, getGroups ,getGroupsByProjectId ,removeMemberFromGroup} = require("../../services/groupService");
+
 
 const chatResolvers = {
   Query: {
@@ -198,6 +199,16 @@ const chatResolvers = {
       }
     },
     
+    removeMemberFromGroup: async (_, { groupId, memberId }, { user }) => {
+      if (!user || !user._id) {
+        throw new Error('Not authenticated');
+      }
+      return removeMemberFromGroup({
+        groupId,
+        memberId,
+        userId: user._id,
+      });
+    },
 
     // notifyUserAddition: async (_, { projectId, userId, groupType }) => {
     //   const user = await User.findById(userId);

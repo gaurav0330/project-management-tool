@@ -138,6 +138,29 @@ async function createCustomGroup(name, projectId, memberIds) {
   return await group.save();
 }
 
+
+//removing from group
+async function removeMemberFromGroup({ groupId, memberId, userId }) {
+  const group = await Group.findById(groupId);
+  if (!group) throw new Error('Group not found');
+
+  if (String(group.creator) !== String(userId)) {
+    throw new Error('Only the group creator can remove members');
+  }
+
+  // Remove the member by filtering array (ObjectId to string comparison)
+  group.members = group.members.filter(id => String(id) !== String(memberId));
+  await group.save();
+
+  // Convert ObjectIds to strings before returning
+  const groupObj = group.toObject();
+  groupObj.members = groupObj.members.map(id => id.toString());
+
+  return groupObj;
+}
+
+
+
 module.exports = {
   createGroup,
   getGroupsByProjectId,
@@ -145,5 +168,6 @@ module.exports = {
   createDefaultGroupsForProject,
   createTeamGroup,
   updateGroupsOnUserChange,
-  createCustomGroup
+  createCustomGroup,
+  removeMemberFromGroup
 };

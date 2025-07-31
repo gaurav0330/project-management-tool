@@ -1,4 +1,4 @@
-// filepath: c:\Users\gbcha\Documents\MERN-Projects\project-management-tool\backend\models\Group.js
+// filepath: c
 const mongoose = require("mongoose");
 
 const groupSchema = new mongoose.Schema({
