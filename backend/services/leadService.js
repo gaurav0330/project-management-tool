@@ -6,6 +6,7 @@ const Task = require("../models/Task");
 const { ApolloError } = require("apollo-server-express");
 const { sendTeamAssignEmail , sendTaskAssignedEmail,sendTaskApprovalEmail,sendTaskRejectionEmail,sendTaskModificationEmail,sendTaskSubmissionEmail} = require("../services/emailService");
 const shortid = require('shortid'); 
+const Team = require("../models/Teams");
 
 const leadService = {
 
@@ -446,6 +447,20 @@ rejectTaskService: async (taskId, reason, user) => {
       return { success: false, message: `Failed to request review: ${error.message}`, task: null };
     }
   },
+
+
+  //Get Team Members by Team ID
+  getTeamMembersByTeamId : async (teamId) => {
+    const team = await Team.findById(teamId)
+      .populate('members.teamMemberId', 'username email role ') // Adjust fields as needed
+      .exec();
+  
+    if (!team) {
+      throw new Error('Team not found');
+    }
+  
+    return team.members;
+  }
   
 };
 

@@ -17,6 +17,9 @@ const leadTypeDefs = gql`
     role: UserRole!
   }
 
+  # --- TEAM Members Schema INPUTS ---
+  
+
   # --- TEAM/PROJECT TYPES ---
   type TeamLead {
     teamLeadId: ID!
@@ -93,6 +96,11 @@ const leadTypeDefs = gql`
     task: Task
   }
 
+  type PopulatedTeamMember {
+  teamMemberId: User!
+  memberRole: String!
+}
+
   # --- QUERIES ---
   type Query {
     getProjectsByLeadId(leadId: ID!): [Project]
@@ -100,7 +108,11 @@ const leadTypeDefs = gql`
     # For example:
     # getTasksByTeamLead(teamLeadId: ID!, memberId: ID, projectId: ID): [Task]
     # getTaskById(taskId: ID!): Task
+
+    getTeamMembersByTeamId(teamId: ID!): [PopulatedTeamMember]
   }
+
+   
 
   # --- MUTATIONS ---
   type Mutation {
