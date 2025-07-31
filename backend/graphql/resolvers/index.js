@@ -5,13 +5,12 @@ const authResolvers = require("./user");
 const teamResolvers = require("./teams");
 const memberResolvers = require("./member");
 const taskResolvers = require("./task");
-const getTaskResolvers = require("./getTask");
+const getTaskResolvers = require("./getTask");   ///
 const analyticsResolvers = require("./analytics");
 const chatResolvers = require("./chat");
 const meetingResolvers = require("./meetings");
 const profileResolvers = require("./Profile");
-const taskSuggestionResolvers = require("./taskSuggestion");
-
+const AiSuggestresolvers = require("./taskSuggestion");
 const resolvers = {
   Query: {
     ...projectManagerResolvers.Query,
@@ -25,8 +24,7 @@ const resolvers = {
     ...chatResolvers.Query ,
     ...meetingResolvers.Query,
     ...profileResolvers.Query,
-    ...taskSuggestionResolvers.Query,
-
+    ...AiSuggestresolvers.Query
 
   },
   Mutation: {
@@ -38,8 +36,8 @@ const resolvers = {
     ...taskResolvers.Mutation,
     ...chatResolvers.Mutation ,
     ...meetingResolvers.Mutation,
-    ...profileResolvers.Mutation
-
+    ...profileResolvers.Mutation,
+    ...AiSuggestresolvers.Mutation
   },
 };
 

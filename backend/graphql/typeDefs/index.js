@@ -9,7 +9,10 @@ const analyticsTypeDefs = require("./analytics");
 const chatTypeDefs = require("./chat");
 const meetingTypes = require("./meetings");
 const profileTypeDefs = require("./Profile");
-const taskSuggestionTypeDefs = require("./taskSuggestion");
+const AiSuggtypeDefs = require("./taskSuggestion");
+
+// Combine all type definitions into a single array
+
 
 const typeDefs = [
   userTypeDefs,
@@ -22,7 +25,8 @@ const typeDefs = [
   chatTypeDefs,
   meetingTypes,
   profileTypeDefs,
-  taskSuggestionTypeDefs
+  AiSuggtypeDefs
+
 ];
 
 module.exports = typeDefs;
