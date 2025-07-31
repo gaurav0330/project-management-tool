@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { useQuery, gql, useLazyQuery } from "@apollo/client";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
@@ -27,8 +28,8 @@ import {
 
 // GraphQL Query for fetching tasks assigned to a Team Lead
 const GET_TASKS_FOR_LEAD = gql`
-  query GetTasksForLead($teamLeadId: ID!) {
-    getTasksForLead(teamLeadId: $teamLeadId) {
+  query GetTasksForLead($teamLeadId: ID!, $projectId: ID!) {
+    getTasksForLead(teamLeadId: $teamLeadId, projectId: $projectId) {
       id
       title
       description
@@ -70,6 +71,8 @@ const MyTasks = () => {
   const { isDark } = useTheme();
   const token = localStorage.getItem("token");
   let teamLeadId = null;
+  const {projectId} = useParams();
+
 
   try {
     const decodedToken = token ? jwtDecode(token) : null;
@@ -80,7 +83,7 @@ const MyTasks = () => {
 
   const shouldSkipQuery = !teamLeadId;
   const { data, loading, error, refetch } = useQuery(GET_TASKS_FOR_LEAD, {
-    variables: { teamLeadId },
+    variables: { teamLeadId , projectId },
     skip: shouldSkipQuery,
     fetchPolicy: "network-only",
   });

@@ -1,6 +1,7 @@
 import React from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { motion } from "framer-motion";
+import { useQuery, gql } from "@apollo/client";
 import { 
   FaUserPlus, 
   FaUsers, 
@@ -10,15 +11,37 @@ import {
   FaArrowRight
 } from "react-icons/fa";
 
-const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMember}) => {
+const GET_TEAM_MEMBERS_BY_TEAM_ID = gql`
+  query GetTeamMembersByTeamId($teamId: ID!) {
+    getTeamMembersByTeamId(teamId: $teamId) {
+      memberRole
+      teamMemberId {
+        id
+        email
+        role
+        username
+      }
+    }
+  }
+`;
+
+const TeamCard = ({ team, projectId, navigate, viewMode = "grid" }) => {
   const { isDark } = useTheme();
+
+  const { loading, error, data } = useQuery(GET_TEAM_MEMBERS_BY_TEAM_ID, {
+    variables: { teamId: team.id },
+    fetchPolicy: "cache-and-network"
+  });
+
+  const members = data?.getTeamMembersByTeamId || [];
+  const memberCount = members.length;
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -54,7 +77,7 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
               <div className="w-12 h-12 bg-gradient-to-br from-brand-primary-500 to-brand-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
                 <FaUsers className="w-6 h-6 text-white" />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <h3 className="font-heading text-xl font-bold text-heading-primary-light dark:text-heading-primary-dark group-hover:text-brand-primary-600 dark:group-hover:text-brand-primary-400 transition-colors duration-200">
                   {team.teamName}
@@ -64,6 +87,14 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
                     <FaCalendarAlt className="w-3 h-3 text-txt-secondary-light dark:text-txt-secondary-dark" />
                     <span className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
                       Created {formatDate(team.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Show member count */}
+                  <div className="flex items-center gap-1">
+                    <FaUsers className="w-3 h-3 text-txt-secondary-light dark:text-txt-secondary-dark" />
+                    <span className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                      {loading ? "Loading..." : memberCount} member{memberCount !== 1 ? "s" : ""}
                     </span>
                   </div>
                 </div>
@@ -85,7 +116,7 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
                 <FaUserPlus className="w-4 h-4" />
                 Invite
               </motion.button>
-              
+
               <motion.button
                 onClick={handleManageClick}
                 className="p-2 text-brand-primary-500 hover:bg-brand-primary-50 dark:hover:bg-brand-primary-900/20 rounded-lg transition-colors duration-200"
@@ -118,13 +149,13 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
       <div className="bg-gradient-to-r from-brand-primary-500 to-brand-secondary-500 p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
         <div className="absolute bottom-0 left-0 w-20 h-20 bg-white/5 rounded-full translate-y-10 -translate-x-10"></div>
-        
+
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
               <FaUsers className="w-6 h-6 text-white" />
             </div>
-            
+
             <motion.button
               onClick={handleManageClick}
               className="p-2 bg-white/20 backdrop-blur-sm hover:bg-white/30 rounded-lg transition-colors duration-200"
@@ -134,11 +165,11 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
               <FaCog className="w-4 h-4 text-white" />
             </motion.button>
           </div>
-          
+
           <h3 className="font-heading text-xl font-bold text-white mb-2">
             {team.teamName}
           </h3>
-          
+
           <div className="flex items-center gap-2 text-white/80">
             <FaCalendarAlt className="w-3 h-3" />
             <span className="font-body text-sm">
@@ -161,29 +192,27 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
           </p>
         )}
 
-
-        
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-3 text-center">
-            <p className="font-heading text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark">
-              {NumberOfTeamMember} {/* Mock member count */}
-            </p>
-            <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-              Members
-            </p>
-          </div>
-          <div className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-3 text-center">
-            <p className="font-heading text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark">
-              {Math.floor(Math.random() * 15) + 5} {/* Mock task count */}
-            </p>
-            <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-              Tasks
-            </p>
-          </div>
+        {/* Members count only */}
+        <div className="bg-bg-accent-light dark:bg-bg-accent-dark rounded-xl p-4 text-center mb-6">
+          {loading ? (
+            <span className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+              Loading members...
+            </span>
+          ) : error ? (
+            <span className="font-body text-sm text-red-500">
+              Error loading members
+            </span>
+          ) : (
+            <>
+              <p className="font-heading text-2xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+                {memberCount}
+              </p>
+              <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                Member{memberCount !== 1 ? "s" : ""}
+              </p>
+            </>
+          )}
         </div>
-          
-
 
         {/* Action Buttons */}
         <div className="flex gap-3">
@@ -196,7 +225,7 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
             <FaUserPlus className="w-4 h-4" />
             Invite Members
           </motion.button>
-          
+
           <motion.button
             onClick={(e) => {
               e.stopPropagation();
@@ -209,10 +238,10 @@ const TeamCard = ({ team, projectId, navigate, viewMode = "grid" ,NumberOfTeamMe
             <FaEye className="w-4 h-4" />
           </motion.button>
         </div>
-      </div>
 
-      {/* Hover Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+        {/* Hover Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      </div>
     </motion.div>
   );
 };
