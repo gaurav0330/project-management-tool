@@ -7,8 +7,45 @@ import {
   FaArrowRight
 } from "react-icons/fa";
 import {jwtDecode} from "jwt-decode"; // fix import
+
+
+
 import { motion } from "framer-motion";
 import { useWindowSize } from "../../hooks/useWindowSize"; // Adjust path as needed
+
+// Map status to badge styles and icons
+const statusStyles = {
+  "In Progress": {
+    bg: "bg-orange-100 dark:bg-orange-900/20",
+    text: "text-orange-800 dark:text-orange-300",
+    icon: "🚀",
+  },
+  "Completed": {
+    bg: "bg-green-100 dark:bg-green-900/20",
+    text: "text-green-800 dark:text-green-300",
+    icon: "✅",
+  },
+  "On Hold": {
+    bg: "bg-yellow-100 dark:bg-yellow-900/20",
+    text: "text-yellow-800 dark:text-yellow-300",
+    icon: "⏸️",
+  },
+  "Cancelled": {
+    bg: "bg-red-100 dark:bg-red-900/20",
+    text: "text-red-800 dark:text-red-300",
+    icon: "❌",
+  },
+  "Delayed": {
+    bg: "bg-purple-100 dark:bg-purple-900/20",
+    text: "text-purple-800 dark:text-purple-300",
+    icon: "⏳",
+  },
+  default: {
+    bg: "bg-gray-100 dark:bg-gray-800",
+    text: "text-gray-700 dark:text-gray-400",
+    icon: "❓",
+  },
+};
 
 const ProjectCard = ({ project }) => {
   const navigate = useNavigate();
@@ -26,7 +63,7 @@ const ProjectCard = ({ project }) => {
     }
   }
 
-  // Date formatting function enhanced
+
   const formatDate = (dateInput) => {
     try {
       let date;
@@ -74,6 +111,9 @@ const ProjectCard = ({ project }) => {
   // Responsive classes - adjust layout for small screens
   const containerClasses =
     "rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300";
+  // Determine status style or fallback to default
+  const style = statusStyles[project.status] || statusStyles.default;
+
 
   return (
     <motion.div
@@ -81,6 +121,7 @@ const ProjectCard = ({ project }) => {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: width >= 768 ? 1.02 : 1 }} // Hover scale on md and up only
       transition={{ duration: 0.4 }}
+
       className={containerClasses}
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4 sm:gap-0">
@@ -89,9 +130,22 @@ const ProjectCard = ({ project }) => {
             {project.title}
           </h3>
           <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark line-clamp-3">
+
+      className="rounded-3xl p-6 lg:p-8 shadow-xl bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 hover:shadow-2xl group transition-all duration-300 relative"
+    >
+      <div className="flex items-start justify-between mb-6">
+        <div className="flex flex-col flex-1">
+          <h3 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark mb-1 line-clamp-1">
+            {project.title}
+          </h3>
+
+          {/* Status Badge Below Title */}
+          <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark line-clamp-2">
+
             {project.description}
           </p>
         </div>
+
         {project.category && (
           <div className="shrink-0 px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 rounded-full text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
             <FaFolder size={14} aria-hidden="true" />
@@ -113,7 +167,17 @@ const ProjectCard = ({ project }) => {
             <strong>End:</strong> {formatDate(project.endDate)}
           </span>
         </div>
+            <div
+            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold select-none mb-2 w-max
+             ${style.bg} ${style.text}`}
+            aria-label={`Project status: ${project.status}`}
+            title={`Status: ${project.status}`}
+          >
+          Status: 
+            <span>{style.icon}</span> {project.status}
+          </div>
       </div>
+      
 
       <button
         onClick={handleNavigation}
