@@ -10,6 +10,7 @@ const analyticsResolvers = require("./analytics");
 const chatResolvers = require("./chat");
 const meetingResolvers = require("./meetings");
 const profileResolvers = require("./Profile");
+const taskSuggestionResolvers = require("./taskSuggestion");
 
 const resolvers = {
   Query: {
@@ -23,7 +24,9 @@ const resolvers = {
     ...analyticsResolvers.Query   ,
     ...chatResolvers.Query ,
     ...meetingResolvers.Query,
-    ...profileResolvers.Query
+    ...profileResolvers.Query,
+    ...taskSuggestionResolvers.Query,
+
 
   },
   Mutation: {
