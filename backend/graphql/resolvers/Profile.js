@@ -8,9 +8,10 @@ const profileResolvers = {
     },
   },
   Mutation: {
-    createProfile: async (_, { userId, skills, GithubUsername }) => {
-      return await profileService.createProfile(userId, skills, GithubUsername);
+    createProfile: async (_, { userId, skills, GithubUsername, availability, workload }) => {
+      return await profileService.createProfile(userId, skills, GithubUsername, availability, workload);
     },
+    
     updateProfile: async (_, { userId, availability, workload, skills, GithubUsername }) => {
       const updates = { availability, workload, skills, GithubUsername };
       return await profileService.updateProfile(userId, updates);

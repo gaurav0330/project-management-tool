@@ -39,10 +39,13 @@ const profileTypeDefs = gql`
 
   extend type Mutation {
     createProfile(
-      userId: ID!
-      skills: [SkillInput!]!
-      GithubUsername: String!
-    ): Profile
+  userId: ID!
+  skills: [SkillInput!]!
+  GithubUsername: String!
+  availability: Availability
+  workload: Int
+): Profile
+
 
     updateProfile(
       userId: ID!
