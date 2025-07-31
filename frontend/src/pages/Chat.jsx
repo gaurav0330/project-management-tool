@@ -24,11 +24,11 @@ import CreateGroupModal from "../components/chat/CreateGroupModal";
 const getInitials = (name) =>
   name
     ? name
-        .split(" ")
-        .slice(0, 2)
-        .map((w) => w[0])
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase()
     : "??";
 
 // Utility: Get group type label
@@ -84,8 +84,8 @@ const Chat = ({ projectId }) => {
       userRole === "Team_Lead"
         ? { leadId: currentUser?.id, projectId }
         : userRole === "Team_Member"
-        ? { memberId: currentUser?.id, projectId }
-        : { projectId },
+          ? { memberId: currentUser?.id, projectId }
+          : { projectId },
     skip: !currentUser || !projectId,
     fetchPolicy: "network-only",
   });
@@ -167,7 +167,7 @@ const Chat = ({ projectId }) => {
     return (
       <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
         <div className="rounded-2xl shadow-2xl backdrop-blur-xl bg-bg-secondary-light/90 dark:bg-bg-secondary-dark/90 max-w-md p-10 w-full mx-2 font-body text-txt-primary-light dark:text-txt-primary-dark flex flex-col items-center gap-3">
-          <svg width="36" height="36" className="text-error opacity-70 mb-2" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M12 9v3m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <svg width="36" height="36" className="text-error opacity-70 mb-2" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="1.5" d="M12 9v3m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           <h2 className="text-2xl font-heading font-bold">Project ID Required</h2>
           <p className="text-txt-secondary-light dark:text-txt-secondary-dark">
             Please provide a valid project ID to access chat.
@@ -215,13 +215,20 @@ const Chat = ({ projectId }) => {
       <main className="flex-1 flex flex-col relative">
         {selectedGroup ? (
           <>
-            <ChatHeader
-              selectedGroup={selectedGroup}
-              userRole={userRole}
-              handleStartVideoCall={handleStartVideoCall}
-              getGroupTypeLabel={getGroupTypeLabel}
-              canStartVideoCall={canStartVideoCall()} // ✅ Pass the conditional flag to ChatHeader
-            />
+
+<ChatHeader
+  selectedGroup={selectedGroup}
+  userRole={userRole}
+  handleStartVideoCall={handleStartVideoCall}
+  getGroupTypeLabel={getGroupTypeLabel}
+  canStartVideoCall={canStartVideoCall()}
+  currentUser={currentUser}          // pass currentUser down
+  refetchGroups={refetchGroups}      // pass refetchGroups to refresh after removal
+  refetchMessages={refetchMessages}  // optional
+/>
+
+
+
             <Messages
               messagesData={messagesData}
               messagesLoading={messagesLoading}
@@ -240,7 +247,7 @@ const Chat = ({ projectId }) => {
         ) : (
           <div className="flex-1 flex items-center justify-center px-8 bg-transparent">
             <div className="bg-bg-secondary-light/70 dark:bg-bg-secondary-dark/80 rounded-3xl p-12 shadow-2xl text-center text-txt-muted-light dark:text-txt-muted-dark w-full max-w-lg mx-auto">
-              <svg width="40" height="40" className="mx-auto mb-3 text-brand-primary-400 dark:text-brand-primary-600 opacity-50" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M7 13h10M7 9h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              <svg width="40" height="40" className="mx-auto mb-3 text-brand-primary-400 dark:text-brand-primary-600 opacity-50" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" /><path d="M7 13h10M7 9h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
               <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1">Select a Chat Group</h3>
               <p className="text-base font-body">Choose a group from the sidebar to start chatting</p>
             </div>

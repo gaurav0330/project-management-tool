@@ -51,6 +51,7 @@ const chatTypeDefs = gql`
       creatorId: ID # Add creatorId argument
     ): Group!
     sendMessage(groupId: ID!, senderId: ID!, content: String!): Message!
+    removeMemberFromGroup(groupId: ID!, memberId: ID!): Group!
   }
 `;
 
