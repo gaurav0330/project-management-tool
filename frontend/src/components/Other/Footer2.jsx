@@ -71,9 +71,7 @@ export default function Footer() {
               Streamline your workflow with our intuitive project management solution. Built for teams that value efficiency and collaboration.
             </p>
             <div className="flex space-x-3">
-              <SocialIcon icon={<FaFacebook className="text-xl" />} href="#" color="bg-blue-600 text-white" />
-              <SocialIcon icon={<FaTwitter className="text-xl" />} href="#" color="bg-sky-500 text-white" />
-              <SocialIcon icon={<FaLinkedin className="text-xl" />} href="#" color="bg-blue-700 text-white" />
+             <SocialIcon icon={<FaLinkedin className="text-xl" />} href="#" color="bg-blue-700 text-white" />
               <SocialIcon icon={<FaInstagram className="text-xl" />} href="#" color="bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 text-white" />
               <SocialIcon icon={<FaGithub className="text-xl" />} href="#" color="bg-gray-800 text-white" />
             </div>
@@ -94,8 +92,7 @@ export default function Footer() {
               <li><FooterLink text="Home" href="#" /></li>
               <li><FooterLink text="Features" href="#" /></li>
               <li><FooterLink text="Pricing" href="#" /></li>
-              <li><FooterLink text="Testimonials" href="#" /></li>
-              <li><FooterLink text="Blog" href="#" /></li>
+             
             </ul>
           </div>
           
@@ -114,8 +111,7 @@ export default function Footer() {
               <li><FooterLink text="Privacy Policy" href="#" /></li>
               <li><FooterLink text="Terms of Service" href="#" /></li>
               <li><FooterLink text="Cookie Policy" href="#" /></li>
-              <li><FooterLink text="GDPR Compliance" href="#" /></li>
-              <li><FooterLink text="Security" href="#" /></li>
+              
             </ul>
           </div>
           

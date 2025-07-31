@@ -146,7 +146,7 @@ const HowItWorksSection = () => {
 
   const WorkflowCard = ({ workflowKey, workflow, isActive }) => {
     return (
-      <motion.button
+      <motion.button 
         onClick={() => setActiveWorkflow(workflowKey)}
         className={`relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 ${
           isActive
@@ -159,7 +159,7 @@ const HowItWorksSection = () => {
         {/* Background decoration */}
         <div className={`absolute top-0 right-0 w-24 h-24 ${isActive ? 'bg-white/10' : `bg-${workflow.color}-100 dark:bg-${workflow.color}-900/20`} rounded-full -translate-y-12 translate-x-12`}></div>
         
-        <div className="relative z-10">
+        <div className="relative z-10 " >
           <div className="flex items-center justify-between mb-4">
             <span className="text-4xl">{workflow.avatar}</span>
             <span className={`text-xs px-3 py-1 rounded-full font-medium ${
@@ -381,47 +381,54 @@ const HowItWorksSection = () => {
 
         {/* Process Flow Visualization */}
         <motion.div
-          className="mt-20 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <div className="glass inline-flex items-center space-x-6 p-8 bg-gradient-to-r from-brand-primary-50/50 to-brand-secondary-50/50 dark:from-brand-primary-900/10 dark:to-brand-secondary-900/10 border border-brand-primary-200 dark:border-brand-primary-800">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg">
-                M
-              </div>
-              <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Manager</span>
-            </div>
-            
-            <svg className="w-8 h-8 text-brand-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-brand-secondary-500 to-brand-secondary-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg">
-                L
-              </div>
-              <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Team Lead</span>
-            </div>
-            
-            <svg className="w-8 h-8 text-brand-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-brand-accent-500 to-brand-accent-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg">
-                T
-              </div>
-              <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Team Member</span>
-            </div>
-          </div>
-          
-          <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mt-6 max-w-2xl mx-auto">
-            Our hierarchical workflow ensures quality control while maintaining efficiency and clear communication channels throughout the entire development lifecycle.
-          </p>
-        </motion.div>
+  className="mt-20 text-center px-4"
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8, delay: 0.5 }}
+  viewport={{ once: true }}
+>
+  <div className="glass flex flex-col md:flex-row items-center justify-center md:space-x-6 space-y-6 md:space-y-0 p-6 md:p-8 bg-gradient-to-r from-brand-primary-50/50 to-brand-secondary-50/50 dark:from-brand-primary-900/10 dark:to-brand-secondary-900/10 border border-brand-primary-200 dark:border-brand-primary-800 rounded-xl max-w-4xl mx-auto">
+    
+    {/* Manager */}
+    <div className="text-center">
+      <div className="w-16 h-16 bg-gradient-to-r from-brand-primary-500 to-brand-primary-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg mx-auto">
+        M
+      </div>
+      <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Manager</span>
+    </div>
+
+    {/* Arrow */}
+    <svg className="w-6 h-6 md:w-8 md:h-8 text-brand-primary-500 rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+    </svg>
+
+    {/* Team Lead */}
+    <div className="text-center">
+      <div className="w-16 h-16 bg-gradient-to-r from-brand-secondary-500 to-brand-secondary-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg mx-auto">
+        L
+      </div>
+      <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Team Lead</span>
+    </div>
+
+    {/* Arrow */}
+    <svg className="w-6 h-6 md:w-8 md:h-8 text-brand-primary-500 rotate-90 md:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+    </svg>
+
+    {/* Team Member */}
+    <div className="text-center">
+      <div className="w-16 h-16 bg-gradient-to-r from-brand-accent-500 to-brand-accent-600 text-white rounded-2xl flex items-center justify-center font-heading font-bold text-xl mb-3 shadow-lg mx-auto">
+        T
+      </div>
+      <span className="font-body text-sm font-medium text-txt-secondary-light dark:text-txt-secondary-dark">Team Member</span>
+    </div>
+  </div>
+
+  <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mt-6 max-w-2xl mx-auto px-2">
+    Our hierarchical workflow ensures quality control while maintaining efficiency and clear communication channels throughout the entire development lifecycle.
+  </p>
+</motion.div>
+
       </div>
     </section>
   );

@@ -136,9 +136,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><FooterLink text="Privacy Policy" href="/privacy" /></li>
               <li><FooterLink text="Terms of Service" href="/terms" /></li>
-              <li><FooterLink text="Cookie Policy" href="/cookies" /></li>
-              <li><FooterLink text="GDPR Compliance" href="/gdpr" /></li>
-              <li><FooterLink text="Security" href="/security" /></li>
+              
             </ul>
           </div>
           
@@ -166,7 +164,9 @@ export default function Footer() {
                   href="mailto:contact@yojanadesk.com" 
                   className="font-body text-txt-secondary-light dark:text-txt-secondary-dark hover:text-heading-accent-light dark:hover:text-heading-accent-dark text-sm transition-colors duration-300"
                 >
+                  ayushwaghale777@gmail.com
                   gauravjikar070806@gmaiil.com
+                  
                 </a>
               </li>
               <li className="flex items-center space-x-3">
