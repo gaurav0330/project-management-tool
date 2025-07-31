@@ -64,6 +64,12 @@ const projectTypeDefs = gql`
     secret: String!
   }
 
+    type UpdateProjectStatusResponse {
+    success: Boolean!
+    message: String!
+    project: Project
+  }
+
   type Query {
     getAllProjects: [Project]
     getProjectById(id: ID!): Project
@@ -102,6 +108,14 @@ const projectTypeDefs = gql`
 
     # ✅ NEW: Mutation to generate webhook config (per project/repo)
     createWebhookConfig(projectId: ID!, githubRepo: String!): WebhookConfig
+
+    updateProjectStatus(
+      projectId: ID!
+      status: String!
+      reason: String  # Optional reason for status change
+      notes: String   # Optional additional notes
+    ): UpdateProjectStatusResponse!
+
   }
 
   input TeamLeadInput {

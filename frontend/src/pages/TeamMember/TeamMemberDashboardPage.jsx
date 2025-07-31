@@ -82,11 +82,6 @@ export default function TeamMemberDashboardPage() {
       icon: "🚀" 
     },
     { label: "Completed", value: projects.filter(p => p.status === "COMPLETED").length, icon: "✅" },
-    { 
-      label: "Pending", 
-      value: projects.filter(p => p.status === "PENDING" || p.status === "NOT_STARTED").length, 
-      icon: "⏳" 
-    }
   ];
 
   if (!memberId) return <div className="text-center py-40 text-red-500">Unauthorized</div>;
@@ -122,7 +117,7 @@ export default function TeamMemberDashboardPage() {
           </motion.div>
 
           {/* ✅ Stats Cards */}
-          <motion.div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <motion.div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {stats.map((s, i) => (
               <motion.div
                 key={i}
