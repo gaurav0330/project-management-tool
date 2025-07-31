@@ -1,8 +1,9 @@
+require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Profile = require('../models/Profile');
 
 // Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'AIzaSyDFvNhxNhX5YSRSdCKNV2AbFj_GJud-vAw');
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 // Fallback scoring function
@@ -80,29 +81,6 @@ const getSuggestions = async ({ taskDetails, candidates }) => {
       rankedList: []
     };
   }
-
-  // 🔍 DEBUG: Log all candidates and their profile data
-  console.log('\n=== CANDIDATES DEBUG ===');
-  console.log(`Total candidates: ${candidates.length}`);
-  candidates.forEach((candidate, index) => {
-    console.log(`\n--- Candidate ${index + 1} ---`);
-    console.log(`Username: ${candidate.username}`);
-    console.log(`Role: ${candidate.role}`);
-    console.log(`User ID: ${candidate._id}`);
-    console.log(`Profile exists: ${candidate.profile ? 'YES' : 'NO'}`);
-    
-    if (candidate.profile) {
-      console.log('Profile details:');
-      console.log('- Skills:', candidate.profile.skills || 'No skills');
-      console.log('- Availability:', candidate.profile.availability || 'Not set');
-      console.log('- Workload:', candidate.profile.workload || 'Not set');
-      console.log('- Experience:', candidate.profile.experience || 'Not set');
-      console.log('- Performance:', candidate.profile.performance || 'Not set');
-    } else {
-      console.log('Profile: NULL/UNDEFINED');
-    }
-  });
-  console.log('=== END CANDIDATES DEBUG ===\n');
 
   try {
     const candidateData = candidates.map(c => ({

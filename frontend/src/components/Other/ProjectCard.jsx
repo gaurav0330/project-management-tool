@@ -112,12 +112,6 @@ const ProjectCard = ({ project }) => {
             <strong>End:</strong> {formatDate(project.endDate)}
           </span>
         </div>
-        <div className="flex items-center gap-2 sm:col-span-2">
-          <FaStar className="text-yellow-500" />
-          <span>
-            <strong>Priority:</strong> {project.priority || "Normal"}
-          </span>
-        </div>
       </div>
 
       <button
