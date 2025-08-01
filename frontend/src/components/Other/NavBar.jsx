@@ -63,7 +63,7 @@ export default function Navbar() {
   const isOnTeamDetailPage = location.pathname.match(/\/teamlead\/project\/[^\/]+\/[^\/]+$/);
   const isOnProjectPage = location.pathname.includes('/projectHome/') || 
                           location.pathname.includes('/teamLead/') ||
-                          location.pathname.includes('/projectdashboard/');
+                          location.pathname.includes('/teamMember/project/');
   
   const currentlyOnProjectPage = isOnProjectPage || isOnTeamDetailPage;
 
