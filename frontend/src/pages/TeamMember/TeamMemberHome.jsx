@@ -254,10 +254,10 @@ export default function TeamMemberDashboardPage() {
               </motion.div>
             )}
 
-            {/* Enhanced Welcome Header for Team Member */}
+            {/* Enhanced Welcome Header for Team Member - MOBILE RESPONSIVE */}
             {!loading && !error && (
               <motion.div
-                className="relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-500 rounded-2xl p-8 text-white overflow-hidden"
+                className={`relative bg-gradient-to-br from-green-500 via-green-600 to-emerald-500 rounded-2xl ${isMobile ? 'p-4' : 'p-8'} text-white overflow-hidden`}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
@@ -270,55 +270,114 @@ export default function TeamMemberDashboardPage() {
                 </div>
 
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <motion.div 
-                        className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg"
-                        whileHover={{ scale: 1.05, rotate: 5 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <FaRocket className="text-3xl text-white" />
-                      </motion.div>
-                      <div>
-                        <motion.p 
-                          className="font-body text-lg opacity-90 mb-1"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.6, delay: 0.2 }}
+                  {/* Mobile Layout - Stack Vertically */}
+                  {isMobile ? (
+                    <div className="flex flex-col space-y-4">
+                      {/* Top Section - Icon and Main Content */}
+                      <div className="flex items-center gap-4">
+                        <motion.div 
+                          className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+                          whileHover={{ scale: 1.05, rotate: 5 }}
+                          transition={{ duration: 0.3 }}
                         >
-                          {getGreeting()}, Team Member! 👋
-                        </motion.p>
-                        <motion.h1 
-                          className="font-heading text-4xl font-bold mb-2"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.6, delay: 0.3 }}
-                        >
-                          Your Work Hub
-                        </motion.h1>
-                        <motion.p 
-                          className="font-body text-lg opacity-90"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.6, delay: 0.4 }}
-                        >
-                          Focus on tasks, deliver excellence
-                        </motion.p>
+                          <FaRocket className="text-2xl text-white" />
+                        </motion.div>
+                        <div className="flex-1 min-w-0">
+                          <motion.p 
+                            className="font-body text-sm opacity-90 mb-1"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                          >
+                            {getGreeting()}, Team Member! 👋
+                          </motion.p>
+                          <motion.h1 
+                            className="font-heading text-xl font-bold mb-1"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                          >
+                            Your Work Hub
+                          </motion.h1>
+                          <motion.p 
+                            className="font-body text-sm opacity-90"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                          >
+                            Focus on tasks, deliver excellence
+                          </motion.p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Quick Status Indicator */}
-                    <motion.div 
-                      className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.6, delay: 0.5 }}
-                    >
-                      <FaBullseye className="text-2xl mb-2 mx-auto" />
-                      <p className="font-heading text-sm font-semibold">My Status</p>
-                      <p className="font-body text-xs opacity-80">Active</p>
-                    </motion.div>
-                  </div>
+                      {/* Bottom Section - Status Indicator */}
+                      <motion.div 
+                        className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center self-start"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FaBullseye className="text-lg" />
+                          <div className="text-left">
+                            <p className="font-heading text-xs font-semibold">My Status</p>
+                            <p className="font-body text-xs opacity-80">Active</p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  ) : (
+                    /* Desktop Layout - Horizontal */
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-6">
+                        <motion.div 
+                          className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg"
+                          whileHover={{ scale: 1.05, rotate: 5 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <FaRocket className="text-3xl text-white" />
+                        </motion.div>
+                        <div>
+                          <motion.p 
+                            className="font-body text-lg opacity-90 mb-1"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.2 }}
+                          >
+                            {getGreeting()}, Team Member! 👋
+                          </motion.p>
+                          <motion.h1 
+                            className="font-heading text-4xl font-bold mb-2"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                          >
+                            Your Work Hub
+                          </motion.h1>
+                          <motion.p 
+                            className="font-body text-lg opacity-90"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                          >
+                            Focus on tasks, deliver excellence
+                          </motion.p>
+                        </div>
+                      </div>
+
+                      {/* Quick Status Indicator */}
+                      <motion.div 
+                        className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.6, delay: 0.5 }}
+                      >
+                        <FaBullseye className="text-2xl mb-2 mx-auto" />
+                        <p className="font-heading text-sm font-semibold">My Status</p>
+                        <p className="font-body text-xs opacity-80">Active</p>
+                      </motion.div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -333,7 +392,11 @@ export default function TeamMemberDashboardPage() {
             {/* Enhanced Quick Actions for Team Members */}
             {!loading && !error && (
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8"
+                className={`grid gap-6 mt-8 ${
+                  isMobile 
+                    ? 'grid-cols-1' 
+                    : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+                }`}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
@@ -384,42 +447,9 @@ export default function TeamMemberDashboardPage() {
                     }}
                     layout
                   >
-                    <TeamMemberQuickActionCard {...card} />
+                    <TeamMemberQuickActionCard {...card} isMobile={isMobile} />
                   </motion.div>
                 ))}
-              </motion.div>
-            )}
-
-            {/* Task Statistics */}
-            {!loading && !error && (
-              <motion.div 
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                layout
-              >
-                <TaskStatCard 
-                  title="Pending Tasks" 
-                  count="5" 
-                  icon="⏳" 
-                  color="text-yellow-600 dark:text-yellow-400"
-                  bgColor="bg-yellow-50 dark:bg-yellow-900/20"
-                />
-                <TaskStatCard 
-                  title="In Progress" 
-                  count="3" 
-                  icon="🔄" 
-                  color="text-blue-600 dark:text-blue-400"
-                  bgColor="bg-blue-50 dark:bg-blue-900/20"
-                />
-                <TaskStatCard 
-                  title="Completed" 
-                  count="12" 
-                  icon="✅" 
-                  color="text-green-600 dark:text-green-400"
-                  bgColor="bg-green-50 dark:bg-green-900/20"
-                />
               </motion.div>
             )}
           </motion.div>
@@ -499,13 +529,13 @@ export default function TeamMemberDashboardPage() {
 }
 
 // Enhanced Quick Action Card Component for Team Members
-const TeamMemberQuickActionCard = ({ title, description, icon: Icon, onClick, gradient, change }) => {
+const TeamMemberQuickActionCard = ({ title, description, icon: Icon, onClick, gradient, change, isMobile }) => {
   return (
     <motion.div
-      className="bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      className={`bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200/20 dark:border-gray-700/20 rounded-2xl ${isMobile ? 'p-4' : 'p-6'} hover:shadow-xl transition-all duration-300 cursor-pointer group`}
       whileHover={{ 
-        scale: 1.05, 
-        y: -5,
+        scale: isMobile ? 1.02 : 1.05, 
+        y: isMobile ? -2 : -5,
         transition: { duration: 0.2, ease: "easeOut" }
       }}
       whileTap={{ 
@@ -516,9 +546,9 @@ const TeamMemberQuickActionCard = ({ title, description, icon: Icon, onClick, gr
       layout
       transition={{ duration: 0.3 }}
     >
-      <div className="flex items-center justify-between mb-4">
-        <div className={`w-14 h-14 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center shadow-lg`}>
-          <Icon className="text-white text-xl" />
+      <div className={`flex items-center justify-between ${isMobile ? 'mb-3' : 'mb-4'}`}>
+        <div className={`${isMobile ? 'w-12 h-12' : 'w-14 h-14'} bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center shadow-lg`}>
+          <Icon className={`text-white ${isMobile ? 'text-lg' : 'text-xl'}`} />
         </div>
         <div className="text-right">
           <motion.div
@@ -531,13 +561,13 @@ const TeamMemberQuickActionCard = ({ title, description, icon: Icon, onClick, gr
         </div>
       </div>
       <div>
-        <h3 className="font-heading text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1 group-hover:text-brand-primary-500 transition-colors duration-200">
+        <h3 className={`font-heading ${isMobile ? 'text-base' : 'text-lg'} font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1 group-hover:text-brand-primary-500 transition-colors duration-200`}>
           {title}
         </h3>
-        <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark mb-2">
+        <p className={`font-body ${isMobile ? 'text-xs' : 'text-sm'} text-txt-secondary-light dark:text-txt-secondary-dark mb-2`}>
           {description}
         </p>
-        <p className="font-body text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+        <p className={`font-body ${isMobile ? 'text-xs' : 'text-xs'} text-txt-secondary-light dark:text-txt-secondary-dark`}>
           {change}
         </p>
       </div>
@@ -545,42 +575,4 @@ const TeamMemberQuickActionCard = ({ title, description, icon: Icon, onClick, gr
   );
 };
 
-// Task Statistics Card Component (unchanged)
-const TaskStatCard = ({ title, count, icon, color, bgColor }) => {
-  return (
-    <motion.div
-      className={`${bgColor} border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-6`}
-      whileHover={{ 
-        scale: 1.02,
-        transition: { duration: 0.2 }
-      }}
-      layout
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark mb-1">
-            {title}
-          </p>
-          <motion.p 
-            className={`font-heading text-3xl font-bold ${color}`}
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, type: "spring" }}
-          >
-            {count}
-          </motion.p>
-        </div>
-        <motion.div 
-          className="text-3xl"
-          whileHover={{ 
-            scale: 1.2,
-            rotate: 10,
-            transition: { duration: 0.2 }
-          }}
-        >
-          {icon}
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
+
