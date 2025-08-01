@@ -169,35 +169,6 @@ function SignUpPage() {
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 h-px bg-border-light dark:bg-border-dark" />
-          <span className="mx-3 text-xs text-txt-muted-light dark:text-txt-muted-dark">or sign up with</span>
-          <div className="flex-1 h-px bg-border-light dark:bg-border-dark" />
-        </div>
-
-        {/* Social Buttons */}
-        <div className="flex gap-2">
-          <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-bg-accent-light dark:border-bg-accent-dark rounded-full bg-white dark:bg-bg-accent-dark text-xs text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-50 dark:hover:bg-bg-secondary-dark transition">
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
-              <g>
-                <path fill="#4285F4" d="M21.8 10h-9.8v4h5.7c-.5 1.3-1.4 2.3-2.2 3v3h3.5c2.1-1.9 3.3-4.7 3.3-8z" />
-                <path fill="#34A853" d="M12 22c2.4 0 4.3-.8 5.8-2.1l-3.5-2.7c-1 .7-2.2 1.1-3.7 1.1-2.8 0-5.2-1.9-6-4.4H3v2.8A10 10 0 0012 22z" />
-                <path fill="#FBBC05" d="M6 13.8a6 6 0 010-3.7v-2.8H3A10 10 0 002 12c0 1.6.4 3.1 1 4.7l3.9-2.9z" />
-                <path fill="#EA4335" d="M12 6.5c1.3 0 2.4.4 3.3 1.3L18 5.3A10 10 0 0012 2a10 10 0 00-9 5.8l3.9 2.8c.8-2.6 3.2-4.1 5.1-4.1z" />
-              </g>
-            </svg>
-            Google
-          </button>
-          <button className="flex-1 flex items-center justify-center gap-2 py-2 border border-bg-accent-light dark:border-bg-accent-dark rounded-full bg-white dark:bg-bg-accent-dark text-xs text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-50 dark:hover:bg-bg-secondary-dark transition">
-            <svg width="16" height="16" fill="#1877F3" viewBox="0 0 24 24">
-              <path d="M22.676 0H1.326C.595 0 0 .6 0 1.34V22.66c0 .74.595 1.34 1.326 1.34h11.495V14.74h-3.133v-3.624h3.133V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.461.099 2.794.142v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.764v2.314h3.587l-.467 3.624h-3.12V24h6.116c.73 0 1.325-.6 1.325-1.34V1.34C24 .6 23.405 0 22.675 0"/>
-            </svg>
-            Facebook
-          </button>
-        </div>
-
         <p className="text-center mt-6 text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
           Already have an account?{" "}
           <a href="/login" className="text-brand-primary-500 dark:text-brand-primary-400 font-medium hover:underline">

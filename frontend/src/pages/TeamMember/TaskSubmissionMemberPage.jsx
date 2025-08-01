@@ -21,24 +21,48 @@ const GET_TASK_BY_ID = gql`
     }
   }
 `;
+
 const UPDATE_TASK_STATUS = gql`
   mutation UpdateTaskStatus($taskId: ID!, $status: String!) {
     updateTaskStatus(taskId: $taskId, status: $status) {
-      success message task { id title status updatedAt }
+      success
+      message
+      task {
+        id
+        title
+        status
+        updatedAt
+      }
     }
   }
 `;
+
 const SEND_TASK_FOR_APPROVAL = gql`
   mutation SendTaskForApproval($taskId: ID!) {
     sendTaskForApproval(taskId: $taskId) {
-      success message task { id status }
+      success
+      message
+      task {
+        id
+        status
+      }
     }
   }
 `;
+
 const ADD_TASK_ATTACHMENT = gql`
   mutation AddTaskAttachment($taskId: ID!, $attachment: AttachmentInput!) {
     addTaskAttachment(taskId: $taskId, attachment: $attachment) {
-      success message task { id attachments { name size type } }
+      success
+      message
+      task {
+        id
+        attachments {
+          name
+          size
+          type
+        }
+      }
     }
   }
 `;
@@ -48,16 +72,58 @@ const TaskSubmissionPage = () => {
   const { projectId, taskId } = useParams();
   const fileInputRef = useRef();
 
-  const { data, loading, error, refetch } = useQuery(GET_TASK_BY_ID, { variables: { taskId }, skip: !taskId });
-
-  // --- Mutations
-  const [updateTaskStatus, { loading: updating }] = useMutation(UPDATE_TASK_STATUS, { onCompleted: () => refetch() });
-  const [sendTaskForApproval, { loading: approving }] = useMutation(SEND_TASK_FOR_APPROVAL, {
-    onCompleted: () => { refetch(); notify('success', "Task sent for approval!"); },
+  const { data, loading, error, refetch } = useQuery(GET_TASK_BY_ID, { 
+    variables: { taskId }, 
+    skip: !taskId,
+    errorPolicy: 'all'
   });
+
+  // --- Mutations with proper error handling
+  const [updateTaskStatus, { loading: updating }] = useMutation(UPDATE_TASK_STATUS, {
+    onCompleted: (data) => {
+      if (data.updateTaskStatus.success) {
+        refetch();
+        notify('success', data.updateTaskStatus.message);
+        setStatus(data.updateTaskStatus.task.status);
+      } else {
+        notify('error', data.updateTaskStatus.message);
+      }
+    },
+    onError: (error) => {
+      console.error("Update task status error:", error);
+      notify('error', `Failed to update status: ${error.message}`);
+    }
+  });
+
+  const [sendTaskForApproval, { loading: approving }] = useMutation(SEND_TASK_FOR_APPROVAL, {
+    onCompleted: (data) => {
+      if (data.sendTaskForApproval.success) {
+        refetch();
+        notify('success', data.sendTaskForApproval.message);
+        setStatus(data.sendTaskForApproval.task.status);
+      } else {
+        notify('error', data.sendTaskForApproval.message);
+      }
+    },
+    onError: (error) => {
+      console.error("Send for approval error:", error);
+      notify('error', `Failed to send for approval: ${error.message}`);
+    }
+  });
+
   const [addTaskAttachment, { loading: addingAttachment }] = useMutation(ADD_TASK_ATTACHMENT, {
-    onCompleted: () => { refetch(); notify('success', "File attached!"); },
-    onError: (err) => notify('error', err.message)
+    onCompleted: (data) => {
+      if (data.addTaskAttachment.success) {
+        refetch();
+        notify('success', data.addTaskAttachment.message);
+      } else {
+        notify('error', data.addTaskAttachment.message);
+      }
+    },
+    onError: (error) => {
+      console.error("Add attachment error:", error);
+      notify('error', `Failed to add attachment: ${error.message}`);
+    }
   });
 
   // --- Status UI state
@@ -65,53 +131,112 @@ const TaskSubmissionPage = () => {
   const [notification, setNotification] = useState({ show: false, type: '', message: '' });
 
   useEffect(() => {
-    if (data?.getTaskById?.status) setStatus(data.getTaskById.status);
+    if (data?.getTaskById?.status) {
+      setStatus(data.getTaskById.status);
+      console.log("Current task status:", data.getTaskById.status); // Debug log
+    }
   }, [data]);
 
   function notify(type, message) {
     setNotification({ show: true, type, message });
-    setTimeout(() => setNotification((p) => ({ ...p, show: false })), 2200);
+    setTimeout(() => setNotification((p) => ({ ...p, show: false })), 3000);
   }
 
-  // --- Status Handlers
+  // --- Fixed Status Handlers
   const handleStatusUpdate = async () => {
-    if (!status || status === "Done") return;
-    await updateTaskStatus({ variables: { taskId, status: "Done" } });
-    setStatus("Done");
-    notify("success", "Marked as Done!");
+    try {
+      console.log("Current status before update:", status); // Debug log
+      
+      // Allow updating from various statuses to "Done"
+      if (!status || status === "Done" || status === "Completed" || status === "Pending Approval") {
+        notify('error', 'Task cannot be marked as done from current status');
+        return;
+      }
+
+      console.log("Attempting to update task status to 'Done'"); // Debug log
+      
+      await updateTaskStatus({ 
+        variables: { 
+          taskId, 
+          status: "Done" 
+        } 
+      });
+    } catch (error) {
+      console.error("Error in handleStatusUpdate:", error);
+      notify('error', `Failed to update task: ${error.message}`);
+    }
   };
 
   const handleSendForApproval = async () => {
-    if (status !== "Done") return;
-    await sendTaskForApproval({ variables: { taskId } });
+    try {
+      console.log("Current status before sending for approval:", status); // Debug log
+      
+      if (status !== "Done") {
+        notify('error', 'Task must be marked as "Done" before sending for approval');
+        return;
+      }
+
+      console.log("Attempting to send task for approval"); // Debug log
+      
+      await sendTaskForApproval({ 
+        variables: { taskId } 
+      });
+    } catch (error) {
+      console.error("Error in handleSendForApproval:", error);
+      notify('error', `Failed to send for approval: ${error.message}`);
+    }
   };
 
-  // --- Attachments upload
+  // --- Attachments upload (unchanged)
   const handleFileInput = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const newAttachment = { name: file.name, size: file.size, type: file.type };
-    await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
+    
+    try {
+      const newAttachment = { name: file.name, size: file.size, type: file.type };
+      await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
+
   const handleDrop = async (e) => {
     e.preventDefault();
     if (addingAttachment) return;
+    
     const file = e.dataTransfer.files[0];
     if (!file) return;
-    const newAttachment = { name: file.name, size: file.size, type: file.type };
-    await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
+    
+    try {
+      const newAttachment = { name: file.name, size: file.size, type: file.type };
+      await addTaskAttachment({ variables: { taskId, attachment: newAttachment } });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
   };
+
   const handleDragOver = (e) => e.preventDefault();
 
   // --- Data Shortcuts
   const task = data?.getTaskById;
 
   // --- UI Helpers ---
-  const getStatusShade = (status) =>
-    status === "Completed" ? "bg-green-50 text-green-700 border-green-200"
-    : status === "Pending Approval" ? "bg-yellow-50 text-yellow-700 border-yellow-300"
-    : status === "Done" ? "bg-blue-50 text-blue-700 border-blue-300"
-    : "bg-gray-50 text-gray-700 border-gray-200";
+  const getStatusShade = (status) => {
+    switch(status) {
+      case "Completed":
+        return "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-700";
+      case "Pending Approval":
+        return "bg-yellow-50 text-yellow-700 border-yellow-300 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-700";
+      case "Done":
+        return "bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-700";
+      case "In Progress":
+        return "bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-700";
+      case "To Do":
+        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-700";
+      default:
+        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-300 dark:border-gray-700";
+    }
+  };
 
   // --- Render
   if (loading) return (
@@ -119,11 +244,16 @@ const TaskSubmissionPage = () => {
       <div className="text-center text-brand-primary-500 font-heading animate-pulse text-xl">Loading task details...</div>
     </div>
   );
-  if (error) return (
-    <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
-      <div className="text-center text-red-600">Error: {error.message}</div>
-    </div>
-  );
+
+  if (error) {
+    console.error("GraphQL Error:", error);
+    return (
+      <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
+        <div className="text-center text-red-600">Error: {error.message}</div>
+      </div>
+    );
+  }
+
   if (!task) return (
     <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
       <div className="text-center text-txt-secondary-light dark:text-txt-secondary-dark">Task not found</div>
@@ -167,12 +297,18 @@ const TaskSubmissionPage = () => {
           {task.title}
         </h1>
         <div className="flex flex-wrap gap-4 items-center text-txt-secondary-light dark:text-txt-secondary-dark mb-2">
-          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Priority: <b>{task.priority}</b></span>
-          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No deadline'}</span>
-          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">Created: {new Date(task.createdAt).toLocaleDateString()}</span>
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">
+            Priority: <b>{task.priority}</b>
+          </span>
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">
+            Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No deadline'}
+          </span>
+          <span className="bg-bg-accent-light dark:bg-bg-accent-dark px-2 py-1 rounded-lg text-xs font-medium">
+            Created: {new Date(task.createdAt).toLocaleDateString()}
+          </span>
         </div>
         <p className="font-body text-lg mt-2">{task.description}</p>
-        {task.remarks && <p className="text-sm italic text-yellow-700 mt-2">Remarks: {task.remarks}</p>}
+        {task.remarks && <p className="text-sm italic text-yellow-700 dark:text-yellow-400 mt-2">Remarks: {task.remarks}</p>}
       </div>
 
       {/* --- ProgressBar --- */}
@@ -189,10 +325,12 @@ const TaskSubmissionPage = () => {
       >
         <div className="mb-3 flex flex-col items-center gap-2">
           <UploadCloud className="w-8 h-8 text-brand-primary-500" />
-          <span className="font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">Attach your files (PDF, DOC, PNG etc)</span>
+          <span className="font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+            Attach your files (PDF, DOC, PNG etc)
+          </span>
         </div>
         <motion.button
-          className="bg-brand-primary-500 text-white px-6 py-2 rounded-xl mt-2 font-medium shadow hover:bg-brand-primary-600 transition"
+          className="bg-brand-primary-500 text-white px-6 py-2 rounded-xl mt-2 font-medium shadow hover:bg-brand-primary-600 transition disabled:opacity-50"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => fileInputRef.current && fileInputRef.current.click()}
@@ -222,12 +360,12 @@ const TaskSubmissionPage = () => {
             <span className="text-lg font-semibold text-green-700 dark:text-green-200">Task Completed</span>
           </motion.div>
         ) : status === "Pending Approval" ? (
-          <div className="flex items-center justify-center gap-2 text-yellow-700 font-semibold p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 shadow">
+          <div className="flex items-center justify-center gap-2 text-yellow-700 dark:text-yellow-300 font-semibold p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 shadow">
             <Clock className="w-5 h-5" /> Pending Approval
           </div>
         ) : status === "Done" ? (
           <motion.button
-            className="w-full md:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105"
+            className="w-full md:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105 disabled:opacity-50"
             whileHover={{ scale: 1.02 }}
             onClick={handleSendForApproval}
             disabled={approving}
@@ -236,7 +374,7 @@ const TaskSubmissionPage = () => {
           </motion.button>
         ) : (
           <motion.button
-            className="w-full md:w-auto px-8 py-3 bg-brand-primary-600 hover:bg-brand-primary-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105"
+            className="w-full md:w-auto px-8 py-3 bg-brand-primary-600 hover:bg-brand-primary-700 text-white font-semibold rounded-xl shadow transition-transform transform-gpu hover:scale-105 disabled:opacity-50"
             whileHover={{ scale: 1.02 }}
             onClick={handleStatusUpdate}
             disabled={updating}
@@ -249,7 +387,7 @@ const TaskSubmissionPage = () => {
   );
 };
 
-// --- Modern Attachment List
+// Components remain the same...
 const AttachmentList = ({ attachments }) => (
   <div className="mt-4">
     <h4 className="font-semibold mb-2 flex items-center gap-1 text-heading-primary-light dark:text-heading-primary-dark">
@@ -273,13 +411,13 @@ const AttachmentList = ({ attachments }) => (
   </div>
 );
 
-// --- Modern ProgressBar
 const ProgressBar = ({ status }) => {
   const progress = status === "Completed" ? 1
     : status === "Pending Approval" ? 0.9
     : status === "Done" ? 0.75
     : status === "In Progress" ? 0.5
     : 0;
+    
   return (
     <div className="my-4">
       <div className="w-full bg-bg-accent-light dark:bg-bg-accent-dark rounded-full h-3">
@@ -301,15 +439,16 @@ const ProgressBar = ({ status }) => {
   );
 };
 
-// --- NotificationBanner
 const NotificationBanner = ({ type, message, onClose }) => (
   <motion.div
     initial={{ opacity: 0, y: -40 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -40 }}
     className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-md w-full p-4 rounded-xl flex gap-3 items-center shadow-xl ring-1 ring-opacity-20
-    ${type === 'success' ? 'bg-green-50 ring-green-400 border-green-300 text-green-900'
-      : 'bg-red-50 ring-red-400 border-red-300 text-red-900' }`}
+    ${type === 'success' 
+      ? 'bg-green-50 ring-green-400 border-green-300 text-green-900 dark:bg-green-900/20 dark:ring-green-500 dark:border-green-700 dark:text-green-100'
+      : 'bg-red-50 ring-red-400 border-red-300 text-red-900 dark:bg-red-900/20 dark:ring-red-500 dark:border-red-700 dark:text-red-100' 
+    }`}
   >
     {type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
     <span className="font-medium">{message}</span>

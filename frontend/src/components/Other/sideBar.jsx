@@ -49,11 +49,6 @@ const Sidebar = ({ setActiveComponent, onStateChange, category, NavbarItems }) =
   const MENU = {
     Project_Manager: [
       {
-        title: "Overview",
-        icon: Home,
-        links: [{ txt: "Dashboard", icon: Home, comp: "dashboard" }],
-      },
-      {
         title: "Project Management",
         icon: FolderKanban,
         links: [

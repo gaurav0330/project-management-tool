@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, gql } from "@apollo/client";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc, Loader ,Clipboard} from "lucide-react";
+import { Search, X, Calendar, User, Flag, Clock, ArrowRight, Filter, SortDesc, Loader, Clipboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { useResponsive } from "../../hooks/useResponsive";
 
 // 🔹 GraphQL Query to Fetch Tasks
 const GET_TASKS_FOR_MEMBER = gql`
@@ -19,7 +20,6 @@ const GET_TASKS_FOR_MEMBER = gql`
       dueDate
       createdAt
       taskId
-
     }
   }
 `;
@@ -46,10 +46,8 @@ const GET_PROJECT_BY_ID = gql`
   }
 `;
 
-
 // 🔹 Extract memberId from JWT token
 const getMemberIdFromToken = () => {
-
   const token = localStorage.getItem("token");
   if (!token) return null;
 
@@ -66,7 +64,7 @@ const getMemberIdFromToken = () => {
 const UserDisplay = ({ userId }) => {
   const { data, loading, error } = useQuery(GET_USER, {
     variables: { userId },
-    skip: !userId, // Skip query if no userId provided
+    skip: !userId,
   });
 
   if (loading) {
@@ -83,7 +81,7 @@ const UserDisplay = ({ userId }) => {
   if (error || !data?.getUser) {
     return (
       <span className="text-sm">
-        {userId} {/* Fallback to showing the ID if user fetch fails */}
+        {userId}
       </span>
     );
   }
@@ -95,9 +93,8 @@ const UserDisplay = ({ userId }) => {
   );
 };
 
-// Task Card Component
-
-const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
+// Task Card Component with responsive design
+const TaskCard = ({ task, index, projectId, navigate, showGitOptions, isMobile, isTablet }) => {
   // Determine priority color gradient
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -123,7 +120,7 @@ const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
     }
   };
 
-  // Check if overdue (dueDate in past and not done)
+  // Check if overdue
   const isOverdue =
     task.dueDate &&
     new Date(task.dueDate) < new Date() &&
@@ -142,35 +139,35 @@ const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
-      whileHover={{ y: -4 }}
-      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
+      whileHover={{ y: isMobile ? -2 : -4 }}
+      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group w-full max-w-full"
     >
       {/* Priority strip */}
       <div className={`h-1 bg-gradient-to-r ${getPriorityColor(task.priority)}`} />
 
-      <div className="p-6">
+      <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2 line-clamp-2">
+        <div className={`flex items-start justify-between ${isMobile ? 'mb-3' : 'mb-4'}`}>
+          <div className="flex-1 min-w-0 pr-3">
+            <h3 className={`font-heading ${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-heading-primary-light dark:text-heading-primary-dark ${isMobile ? 'mb-1' : 'mb-2'} line-clamp-2 break-words`}>
               {task.title}
             </h3>
-            <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark text-sm line-clamp-3">
+            <p className={`font-body text-txt-secondary-light dark:text-txt-secondary-dark ${isMobile ? 'text-xs' : 'text-sm'} line-clamp-3 break-words`}>
               {task.description}
             </p>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-            {task.status}
+          <div className={`${isMobile ? 'px-2 py-1 text-xs' : 'px-3 py-1 text-xs'} rounded-full font-medium ${getStatusColor(task.status)} flex-shrink-0`}>
+            {isMobile ? task.status.split(' ')[0] : task.status}
           </div>
         </div>
 
         {/* Task Details */}
-        <div className="space-y-3 mb-6">
-          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-            <Flag className="w-4 h-4" />
+        <div className={`space-y-${isMobile ? '2' : '3'} ${isMobile ? 'mb-4' : 'mb-6'}`}>
+          <div className={`flex items-center gap-${isMobile ? '2' : '3'} ${isMobile ? 'text-xs' : 'text-sm'} text-txt-secondary-light dark:text-txt-secondary-dark`}>
+            <Flag className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
             <span className="font-medium">Priority:</span>
             <span
-              className={`px-2 py-1 rounded text-xs font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}
+              className={`px-2 py-1 rounded ${isMobile ? 'text-xs' : 'text-xs'} font-medium bg-gradient-to-r ${getPriorityColor(task.priority)} text-white`}
             >
               {task.priority}
             </span>
@@ -178,39 +175,39 @@ const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
 
           {task.dueDate && (
             <div
-              className={`flex items-center gap-3 text-sm ${
+              className={`flex items-center gap-${isMobile ? '2' : '3'} ${isMobile ? 'text-xs' : 'text-sm'} ${
                 isOverdue ? "text-red-600 dark:text-red-400" : "text-txt-secondary-light dark:text-txt-secondary-dark"
               }`}
             >
-              <Calendar className="w-4 h-4" />
+              <Calendar className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
               <span className="font-medium">Due:</span>
-              <span className={isOverdue ? "font-semibold" : ""}>
+              <span className={`${isOverdue ? "font-semibold" : ""} truncate`}>
                 {new Date(task.dueDate).toLocaleDateString()}
-                {isOverdue && " (Overdue)"}
+                {isOverdue && !isMobile && " (Overdue)"}
+                {isOverdue && isMobile && " ⚠️"}
               </span>
             </div>
           )}
 
           {task.createdBy && (
-            <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-              <User className="w-4 h-4" />
-              <span className="font-medium">Assigned By:</span>
-              <span>{task.createdBy}</span>
-              {/* You can replace with UserDisplay component if desired */}
+            <div className={`flex items-center gap-${isMobile ? '2' : '3'} ${isMobile ? 'text-xs' : 'text-sm'} text-txt-secondary-light dark:text-txt-secondary-dark`}>
+              <User className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
+              <span className="font-medium">By:</span>
+              <span className="truncate">{task.createdBy}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-3 text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
-            <Clock className="w-4 h-4" />
+          <div className={`flex items-center gap-${isMobile ? '2' : '3'} ${isMobile ? 'text-xs' : 'text-sm'} text-txt-secondary-light dark:text-txt-secondary-dark`}>
+            <Clock className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} />
             <span className="font-medium">Created:</span>
-            <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+            <span className="truncate">{new Date(task.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
 
         {/* Conditionally show Git info */}
         {showGitOptions && (
-          <div className="mb-6 space-y-2">
-            <label className="block text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+          <div className={`${isMobile ? 'mb-4' : 'mb-6'} space-y-${isMobile ? '2' : '3'}`}>
+            <label className={`block ${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-txt-secondary-light dark:text-txt-secondary-dark`}>
               Task ID
             </label>
             <div className="flex items-center gap-2">
@@ -218,69 +215,63 @@ const TaskCard = ({ task, index, projectId, navigate, showGitOptions }) => {
                 type="text"
                 readOnly
                 value={task.taskId || task.id}
-                className="flex-grow rounded-md border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark px-3 py-2 font-mono text-sm text-txt-primary-light dark:text-txt-primary-dark"
+                className={`flex-grow rounded-md border border-bg-accent-light dark:border-bg-accent-dark bg-bg-primary-light dark:bg-bg-primary-dark ${isMobile ? 'px-2 py-1.5 text-xs' : 'px-3 py-2 text-sm'} font-mono text-txt-primary-light dark:text-txt-primary-dark`}
               />
               <button
                 type="button"
                 onClick={() => copyToClipboard(task.taskId || task.id)}
-                className="bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-3 py-2 rounded-md font-semibold transition-colors duration-200"
+                className={`bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} rounded-md font-semibold transition-colors duration-200`}
                 aria-label="Copy Task ID"
               >
-                <Clipboard className="w-4 h-4" />
+                <Clipboard className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
               </button>
             </div>
 
-            
-            <label className="block text-sm font-semibold text-txt-secondary-light dark:text-txt-secondary-dark">
+            <label className={`block ${isMobile ? 'text-xs' : 'text-sm'} font-semibold text-txt-secondary-light dark:text-txt-secondary-dark`}>
               Commit Command
             </label>
             <div className="flex items-center gap-2">
-  <div className="flex-grow border border-bg-accent-light dark:border-bg-accent-dark rounded-md px-3 py-2">
-    <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark font-mono select-text">
-      {`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`}
-    </p>
-  </div>
-  <button
-    type="button"
-    onClick={() =>
-      copyToClipboard(`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`)
-    }
-    aria-label="Copy commit command"
-    className="flex items-center gap-1 bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark px-3 py-1 rounded-md font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400"
-  >
-    <Clipboard className="w-4 h-4" />
-  </button>
-</div>
-
+              <div className={`flex-grow border border-bg-accent-light dark:border-bg-accent-dark rounded-md ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'}`}>
+                <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-txt-secondary-light dark:text-txt-secondary-dark font-mono select-text break-all`}>
+                  {`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  copyToClipboard(`git commit -m "Implemented feature - Closes ${task.taskId || task.id}"`)
+                }
+                aria-label="Copy commit command"
+                className={`flex items-center gap-1 bg-brand-secondary-500 hover:bg-brand-secondary-600 dark:bg-brand-secondary-600 dark:hover:bg-brand-secondary-700 text-bg-primary-light dark:text-bg-primary-dark ${isMobile ? 'px-2 py-1.5' : 'px-3 py-2'} rounded-md font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-primary-500 dark:focus:ring-brand-primary-400`}
+              >
+                <Clipboard className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
+              </button>
+            </div>
           </div>
         )}
 
         {/* Action Button */}
         <motion.button
-          className="w-full btn-primary flex items-center justify-center gap-2 group-hover:shadow-lg"
-          whileHover={{ scale: 1.02 }}
+          className={`w-full btn-primary flex items-center justify-center gap-2 group-hover:shadow-lg ${isMobile ? 'py-2.5 text-sm' : 'py-3'}`}
+          whileHover={{ scale: isMobile ? 1.01 : 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate(`/teammembertasksubmission/${projectId}/${task.id}`)}
         >
           <span>Submit Task</span>
-          <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+          <ArrowRight className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} transition-transform duration-200 group-hover:translate-x-1`} />
         </motion.button>
       </div>
     </motion.div>
   );
 };
 
-
-
-
-
-// Filter Select Component
-const FilterSelect = ({ value, onChange, options, icon }) => (
+// Filter Select Component with responsive design - FIXED
+const FilterSelect = ({ value, onChange, options, icon, isMobile }) => (
   <div className="relative">
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 transition-all duration-200"
+      className={`appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl ${isMobile ? 'pl-8 pr-6 py-2 text-sm' : 'pl-10 pr-8 py-3'} font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 transition-all duration-200 w-full`}
     >
       {options.map(option => (
         <option key={option.value} value={option.value}>
@@ -288,77 +279,91 @@ const FilterSelect = ({ value, onChange, options, icon }) => (
         </option>
       ))}
     </select>
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
-      {icon}
+    <div className={`absolute ${isMobile ? 'left-2' : 'left-3'} top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark`}>
+      {/* FIXED: Direct icon rendering instead of React.cloneElement */}
+      <div className={isMobile ? 'w-3 h-3' : 'w-4 h-4'}>
+        {icon}
+      </div>
     </div>
   </div>
 );
 
-// Sort Select Component
-const SortSelect = ({ sortBy, setSortBy, sortOrder, setSortOrder }) => (
-  <div className="flex items-center gap-2 relative">
-    <div className="relative">
+// Sort Select Component with responsive design
+const SortSelect = ({ sortBy, setSortBy, sortOrder, setSortOrder, isMobile }) => (
+  <div className={`flex items-center gap-2 relative ${isMobile ? 'col-span-2' : ''}`}>
+    <div className="relative flex-1">
       <select
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value)}
-        className="appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl pl-10 pr-8 py-3 font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500"
+        className={`appearance-none bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl ${isMobile ? 'pl-8 pr-6 py-2 text-sm' : 'pl-10 pr-8 py-3'} font-body text-txt-primary-light dark:text-txt-primary-dark focus:outline-none focus:ring-2 focus:ring-brand-primary-500 w-full`}
       >
         <option value="createdAt">Created Date</option>
         <option value="priority">Priority</option>
         <option value="dueDate">Due Date</option>
         <option value="status">Status</option>
       </select>
-      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark">
-        <SortDesc className="w-4 h-4" />
+      <div className={`absolute ${isMobile ? 'left-2' : 'left-3'} top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark`}>
+        <SortDesc className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'}`} />
       </div>
     </div>
     <motion.button
-      className="p-3 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+      className={`${isMobile ? 'p-2' : 'p-3'} bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200 flex-shrink-0`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
     >
-      <SortDesc className={`w-4 h-4 text-txt-secondary-light dark:text-txt-secondary-dark transition-transform duration-200 ${sortOrder === "asc" ? "rotate-180" : ""}`} />
+      <SortDesc className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} text-txt-secondary-light dark:text-txt-secondary-dark transition-transform duration-200 ${sortOrder === "asc" ? "rotate-180" : ""}`} />
     </motion.button>
   </div>
 );
 
-// Pagination Component
-const PaginationComponent = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage }) => {
+// Pagination Component with responsive design
+const PaginationComponent = ({ currentPage, totalPages, onPageChange, totalItems, itemsPerPage, isMobile }) => {
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
+  // Show fewer page numbers on mobile
+  const getVisiblePages = () => {
+    if (isMobile) {
+      const maxVisible = 3;
+      const start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      const end = Math.min(totalPages, start + maxVisible - 1);
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    } else {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+  };
+
   return (
     <motion.div 
-      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+      className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-4 lg:p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <div className="flex items-center justify-between">
-        <p className="font-body text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+      <div className={`flex items-center ${isMobile ? 'flex-col gap-4' : 'justify-between'}`}>
+        <p className={`font-body ${isMobile ? 'text-xs text-center' : 'text-sm'} text-txt-secondary-light dark:text-txt-secondary-dark`}>
           Showing {startItem} to {endItem} of {totalItems} tasks
         </p>
         
         <div className="flex items-center gap-2">
           <motion.button
-            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+            className={`${isMobile ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'} bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200`}
             whileHover={{ scale: currentPage === 1 ? 1 : 1.02 }}
             whileTap={{ scale: currentPage === 1 ? 1 : 0.98 }}
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            Previous
+            {isMobile ? '‹' : 'Previous'}
           </motion.button>
           
           <div className="flex items-center gap-1">
-            {[...Array(totalPages)].map((_, i) => {
-              const page = i + 1;
+            {getVisiblePages().map((page) => {
               const isActive = page === currentPage;
               
               return (
                 <motion.button
                   key={page}
-                  className={`w-10 h-10 rounded-xl font-body text-sm transition-all duration-200 ${
+                  className={`${isMobile ? 'w-8 h-8 text-xs' : 'w-10 h-10 text-sm'} rounded-xl font-body transition-all duration-200 ${
                     isActive 
                       ? "bg-brand-primary-500 text-white shadow-lg" 
                       : "bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 text-txt-primary-light dark:text-txt-primary-dark hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -374,13 +379,13 @@ const PaginationComponent = ({ currentPage, totalPages, onPageChange, totalItems
           </div>
           
           <motion.button
-            className="px-4 py-2 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+            className={`${isMobile ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'} bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl font-body text-txt-primary-light dark:text-txt-primary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200`}
             whileHover={{ scale: currentPage === totalPages ? 1 : 1.02 }}
             whileTap={{ scale: currentPage === totalPages ? 1 : 0.98 }}
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
-            Next
+            {isMobile ? '›' : 'Next'}
           </motion.button>
         </div>
       </div>
@@ -393,43 +398,38 @@ export default function MyTasksPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { isMobile, isTablet, isDesktop, width } = useResponsive();
   const memberId = getMemberIdFromToken();
   
-
   const [githubRepo, setGithubRepo] = useState(null);
-const [githubWebhookSecret, setGithubWebhookSecret] = useState(null);
-const [showGitOptions, setShowGitOptions] = useState(false);
+  const [githubWebhookSecret, setGithubWebhookSecret] = useState(null);
+  const [showGitOptions, setShowGitOptions] = useState(false);
 
-const { data: projectData, loading: projectLoading } = useQuery(GET_PROJECT_BY_ID, {
-  variables: { id: projectId },
-  skip: !projectId,
-  fetchPolicy: 'network-only',
-});
+  const { data: projectData, loading: projectLoading } = useQuery(GET_PROJECT_BY_ID, {
+    variables: { id: projectId },
+    skip: !projectId,
+    fetchPolicy: 'network-only',
+  });
 
-useEffect(() => {
-  if (projectData?.getProjectById) {
-    const { githubRepo, githubWebhookSecret } = projectData.getProjectById;
-    setGithubRepo(githubRepo);
-    setGithubWebhookSecret(githubWebhookSecret);
+  useEffect(() => {
+    if (projectData?.getProjectById) {
+      const { githubRepo, githubWebhookSecret } = projectData.getProjectById;
+      setGithubRepo(githubRepo);
+      setGithubWebhookSecret(githubWebhookSecret);
 
-    // Show copy options only if both values exist and are non-empty
-    setShowGitOptions(
-      githubRepo && githubWebhookSecret &&
-      githubRepo.trim() !== '' && githubWebhookSecret.trim() !== ''
-    );
-  }
-}, [projectData]);
-
+      setShowGitOptions(
+        githubRepo && githubWebhookSecret &&
+        githubRepo.trim() !== '' && githubWebhookSecret.trim() !== ''
+      );
+    }
+  }, [projectData]);
 
   // 🔹 Fetch tasks using Apollo Client
   const { data, loading, error, refetch } = useQuery(GET_TASKS_FOR_MEMBER, {
     variables: { memberId, projectId },
     skip: !memberId || !projectId,
-    pollInterval: 30000, // Refresh every 30 seconds
+    pollInterval: 30000,
   });
-
-
-  //Fetching githubRepo and githubWebhookSecret
   
   // State Management
   const [searchTerm, setSearchTerm] = useState("");
@@ -439,7 +439,7 @@ useEffect(() => {
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const tasksPerPage = 6;
+  const tasksPerPage = isMobile ? 4 : 6; // Fewer tasks per page on mobile
 
   const tasks = data?.getTasksForMember || [];
 
@@ -496,9 +496,9 @@ useEffect(() => {
   // Loading Component
   if (loading) {
     return (
-      <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
+      <div className={`min-h-screen ${isMobile ? 'p-4' : 'p-6 lg:p-8'} bg-bg-secondary-light dark:bg-bg-secondary-dark`}>
         <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-8"
+          className={`bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg ${isMobile ? 'p-6' : 'p-8'}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
@@ -506,13 +506,13 @@ useEffect(() => {
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-4 h-4 bg-brand-primary-500 rounded-full"
+                className={`${isMobile ? 'w-3 h-3' : 'w-4 h-4'} bg-brand-primary-500 rounded-full`}
                 animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
               />
             ))}
           </div>
-          <p className="text-center mt-4 font-body text-txt-secondary-light dark:text-txt-secondary-dark">
+          <p className={`text-center mt-4 font-body text-txt-secondary-light dark:text-txt-secondary-dark ${isMobile ? 'text-sm' : ''}`}>
             Loading your tasks...
           </p>
         </motion.div>
@@ -523,20 +523,20 @@ useEffect(() => {
   // Error Component
   if (error) {
     return (
-      <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
+      <div className={`min-h-screen ${isMobile ? 'p-4' : 'p-6 lg:p-8'} bg-bg-secondary-light dark:bg-bg-secondary-dark`}>
         <motion.div 
-          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-8"
+          className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl ${isMobile ? 'p-6' : 'p-8'}`}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-red-600 dark:text-red-400" />
+            <div className={`${isMobile ? 'w-12 h-12' : 'w-16 h-16'} bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <X className={`${isMobile ? 'w-6 h-6' : 'w-8 h-8'} text-red-600 dark:text-red-400`} />
             </div>
-            <h3 className="font-heading text-xl font-semibold text-red-800 dark:text-red-200 mb-2">
+            <h3 className={`font-heading ${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-red-800 dark:text-red-200 mb-2`}>
               Error Loading Tasks
             </h3>
-            <p className="font-body text-red-600 dark:text-red-300 mb-4">
+            <p className={`font-body text-red-600 dark:text-red-300 mb-4 ${isMobile ? 'text-sm' : ''}`}>
               {error.message}
             </p>
             <motion.button
@@ -554,44 +554,44 @@ useEffect(() => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-8 bg-bg-secondary-light dark:bg-bg-secondary-dark">
+    <div className={`min-h-screen ${isMobile ? 'p-4' : 'p-6 lg:p-8'} bg-bg-secondary-light dark:bg-bg-secondary-dark`}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="space-y-6"
+        className={`space-y-${isMobile ? '4' : '6'}`}
       >
         {/* Header */}
         <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+          className={`bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg ${isMobile ? 'p-4' : 'p-6'}`}
           layout
         >
-          <div className="flex items-center justify-between">
+          <div className={`flex items-center ${isMobile ? 'flex-col text-center space-y-3' : 'justify-between'}`}>
             <div>
-              <h1 className="font-heading text-3xl font-bold text-heading-primary-light dark:text-heading-primary-dark">
+              <h1 className={`font-heading ${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-heading-primary-light dark:text-heading-primary-dark`}>
                 My Tasks
               </h1>
-              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mt-1">
+              <p className={`font-body text-txt-secondary-light dark:text-txt-secondary-dark mt-1 ${isMobile ? 'text-sm' : ''}`}>
                 Manage and track your assigned tasks
               </p>
             </div>
             <motion.div 
-              className="flex items-center gap-4 text-txt-secondary-light dark:text-txt-secondary-dark"
+              className={`flex items-center ${isMobile ? 'gap-6' : 'gap-4'} text-txt-secondary-light dark:text-txt-secondary-dark`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
               <div className="text-center">
-                <div className="font-heading text-2xl font-bold text-brand-primary-500">
+                <div className={`font-heading ${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-brand-primary-500`}>
                   {tasks.length}
                 </div>
-                <div className="text-sm">Total Tasks</div>
+                <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>Total Tasks</div>
               </div>
               <div className="text-center">
-                <div className="font-heading text-2xl font-bold text-green-500">
+                <div className={`font-heading ${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-green-500`}>
                   {tasks.filter(t => t.status === "Done" || t.status === "Completed").length}
                 </div>
-                <div className="text-sm">Completed</div>
+                <div className={`${isMobile ? 'text-xs' : 'text-sm'}`}>Completed</div>
               </div>
             </motion.div>
           </div>
@@ -599,91 +599,98 @@ useEffect(() => {
 
         {/* Search and Filters */}
         <motion.div 
-          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-6"
+          className={`bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg ${isMobile ? 'p-4' : 'p-6'}`}
           layout
         >
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className={`flex flex-col ${isMobile ? 'space-y-3' : 'lg:flex-row gap-4'}`}>
             {/* Search Bar */}
             <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark w-5 h-5" />
+              <Search className={`absolute ${isMobile ? 'left-3 w-4 h-4' : 'left-4 w-5 h-5'} top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark`} />
               <input
                 type="text"
-                placeholder="Search tasks by title or description..."
-                className="w-full pl-12 pr-12 py-3 bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 font-body text-txt-primary-light dark:text-txt-primary-dark transition-all duration-200"
+                placeholder={isMobile ? "Search tasks..." : "Search tasks by title or description..."}
+                className={`w-full ${isMobile ? 'pl-10 pr-10 py-2.5 text-sm' : 'pl-12 pr-12 py-3'} bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500 font-body text-txt-primary-light dark:text-txt-primary-dark transition-all duration-200`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               {searchTerm && (
                 <motion.button
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                  className={`absolute ${isMobile ? 'right-3' : 'right-4'} top-1/2 transform -translate-y-1/2 text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark`}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setSearchTerm("")}
                 >
-                  <X className="w-5 h-5" />
+                  <X className={`${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`} />
                 </motion.button>
               )}
             </div>
 
             {/* Filter Toggle */}
-            <motion.button
-              className="lg:hidden btn-secondary flex items-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </motion.button>
+            {isMobile && (
+              <motion.button
+                className="btn-secondary flex items-center justify-center gap-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+              >
+                <Filter className="w-4 h-4" />
+                Filters
+              </motion.button>
+            )}
 
             {/* Desktop Filters */}
-            <div className="hidden lg:flex items-center gap-4">
-              <FilterSelect
-                value={statusFilter}
-                onChange={setStatusFilter}
-                options={[
-                  { value: "All", label: "All Status" },
-                  { value: "To Do", label: "To Do" },
-                  { value: "In Progress", label: "In Progress" },
-                  { value: "Done", label: "Done" },
-                  { value: "Pending Approval", label: "Pending Approval" },
-                  { value: "Completed", label: "Completed" }
-                ]}
-                icon={<Flag className="w-4 h-4" />}
-              />
+            {!isMobile && (
+              <div className="flex items-center gap-4">
+                <FilterSelect
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  options={[
+                    { value: "All", label: "All Status" },
+                    { value: "To Do", label: "To Do" },
+                    { value: "In Progress", label: "In Progress" },
+                    { value: "Done", label: "Done" },
+                    { value: "Pending Approval", label: "Pending Approval" },
+                    { value: "Completed", label: "Completed" }
+                  ]}
+                  icon={<Flag className="w-4 h-4" />}
+                  isMobile={isMobile}
+                />
 
-              <FilterSelect
-                value={priorityFilter}
-                onChange={setPriorityFilter}
-                options={[
-                  { value: "All", label: "All Priorities" },
-                  { value: "High", label: "High Priority" },
-                  { value: "Medium", label: "Medium Priority" },
-                  { value: "Low", label: "Low Priority" }
-                ]}
-                icon={<Flag className="w-4 h-4" />}
-              />
+                <FilterSelect
+                  value={priorityFilter}
+                  onChange={setPriorityFilter}
+                  options={[
+                    { value: "All", label: "All Priorities" },
+                    { value: "High", label: "High Priority" },
+                    { value: "Medium", label: "Medium Priority" },
+                    { value: "Low", label: "Low Priority" }
+                  ]}
+                  icon={<Flag className="w-4 h-4" />}
+                  isMobile={isMobile}
+                />
 
-              <SortSelect
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                sortOrder={sortOrder}
-                setSortOrder={setSortOrder}
-              />
-            </div>
+                <SortSelect
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  sortOrder={sortOrder}
+                  setSortOrder={setSortOrder}
+                  isMobile={isMobile}
+                />
+              </div>
+            )}
           </div>
 
           {/* Mobile Filters */}
           <AnimatePresence>
-            {isFilterOpen && (
+            {isMobile && isFilterOpen && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.3 }}
-                className="lg:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
+                className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                   <FilterSelect
                     value={statusFilter}
                     onChange={setStatusFilter}
@@ -695,7 +702,8 @@ useEffect(() => {
                       { value: "Pending Approval", label: "Pending Approval" },
                       { value: "Completed", label: "Completed" }
                     ]}
-                    icon={<Flag className="w-4 h-4" />}
+                    icon={<Flag className="w-3 h-3" />}
+                    isMobile={isMobile}
                   />
 
                   <FilterSelect
@@ -707,7 +715,8 @@ useEffect(() => {
                       { value: "Medium", label: "Medium Priority" },
                       { value: "Low", label: "Low Priority" }
                     ]}
-                    icon={<Flag className="w-4 h-4" />}
+                    icon={<Flag className="w-3 h-3" />}
+                    isMobile={isMobile}
                   />
 
                   <SortSelect
@@ -715,6 +724,7 @@ useEffect(() => {
                     setSortBy={setSortBy}
                     sortOrder={sortOrder}
                     setSortOrder={setSortOrder}
+                    isMobile={isMobile}
                   />
                 </div>
               </motion.div>
@@ -731,7 +741,7 @@ useEffect(() => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+              className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}
             >
               {currentTasks.map((task, index) => (
                 <TaskCard
@@ -740,7 +750,9 @@ useEffect(() => {
                   index={index}
                   projectId={projectId}
                   navigate={navigate}
-                  showGitOptions={showGitOptions}  // pass flag here
+                  showGitOptions={showGitOptions}
+                  isMobile={isMobile}
+                  isTablet={isTablet}
                 />
               ))}
             </motion.div>
@@ -750,15 +762,15 @@ useEffect(() => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg p-12 text-center"
+              className={`bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg ${isMobile ? 'p-8' : 'p-12'} text-center`}
             >
-              <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="w-12 h-12 text-gray-400" />
+              <div className={`${isMobile ? 'w-16 h-16' : 'w-24 h-24'} bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto ${isMobile ? 'mb-4' : 'mb-6'}`}>
+                <Search className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-gray-400`} />
               </div>
-              <h3 className="font-heading text-xl font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+              <h3 className={`font-heading ${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2`}>
                 No Tasks Found
               </h3>
-              <p className="font-body text-txt-secondary-light dark:text-txt-secondary-dark mb-6">
+              <p className={`font-body text-txt-secondary-light dark:text-txt-secondary-dark ${isMobile ? 'mb-4 text-sm' : 'mb-6'}`}>
                 {searchTerm || statusFilter !== "All" || priorityFilter !== "All"
                   ? "Try adjusting your search criteria or filters"
                   : "You don't have any tasks assigned yet"}
@@ -789,6 +801,7 @@ useEffect(() => {
             onPageChange={setCurrentPage}
             totalItems={sortedTasks.length}
             itemsPerPage={tasksPerPage}
+            isMobile={isMobile}
           />
         )}
       </motion.div>
