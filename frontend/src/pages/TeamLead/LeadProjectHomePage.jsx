@@ -372,16 +372,7 @@ export default function TeamLeadDashboard() {
                   </div>
 
                   {/* Quick Status Indicator */}
-                  <motion.div 
-                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 text-center"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.5 }}
-                  >
-                    <FaBullseye className="text-2xl mb-2 mx-auto" />
-                    <p className="font-heading text-sm font-semibold">Project Status</p>
-                    <p className="font-body text-xs opacity-80">On Track</p>
-                  </motion.div>
+                 
                 </div>
               </div>
             </motion.div>
