@@ -41,7 +41,7 @@ const MobileSidebar = ({
     }));
   };
 
-  // Exact same MENU structure from your Sidebar component
+  // Role-based menu structure optimized for Team Lead
   const MENU = {
     Project_Manager: [
       {
@@ -103,6 +103,14 @@ const MobileSidebar = ({
         ],
       },
       {
+        title: "Task Operations",
+        icon: CheckCircle,
+        links: [
+          { txt: "Assign Tasks", icon: ClipboardList, comp: "tasks" },
+          { txt: "View Tasks", icon: Target, comp: "assignedTasks" },
+        ],
+      },
+      {
         title: "Chat & Collaboration",
         icon: MessageSquare,
         links: [{ txt: "Chat", icon: MessageSquare, comp: "chat" }],
@@ -153,9 +161,16 @@ const MobileSidebar = ({
           <div className="w-7 h-7 bg-brand-primary-600 rounded-lg flex items-center justify-center shadow-sm">
             <Briefcase className="w-3.5 h-3.5 text-white" />
           </div>
-          <h1 className="font-heading text-base font-semibold text-heading-primary-light dark:text-heading-primary-dark tracking-tight">
-            YojanaDesk
-          </h1>
+          <div>
+            <h1 className="font-heading text-base font-semibold text-heading-primary-light dark:text-heading-primary-dark tracking-tight">
+              YojanaDesk
+            </h1>
+            {userRole === "Team_Lead" && (
+              <p className="text-xs text-brand-primary-600 dark:text-brand-primary-400 font-medium">
+                Leadership Hub
+              </p>
+            )}
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -184,12 +199,25 @@ const MobileSidebar = ({
                 "bg-bg-primary-light dark:bg-bg-primary-dark",
                 "hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark",
                 "text-txt-primary-light dark:text-txt-primary-dark",
-                "border border-gray-200/20 dark:border-gray-700/20"
+                "border border-gray-200/20 dark:border-gray-700/20",
+                userRole === "Team_Lead" && title === "Team Management" 
+                  ? "ring-2 ring-brand-primary-500/20 bg-brand-primary-50/50 dark:bg-brand-primary-900/10" 
+                  : ""
               )}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-md bg-brand-primary-50 dark:bg-brand-primary-900/20 flex items-center justify-center">
-                  <SectionIcon className="w-3.5 h-3.5 text-brand-primary-600 dark:text-brand-primary-400" />
+                <div className={cn(
+                  "w-6 h-6 rounded-md flex items-center justify-center",
+                  userRole === "Team_Lead" && title === "Team Management"
+                    ? "bg-brand-primary-500 text-white"
+                    : "bg-brand-primary-50 dark:bg-brand-primary-900/20"
+                )}>
+                  <SectionIcon className={cn(
+                    "w-3.5 h-3.5",
+                    userRole === "Team_Lead" && title === "Team Management"
+                      ? "text-white"
+                      : "text-brand-primary-600 dark:text-brand-primary-400"
+                  )} />
                 </div>
                 <span className="font-medium tracking-wide uppercase">{title}</span>
               </div>
@@ -225,6 +253,9 @@ const MobileSidebar = ({
                   >
                     <Icon className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium tracking-wide">{txt}</span>
+                    {userRole === "Team_Lead" && (txt === "Create Team" || txt === "My Teams") && (
+                      <div className="ml-auto w-2 h-2 bg-brand-primary-500 rounded-full animate-pulse"></div>
+                    )}
                   </motion.button>
                 ))}
               </motion.div>
@@ -247,18 +278,34 @@ const MobileSidebar = ({
         )}
       </nav>
 
-      {/* Footer */}
+      {/* Enhanced Footer for Team Lead */}
       <div className="p-3 border-t border-gray-200/10 dark:border-gray-700/10 bg-bg-primary-light dark:bg-bg-primary-dark">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200/20 dark:border-gray-700/20 transition-all duration-300">
-          <div className="w-7 h-7 bg-gradient-to-br from-brand-accent-500 to-brand-accent-600 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-            <User className="w-3.5 h-3.5 text-white" />
+          <div className={cn(
+            "w-7 h-7 rounded-full flex items-center justify-center shadow-sm flex-shrink-0",
+            userRole === "Team_Lead" 
+              ? "bg-gradient-to-br from-yellow-500 to-orange-500"
+              : "bg-gradient-to-br from-brand-accent-500 to-brand-accent-600"
+          )}>
+            {userRole === "Team_Lead" ? (
+              <Target className="w-3.5 h-3.5 text-white" />
+            ) : (
+              <User className="w-3.5 h-3.5 text-white" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-txt-primary-light dark:text-txt-primary-dark truncate tracking-wide">
               {userRole?.replace("_", " ") || "User"}
             </p>
-            <p className="text-[10px] text-txt-secondary-light dark:text-txt-secondary-dark font-medium">Online</p>
+            <p className="text-[10px] text-txt-secondary-light dark:text-txt-secondary-dark font-medium">
+              {userRole === "Team_Lead" ? "Leading Teams" : "Online"}
+            </p>
           </div>
+          {userRole === "Team_Lead" && (
+            <div className="text-right">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            </div>
+          )}
         </div>
       </div>
     </div>

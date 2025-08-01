@@ -59,8 +59,13 @@ export default function Navbar() {
 
   const { isMobile, isTablet, isDesktop } = useResponsive();
 
-  // Check if we're on a project page
-  const currentlyOnProjectPage = location.pathname.includes('/projectHome/');
+  // Enhanced page detection
+  const isOnTeamDetailPage = location.pathname.match(/\/teamlead\/project\/[^\/]+\/[^\/]+$/);
+  const isOnProjectPage = location.pathname.includes('/projectHome/') || 
+                          location.pathname.includes('/teamLead/') ||
+                          location.pathname.includes('/projectdashboard/');
+  
+  const currentlyOnProjectPage = isOnProjectPage || isOnTeamDetailPage;
 
   // Decode token for userId and role
   useEffect(() => {
@@ -149,20 +154,72 @@ export default function Navbar() {
     setMobileOpen(prev => !prev);
   };
 
-  // CRITICAL FIX: Handle project sidebar toggle from project menu
+  // ENHANCED: Handle both project and team sidebar toggles
   const handleProjectSidebarToggle = () => {
     setMobileOpen(false); // Close the navbar menu
     
-    // Check if we have access to the project page handler
-    if (window.projectMobileSidebarHandler) {
-      window.projectMobileSidebarHandler.toggle();
+    // Check if we're on a team detail page
+    if (isOnTeamDetailPage) {
+      // Handle team sidebar
+      if (window.teamMobileSidebarHandler) {
+        window.teamMobileSidebarHandler.toggle();
+      } else {
+        // Fallback: post message to team page
+        window.postMessage({ type: 'TOGGLE_TEAM_SIDEBAR' }, '*');
+      }
     } else {
-      // Fallback: post message to project page
-      window.postMessage({ type: 'TOGGLE_PROJECT_SIDEBAR' }, '*');
+      // Handle regular project sidebar
+      if (window.projectMobileSidebarHandler) {
+        window.projectMobileSidebarHandler.toggle();
+      } else {
+        // Fallback: post message to project page
+        window.postMessage({ type: 'TOGGLE_PROJECT_SIDEBAR' }, '*');
+      }
+    }
+  };
+
+  // Enhanced menu configuration based on page type and user role
+  const getProjectMenuConfig = () => {
+    // If on team detail page, always show team menu
+    if (isOnTeamDetailPage) {
+      return {
+        text: "🎯 Team Menu",
+        icon: "🎯",
+        color: "bg-purple-500 hover:bg-purple-600 border-purple-500 hover:border-purple-600"
+      };
+    }
+    
+    // Regular project pages based on user role
+    switch (userRole) {
+      case "Project_Manager":
+        return {
+          text: "📋 Project Menu",
+          icon: "📋",
+          color: "bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+        };
+      case "Team_Lead":
+        return {
+          text: "🎯 Team Lead Menu",
+          icon: "🎯",
+          color: "bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
+        };
+      case "Team_Member":
+        return {
+          text: "👤 Member Menu",
+          icon: "👤",
+          color: "bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600"
+        };
+      default:
+        return {
+          text: "📋 Project Menu",
+          icon: "📋",
+          color: "bg-brand-primary-500 hover:bg-brand-primary-600 border-brand-primary-500 hover:border-brand-primary-600"
+        };
     }
   };
 
   const user = userQueryData?.getUser || {};
+  const projectMenuConfig = getProjectMenuConfig();
 
   return (
     <>
@@ -211,7 +268,7 @@ export default function Navbar() {
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
                         <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-                          {userLoading ? "..." : user.role || "Member"}
+                          {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
                     </button>
@@ -289,13 +346,13 @@ export default function Navbar() {
                     📊 Dashboard
                   </button>
 
-                  {/* Show Project Menu Button ONLY if on project page */}
+                  {/* Show Project/Team Menu Button ONLY if on project or team page */}
                   {currentlyOnProjectPage && (
                     <button
                       onClick={handleProjectSidebarToggle}
-                      className="text-left py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 text-white border border-brand-primary-500 hover:border-brand-primary-600 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200"
+                      className={`text-left py-2 px-3 rounded-md border hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ${projectMenuConfig.color} text-white`}
                     >
-                      📋 Project Menu
+                      {projectMenuConfig.text}
                     </button>
                   )}
 
@@ -319,7 +376,7 @@ export default function Navbar() {
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
                         <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
-                          {userLoading ? "..." : user.role || "Member"}
+                          {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
                     </button>
