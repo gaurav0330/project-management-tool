@@ -11,14 +11,10 @@ import {
   CaretUp,
   List,
   X,
-} from "phosphor-react"; // Install: npm i phosphor-react
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+} from "phosphor-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "../../../lib/utils";
+import { useWindowSize } from "../../hooks/useWindowSize";
 
 const TEAM_MENU = [
   {
@@ -43,12 +39,15 @@ const TEAM_MENU = [
     items: [
       { label: "Add Members", icon: UserPlus, component: "addmembers" },
       { label: "Task Distribution", icon: ArrowsLeftRight, component: "taskDistribution" },
+      { label: "Team Tasks", icon: ListChecks, component: "teamtasks" },
     ],
   },
 ];
 
-const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const TeamSidebar = ({ setActiveComponent, onStateChange, teamId, projectId }) => {
+  const { width } = useWindowSize();
+  const isMobile = width < 1024; // Tailwind 'lg' breakpoint
+
   const [activeItem, setActiveItem] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -70,7 +69,13 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
   const handleMouseEnter = () => setIsHovering(true);
   const handleMouseLeave = () => setIsHovering(false);
 
-  const SidebarMenu = (
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+    setExpandedSections({});
+  };
+
+  // Desktop Sidebar Menu Block
+  const MenuBlock = () => (
     <aside
       className={cn(
         "flex h-full flex-col border-r transition-all duration-300 backdrop-blur-md",
@@ -103,7 +108,7 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
       {/* Collapse Toggle */}
       <div className="px-3 py-2 border-b border-gray-200/10 dark:border-gray-700/10">
         <Button
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={toggleCollapse}
           variant="ghost"
           size="sm"
           className={cn(
@@ -111,8 +116,10 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
             shouldShowFull ? "w-full justify-start gap-2" : "w-10 h-10 p-0 justify-center"
           )}
         >
-          {isCollapsed ? <List className="h-5 w-5" /> : <X className="h-5 w-5" />}
-          {shouldShowFull && <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>}
+          {isCollapsed ? <List className="h-4 w-4" /> : <X className="h-4 w-4" />}
+          {shouldShowFull && (
+            <span className="text-xs font-medium">{isCollapsed ? "Expand" : "Collapse"}</span>
+          )}
         </Button>
       </div>
 
@@ -141,7 +148,7 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
             ) : (
               <div className="flex justify-center mb-3">
                 <div
-                  className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark"
+                  className="w-10 h-10 rounded-lg bg-bg-primary-light dark:bg-bg-primary-dark flex items-center justify-center border border-gray-200/20 dark:border-gray-700/20 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-all duration-300"
                   title={title}
                 >
                   <SectionIcon className="w-5 h-5 text-brand-primary-600 dark:text-brand-primary-400" weight="fill" />
@@ -158,26 +165,20 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                     onClick={() => {
                       setActiveComponent(item.component);
                       setActiveItem(item.label);
-                      setIsOpen(false);
                     }}
                     variant="ghost"
                     className={cn(
                       "w-full justify-start gap-2.5 rounded-lg px-3 py-2 text-sm transition-all duration-300",
                       activeItem === item.label
-                        ? "bg-brand-primary-600 text-white shadow-md font-medium"
+                        ? "bg-brand-primary-600 text-white shadow-lg font-medium"
                         : "text-txt-secondary-light dark:text-txt-secondary-dark hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
                     )}
                   >
                     <item.icon className="h-4 w-4 flex-shrink-0" weight="duotone" />
-                    <span className="tracking-wide">{item.label}</span>
+                    <span className="font-medium tracking-wide">{item.label}</span>
                   </Button>
                 ))}
               </div>
-            )}
-
-            {/* Divider between sections */}
-            {shouldShowFull && index !== TEAM_MENU.length - 1 && (
-              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
             )}
 
             {/* Collapsed icon-only view */}
@@ -189,7 +190,6 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                       onClick={() => {
                         setActiveComponent(item.component);
                         setActiveItem(item.label);
-                        setIsOpen(false);
                       }}
                       variant="ghost"
                       size="sm"
@@ -197,7 +197,7 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                       className={cn(
                         "w-10 h-10 p-0 rounded-lg transition-all duration-300",
                         activeItem === item.label
-                          ? "bg-brand-primary-600 text-white shadow-md"
+                          ? "bg-brand-primary-600 text-white shadow-lg"
                           : "hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark text-txt-secondary-light dark:text-txt-secondary-dark"
                       )}
                     >
@@ -207,41 +207,52 @@ const TeamSidebar = ({ setActiveComponent, onStateChange }) => {
                 ))}
               </div>
             )}
+
+            {/* Divider between sections */}
+            {shouldShowFull && index !== TEAM_MENU.length - 1 && (
+              <div className="my-3 h-px bg-gradient-to-r from-transparent via-gray-300/20 dark:via-gray-600/20 to-transparent" />
+            )}
           </div>
         ))}
       </nav>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-gray-200/10 dark:border-gray-700/10 bg-bg-primary-light dark:bg-bg-primary-dark">
+        <div
+          className={cn(
+            "flex items-center rounded-lg bg-bg-accent-light dark:bg-bg-accent-dark border border-gray-200/20 dark:border-gray-700/20 transition-all duration-300",
+            shouldShowFull ? "gap-3 px-3 py-2.5" : "justify-center p-2.5"
+          )}
+        >
+          <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+            <UsersFour className="w-3.5 h-3.5 text-white" weight="fill" />
+          </div>
+          {shouldShowFull && (
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-txt-primary-light dark:text-txt-primary-dark truncate tracking-wide">
+                Team Management
+              </p>
+              <p className="text-[10px] text-txt-secondary-light dark:text-txt-secondary-dark font-medium">Active</p>
+            </div>
+          )}
+        </div>
+      </div>
     </aside>
   );
 
   return (
     <>
-      {/* Mobile sidebar drawer */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button
-            size="icon"
-            className="fixed top-4 left-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white border-none rounded-xl"
-          >
-            <List size={20} />
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          side="left"
-          className="p-0 w-64 border-r border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark"
+      {/* Desktop sidebar only - Mobile is handled by parent component */}
+      {!isMobile && (
+        <div
+          className={cn(
+            "fixed top-0 left-0 h-full z-40 transition-all duration-300",
+            shouldShowFull ? "w-64" : "w-16"
+          )}
         >
-          {SidebarMenu}
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop sidebar */}
-      <div
-        className={cn(
-          "hidden lg:block fixed top-0 left-0 h-full z-40 transition-all duration-300",
-          shouldShowFull ? "w-64" : "w-16"
-        )}
-      >
-        {SidebarMenu}
-      </div>
+          <MenuBlock />
+        </div>
+      )}
     </>
   );
 };
