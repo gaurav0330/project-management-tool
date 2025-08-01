@@ -39,40 +39,38 @@ const DeadlinesOverview = ({ projectId }) => {
     variables: { projectId },
   });
 
-  // Loading state
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-4 xs:p-6">
         <div className="animate-pulse space-y-4">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-4 xs:mb-6">
             <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
-            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-48"></div>
+            <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-36 xs:w-48"></div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 xs:mb-6">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+              <div key={i} className="h-16 xs:h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
             ))}
           </div>
-          <div className="h-80 bg-gray-200 dark:bg-gray-700 rounded-xl mb-6"></div>
-          <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+          <div className="h-56 xs:h-80 bg-gray-200 dark:bg-gray-700 rounded-xl mb-4 xs:mb-6"></div>
+          <div className="h-32 xs:h-48 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
         </div>
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <div className="p-6 text-center">
+      <div className="p-4 xs:p-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 xs:w-16 xs:h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-8 h-8 text-red-500" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+            <h3 className="text-base xs:text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1 xs:mb-2">
               Unable to Load Deadlines
             </h3>
-            <p className="text-txt-secondary-light dark:text-txt-secondary-dark">
+            <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-xs xs:text-base">
               Error loading deadlines data.
             </p>
           </div>
@@ -85,19 +83,18 @@ const DeadlinesOverview = ({ projectId }) => {
   const upcomingTasks = data.getOverdueAndUpcomingTasks.upcomingTasks;
   const totalTasks = overdueTasks.length + upcomingTasks.length;
 
-  // Empty state
   if (totalTasks === 0) {
     return (
-      <div className="p-6 text-center">
+      <div className="p-4 xs:p-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 xs:w-16 xs:h-16 bg-bg-accent-light dark:bg-bg-accent-dark rounded-full flex items-center justify-center">
             <Calendar className="w-8 h-8 text-txt-secondary-light dark:text-txt-secondary-dark" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+            <h3 className="text-base xs:text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1 xs:mb-2">
               No Deadlines to Track
             </h3>
-            <p className="text-txt-secondary-light dark:text-txt-secondary-dark">
+            <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-xs xs:text-base">
               Task deadlines will appear here once they are set.
             </p>
           </div>
@@ -106,7 +103,6 @@ const DeadlinesOverview = ({ projectId }) => {
     );
   }
 
-  // Calculations
   const today = dayjs();
   const totalOverdueDays = overdueTasks.reduce((sum, task) => sum + today.diff(dayjs(task.dueDate), "day"), 0);
   const avgOverdueDays = overdueTasks.length ? (totalOverdueDays / overdueTasks.length).toFixed(1) : 0;
@@ -129,16 +125,15 @@ const DeadlinesOverview = ({ projectId }) => {
     new Date(dayjs(b.date, "MMM DD").format("YYYY-MM-DD"))
   );
 
-  // Custom tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-bg-primary-light dark:bg-bg-primary-dark p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2">
+        <div className="bg-bg-primary-light dark:bg-bg-primary-dark p-2 xs:p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <p className="font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-1 xs:mb-2">
             {label}
           </p>
           {payload.map((entry) => (
-            <p key={entry.dataKey} className="text-sm" style={{ color: entry.color }}>
+            <p key={entry.dataKey} className="text-xs xs:text-sm" style={{ color: entry.color }}>
               {entry.name}: {entry.value} tasks
             </p>
           ))}
@@ -192,22 +187,22 @@ const DeadlinesOverview = ({ projectId }) => {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-2 xs:p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 xs:gap-3 mb-4 xs:mb-6 flex-wrap">
           <div className="p-2 bg-gradient-to-br from-brand-primary-500 to-brand-primary-600 rounded-xl shadow-lg">
             <Calendar className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark">
+            <h2 className="text-lg xs:text-xl font-heading font-bold text-heading-primary-light dark:text-heading-primary-dark">
               Deadlines & Milestones
             </h2>
-            <p className="text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+            <p className="text-xs xs:text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
               Track upcoming deadlines and overdue tasks
             </p>
           </div>
@@ -218,7 +213,7 @@ const DeadlinesOverview = ({ projectId }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 xs:gap-4 mb-4 xs:mb-6"
         >
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
@@ -228,17 +223,17 @@ const DeadlinesOverview = ({ projectId }) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 + index * 0.1 }}
-                className={`p-4 rounded-xl ${stat.bgColor} border ${stat.borderColor} hover:scale-105 transition-all duration-300`}
+                className={`p-2 xs:p-4 rounded-xl ${stat.bgColor} border ${stat.borderColor} hover:scale-105 transition-all duration-300 flex flex-col`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-1.5 rounded-lg bg-gradient-to-r ${stat.color} text-white`}>
+                <div className="flex items-center gap-2 mb-1 xs:mb-2">
+                  <div className={`p-1 rounded-lg bg-gradient-to-r ${stat.color} text-white`}>
                     <IconComponent className="w-3 h-3" />
                   </div>
-                  <span className="text-xs font-medium text-txt-secondary-light dark:text-txt-secondary-dark uppercase tracking-wide">
+                  <span className="text-[10px] xs:text-xs font-medium text-txt-secondary-light dark:text-txt-secondary-dark uppercase tracking-wide">
                     {stat.title}
                   </span>
                 </div>
-                <p className="text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark">
+                <p className="text-base xs:text-lg font-bold text-heading-primary-light dark:text-heading-primary-dark">
                   {stat.value}
                 </p>
               </motion.div>
@@ -251,30 +246,32 @@ const DeadlinesOverview = ({ projectId }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="card mb-6"
+          className="card mb-4 xs:mb-6"
         >
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
+          <div className="p-2 xs:p-4">
+            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2 xs:mb-4">
               Deadline Distribution
             </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                  className="text-txt-primary-light dark:text-txt-primary-dark"
-                />
-                <YAxis 
-                  tick={{ fontSize: 12, fill: 'currentColor' }}
-                  className="text-txt-primary-light dark:text-txt-primary-dark"
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "14px" }} />
-                <Bar dataKey="Overdue" fill="#ef4444" name="Overdue Tasks" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Upcoming" fill="#10b981" name="Upcoming Tasks" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="w-full h-52 xs:h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12, fill: 'currentColor' }}
+                    className="text-txt-primary-light dark:text-txt-primary-dark"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 12, fill: 'currentColor' }}
+                    className="text-txt-primary-light dark:text-txt-primary-dark"
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: "12px" }} />
+                  <Bar dataKey="Overdue" fill="#ef4444" name="Overdue Tasks" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Upcoming" fill="#10b981" name="Upcoming Tasks" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </motion.div>
 
@@ -285,36 +282,36 @@ const DeadlinesOverview = ({ projectId }) => {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="card"
         >
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-4">
+          <div className="p-2 xs:p-4">
+            <h3 className="text-lg font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2 xs:mb-4">
               Task Details
             </h3>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs xs:text-base">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
-                      <div className="flex items-center gap-2">
+                    <th className="text-left py-2 px-2 xs:py-3 xs:px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
+                      <div className="flex items-center gap-1 xs:gap-2">
                         <Hash className="w-4 h-4" />
                         Task ID
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
+                    <th className="text-left py-2 px-2 xs:py-3 xs:px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
                       Title
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
-                      <div className="flex items-center gap-2">
+                    <th className="text-left py-2 px-2 xs:py-3 xs:px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
+                      <div className="flex items-center gap-1 xs:gap-2">
                         <Calendar className="w-4 h-4" />
                         Due Date
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
-                      <div className="flex items-center gap-2">
+                    <th className="text-left py-2 px-2 xs:py-3 xs:px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
+                      <div className="flex items-center gap-1 xs:gap-2">
                         <User className="w-4 h-4" />
                         Assigned To
                       </div>
                     </th>
-                    <th className="text-left py-3 px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
+                    <th className="text-left py-2 px-2 xs:py-3 xs:px-4 font-medium text-txt-secondary-light dark:text-txt-secondary-dark">
                       Status
                     </th>
                   </tr>
@@ -323,7 +320,6 @@ const DeadlinesOverview = ({ projectId }) => {
                   {[...overdueTasks, ...upcomingTasks].map((task, index) => {
                     const isOverdue = overdueTasks.includes(task);
                     const daysFromNow = dayjs(task.dueDate).diff(today, 'day');
-                    
                     return (
                       <motion.tr
                         key={task.taskId}
@@ -332,35 +328,35 @@ const DeadlinesOverview = ({ projectId }) => {
                         transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
                         className="border-b border-gray-100 dark:border-gray-800 hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-colors"
                       >
-                        <td className="py-3 px-4">
-                          <span className="font-mono text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
+                        <td className="py-2 px-2 xs:py-3 xs:px-4">
+                          <span className="font-mono text-xs xs:text-sm text-txt-secondary-light dark:text-txt-secondary-dark">
                             {task.taskId}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-2 px-2 xs:py-3 xs:px-4">
                           <span className="font-medium text-heading-primary-light dark:text-heading-primary-dark">
                             {task.title}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
+                        <td className="py-2 px-2 xs:py-3 xs:px-4">
+                          <div className="flex items-center gap-1 xs:gap-2">
                             <span className="text-txt-primary-light dark:text-txt-primary-dark">
                               {dayjs(task.dueDate).format("MMM DD, YYYY")}
                             </span>
                             {!isOverdue && daysFromNow <= 3 && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                              <span className="inline-flex items-center px-1 xs:px-2 py-1 rounded-full text-[10px] xs:text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
                                 Soon
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-2 px-2 xs:py-3 xs:px-4">
                           <span className="text-txt-primary-light dark:text-txt-primary-dark">
                             {task.assignedTo}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        <td className="py-2 px-2 xs:py-3 xs:px-4">
+                          <span className={`inline-flex items-center px-1 xs:px-2 py-1 rounded-full text-[10px] xs:text-xs font-medium ${
                             isOverdue 
                               ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                               : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
@@ -390,5 +386,4 @@ const DeadlinesOverview = ({ projectId }) => {
     </div>
   );
 };
-
 export default DeadlinesOverview;
