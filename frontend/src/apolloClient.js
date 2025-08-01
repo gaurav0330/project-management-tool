@@ -2,11 +2,11 @@ import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 
 // GraphQL API Endpoint
+// GraphQL API Endpoint
 const httpLink = createHttpLink({
-  uri:
-    process.env.NODE_ENV === "production"
-      ? process.env.REACT_APP_BACKEND_URL + "/graphql"
-      : "http://localhost:5000/graphql",
+  uri: import.meta.env.PROD
+    ? import.meta.env.VITE_BACKEND_URL + "/graphql"
+    : "http://localhost:5000/graphql",
 });
 
 

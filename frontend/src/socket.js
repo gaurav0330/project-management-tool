@@ -1,9 +1,10 @@
 import { io } from "socket.io-client";
 
 const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_BACKEND_WS_URL || "wss://your-backend-app.onrender.com"
+  import.meta.env.PROD
+    ? import.meta.env.VITE_SOCKET_URL
     : "ws://localhost:5000";
+
 
 const socket = io(SOCKET_URL, {
   transports: ["websocket"],
