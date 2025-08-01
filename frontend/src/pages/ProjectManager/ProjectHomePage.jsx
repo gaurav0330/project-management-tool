@@ -16,6 +16,8 @@ import SettingsPage from "../../pages/SettingsPage";
 import Chat from "../Chat";
 import { motion, AnimatePresence } from "framer-motion";
 import CreateWebhookConfig from "./CreateWebhookConfig ";
+import { useResponsive } from "../../hooks/useResponsive";
+import MobileSidebar from "../../components/Other/MobileSidebar"; // Import the new component
 
 const GET_PROJECT_BY_ID = gql`
   query GetProjectById($id: ID!) {
@@ -35,265 +37,367 @@ export default function ProjectDashboard() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
+  const { isMobile, isTablet, isDesktop, width } = useResponsive();
   
   const { loading, error, data } = useQuery(GET_PROJECT_BY_ID, {
     variables: { id: projectId },
-    
   });
   
   const [activeComponent, setActiveComponent] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [contentWidth, setContentWidth] = useState("calc(100vw - 16rem)"); // Track content width
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
   const project = data?.getProjectById;
-  const category = project?.category ;
+  const category = project?.category;
 
-  
-
-  // Handle sidebar state change with smooth animation
+  // Handle sidebar state change
   const handleSidebarStateChange = (collapsed, hovering) => {
     setSidebarCollapsed(collapsed);
     setIsHovering(hovering);
   };
 
-  // Calculate content dimensions with smooth transitions
+  // Mobile-specific handlers
+  const handleMobileMenuToggle = () => {
+    setShowMobileSidebar(prev => !prev);
+  };
+
+  const handleMobileComponentChange = (component) => {
+    setActiveComponent(component);
+    setShowMobileSidebar(false); // Close mobile menu after selection
+  };
+
+  // CRITICAL FIX: Expose mobile sidebar handlers to navbar via global window object
   useEffect(() => {
-    const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
-    const newWidth = shouldShowFullSidebar ? "calc(100vw - 16rem)" : "calc(100vw - 4rem)";
+    // Create a global handler that the navbar can access
+    window.projectMobileSidebarHandler = {
+      toggle: handleMobileMenuToggle,
+      isOpen: showMobileSidebar,
+      category: category,
+      setShowSidebar: setShowMobileSidebar // Add direct setter
+    };
+
+    // Also listen for messages from navbar
+    const handleNavbarMessage = (event) => {
+      if (event.data && event.data.type === 'TOGGLE_PROJECT_SIDEBAR') {
+        setShowMobileSidebar(prev => !prev);
+      }
+    };
+
+    window.addEventListener('message', handleNavbarMessage);
+
+    return () => {
+      delete window.projectMobileSidebarHandler;
+      window.removeEventListener('message', handleNavbarMessage);
+    };
+  }, [showMobileSidebar, category]);
+
+  // Calculate layout dimensions
+  const getLayoutConfig = () => {
+    if (isMobile) {
+      return {
+        contentMarginLeft: '0',
+        contentWidth: '100vw',
+        showSidebar: false,
+        showMobileSidebar: showMobileSidebar
+      };
+    }
     
-    // Add a small delay to make the transition smoother
-    const timer = setTimeout(() => {
-      setContentWidth(newWidth);
-    }, 50);
+    if (isTablet) {
+      return {
+        contentMarginLeft: sidebarCollapsed && !isHovering ? '4rem' : '12rem',
+        contentWidth: sidebarCollapsed && !isHovering ? 'calc(100vw - 4rem)' : 'calc(100vw - 12rem)',
+        showSidebar: true,
+        showMobileSidebar: false
+      };
+    }
 
-    return () => clearTimeout(timer);
-  }, [sidebarCollapsed, isHovering]);
+    // Desktop
+    const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
+    return {
+      contentMarginLeft: shouldShowFullSidebar ? '16rem' : '4rem',
+      contentWidth: shouldShowFullSidebar ? 'calc(100vw - 16rem)' : 'calc(100vw - 4rem)',
+      showSidebar: true,
+      showMobileSidebar: false
+    };
+  };
 
-  // Calculate content margin based on sidebar state
-  const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
-  const contentMarginLeft = shouldShowFullSidebar ? '16rem' : '4rem';
+  const layoutConfig = getLayoutConfig();
+
+  // Helper function to render active component (your existing code remains the same)
+  const renderActiveComponent = (activeComponent, projectId, project, loading, error, setActiveComponent) => {
+    // ... your existing renderActiveComponent logic (keep as is)
+    if (activeComponent === "managelead") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <AssignTeamLead projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "dashboard") {
+      navigate("/projectDashboard");
+      return null;
+    } else if (activeComponent === "approvetask") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <TaskApprovalPage projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "tasks") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <AssignTasks projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "members") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <TeamMembersList projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "manageteam") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <ManageTeam projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "integrations") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <CreateWebhookConfig projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "assignedTasks") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <AssignedTasks projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "chat") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <Chat projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "TimeLine") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <TaskStatusTimeline projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "setting") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <SettingsPage projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "analytics") {
+      return (
+        <motion.div 
+          className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          <AnalyticsDashboard projectId={projectId} />
+        </motion.div>
+      );
+    } else if (activeComponent === "projectHome") {
+      window.location.reload();
+      return null;
+    } else {
+      // Default Overview Component
+      return (
+        <motion.div 
+          className="space-y-6"
+          layout
+          transition={{ duration: 0.3 }}
+        >
+          {error && (
+            <motion.div 
+              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+              layout
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center">
+                  <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
+                </div>
+                <div>
+                  <h3 className="font-heading text-lg font-semibold text-red-800 dark:text-red-200">
+                    Error Loading Project
+                  </h3>
+                  <p className="font-body text-red-600 dark:text-red-300 text-sm">
+                    Unable to fetch project details. Please try again.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Project Details with Layout Animation */}
+          <motion.div layout transition={{ duration: 0.3 }}>
+            <ProjectDetailsCard project={project} loading={loading} />
+          </motion.div>
+
+          {/* Quick Actions with Staggered Animation */}
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
+            layout
+            transition={{ duration: 0.3 }}
+          >
+            {[
+              {
+                title: "Manage Team",
+                description: "View and manage team members",
+                icon: "👥",
+                onClick: () => setActiveComponent("manageteam")
+              },
+              {
+                title: "View Analytics",
+                description: "Check project progress and analytics",
+                icon: "📊",
+                onClick: () => setActiveComponent("analytics")
+              },
+              {
+                title: "Timeline",
+                description: "Track project timeline and milestones",
+                icon: "📅",
+                onClick: () => setActiveComponent("TimeLine")
+              }
+            ].map((card, index) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: 0.2 + index * 0.1,
+                  ease: "easeOut"
+                }}
+                layout
+              >
+                <QuickActionCard {...card} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
-      {/* Sidebar */}
-      <Sidebar 
-        setActiveComponent={setActiveComponent} 
-        onStateChange={handleSidebarStateChange}
-        category={category}
+      {/* Desktop/Tablet Sidebar */}
+      {layoutConfig.showSidebar && (
+        <Sidebar 
+          setActiveComponent={setActiveComponent} 
+          onStateChange={handleSidebarStateChange}
+          category={category}
+        />
+      )}
 
-      />
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobile && layoutConfig.showMobileSidebar && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileSidebar(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+            />
+            
+            {/* Mobile Sidebar */}
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -300, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 h-full w-80 bg-bg-primary-light dark:bg-bg-primary-dark border-r border-gray-200 dark:border-gray-700 z-50 overflow-y-auto"
+            >
+              <MobileSidebar 
+                setActiveComponent={handleMobileComponentChange}
+                category={category}
+                activeComponent={activeComponent}
+                onClose={() => setShowMobileSidebar(false)}
+              />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-      {/* Main Content Area with Smooth Transitions */}
+      {/* Main Content Area */}
       <motion.div 
-        className="min-h-screen"
-        animate={{ 
-          marginLeft: window.innerWidth >= 1024 ? contentMarginLeft : '0',
-          width: window.innerWidth >= 1024 ? contentWidth : '100vw'
-        }}
-        transition={{ 
-          duration: 0.4, 
-          ease: [0.25, 0.46, 0.45, 0.94] // Custom easing for smooth animation
+        className="min-h-screen transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isDesktop ? layoutConfig.contentMarginLeft : '0',
+          width: layoutConfig.contentWidth,
+          marginTop: '64px' // Account for fixed navbar
         }}
       >
-        <motion.div 
-          className="p-6 lg:p-8 h-full"
-          layout // Enables automatic layout animations
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          {/* Content Router with Layout Animation */}
+        <div className={`${isMobile ? 'p-4' : 'p-6 lg:p-8'} h-full`}>
+          {/* Content Router */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeComponent}
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {activeComponent === "managelead" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <AssignTeamLead projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "dashboard" ? (
-                navigate("/projectDashboard")
-              ) : activeComponent === "approvetask" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <TaskApprovalPage projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "tasks" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <AssignTasks projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "members" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <TeamMembersList projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "manageteam" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <ManageTeam projectId={projectId} />
-                </motion.div>
-              ):
-              activeComponent === "integrations" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <CreateWebhookConfig projectId={projectId} />
-                </motion.div>
-              )
-               : activeComponent === "assignedTasks" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <AssignedTasks projectId={projectId} />
-                </motion.div>
-              )
-              : activeComponent === "chat" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <Chat projectId={projectId} />
-                </motion.div>
-              ) 
-              : activeComponent === "TimeLine" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <TaskStatusTimeline projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "setting" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <SettingsPage projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "analytics" ? (
-                <motion.div 
-                  className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  <AnalyticsDashboard projectId={projectId} />
-                </motion.div>
-              ) : activeComponent === "projectHome" ? (
-                window.location.reload()
-              ) : (
-                // Default Overview Component with Layout Animation
-                <motion.div 
-                  className="space-y-6"
-                  layout
-                  transition={{ duration: 0.3 }}
-                >
-                  {error && (
-                    <motion.div 
-                      className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4 }}
-                      layout
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center">
-                          <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
-                        </div>
-                        <div>
-                          <h3 className="font-heading text-lg font-semibold text-red-800 dark:text-red-200">
-                            Error Loading Project
-                          </h3>
-                          <p className="font-body text-red-600 dark:text-red-300 text-sm">
-                            Unable to fetch project details. Please try again.
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* Project Details with Layout Animation */}
-                  <motion.div layout transition={{ duration: 0.3 }}>
-                    <ProjectDetailsCard project={project} loading={loading} />
-                  </motion.div>
-
-                  {/* Quick Actions with Staggered Animation */}
-                  <motion.div 
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-                    layout
-                    transition={{ duration: 0.3 }}
-                  >
-                    {[
-                      {
-                        title: "Manage Team",
-                        description: "View and manage team members",
-                        icon: "👥",
-                        onClick: () => setActiveComponent("manageteam")
-                      },
-                      {
-                        title: "View Analytics",
-                        description: "Check project progress and analytics",
-                        icon: "📊",
-                        onClick: () => setActiveComponent("analytics")
-                      },
-                      {
-                        title: "Timeline",
-                        description: "Track project timeline and milestones",
-                        icon: "📅",
-                        onClick: () => setActiveComponent("TimeLine")
-                      }
-                    ].map((card, index) => (
-                      <motion.div
-                        key={card.title}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ 
-                          duration: 0.4, 
-                          delay: 0.2 + index * 0.1,
-                          ease: "easeOut"
-                        }}
-                        layout
-                      >
-                        <QuickActionCard {...card} />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                </motion.div>
-              )}
+              {renderActiveComponent(activeComponent, projectId, project, loading, error, setActiveComponent)}
             </motion.div>
           </AnimatePresence>
-        </motion.div>
+        </div>
       </motion.div>
     </div>
   );
 }
 
-// Enhanced Quick Action Card Component
+// Enhanced Quick Action Card Component (keep as is)
 const QuickActionCard = ({ title, description, icon, onClick }) => {
   return (
     <motion.div

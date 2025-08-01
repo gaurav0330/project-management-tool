@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { useQuery, gql, useApolloClient } from "@apollo/client";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import ReactFlow, {
   Background,
   Controls,
@@ -10,8 +10,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import TaskModal from "./TaskModal";
 import NodeLabel from "./NodeLabel";
-import { useWindowSize } from "../../hooks/useWindowSize"; // adjust path if needed
-
+import { useResponsive } from "../../hooks/useResponsive";
 
 const GET_LEADS_BY_PROJECT_ID = gql`
   query GetLeadsByProjectId($projectId: ID!) {
@@ -50,7 +49,6 @@ const GET_LEADS_BY_PROJECT_ID = gql`
   }
 `;
 
-
 const GET_TASKS_BY_MANAGER = gql`
   query GetTasksByManager($managerId: ID!, $projectId: ID!) {
     getTasksByManager(managerId: $managerId, projectId: $projectId) {
@@ -76,7 +74,6 @@ const GET_TASKS_BY_MANAGER = gql`
   }
 `;
 
-
 const GET_TASKS_FOR_MEMBER = gql`
   query GetTasksForMember($memberId: ID!, $projectId: ID!) {
     getTasksForMember(memberId: $memberId, projectId: $projectId) {
@@ -96,7 +93,6 @@ const GET_TASKS_FOR_MEMBER = gql`
   }
 `;
 
-
 const GET_USER = gql`
   query GetUser($userId: ID!) {
     getUser(userId: $userId) {
@@ -108,6 +104,19 @@ const GET_USER = gql`
   }
 `;
 
+// Define nodeTypes and edgeTypes outside component to prevent re-creation
+const nodeTypes = {};
+const edgeTypes = {};
+
+// Default viewport configurations for different breakpoints
+const defaultViewportConfig = {
+  mobile: { x: 0, y: 0, zoom: 0.4 },
+  sm: { x: 0, y: 0, zoom: 0.5 },
+  md: { x: 0, y: 0, zoom: 0.6 },
+  lg: { x: 0, y: 0, zoom: 0.7 },
+  xl: { x: 0, y: 0, zoom: 0.8 },
+  desktop: { x: 0, y: 0, zoom: 0.7 }
+};
 
 const ManageTeam = ({ projectId }) => {
   const client = useApolloClient();
@@ -119,23 +128,30 @@ const ManageTeam = ({ projectId }) => {
   const [selectedPersonName, setSelectedPersonName] = useState('');
   const [selectedPersonType, setSelectedPersonType] = useState('lead');
 
-  // Use window size hook for responsiveness
-  const windowSize = useWindowSize();
+  // Use responsive hook for better breakpoint detection
+  const { width, height, breakpoint, isMobile, isTablet, isDesktop } = useResponsive();
 
-  const token = localStorage.getItem("token");
-  let managerId = null;
-  try {
-    const decodedToken = token ? jwtDecode(token) : null;
-    managerId = decodedToken?.id;
-  } catch (error) {
-    console.error("Invalid token:", error);
-  }
+  // Memoize token decoding
+  const managerId = useMemo(() => {
+    const token = localStorage.getItem("token");
+    try {
+      const decodedToken = token ? jwtDecode(token) : null;
+      return decodedToken?.id;
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return null;
+    }
+  }, []);
 
   const { data: managerData, loading: managerLoading, error: managerError } = useQuery(GET_USER, {
     variables: { userId: managerId },
     skip: !managerId,
   });
-  const manager = managerData?.getUser || { id: managerId, username: "Loading...", email: "", role: "" };
+
+  const manager = useMemo(() => 
+    managerData?.getUser || { id: managerId, username: "Loading...", email: "", role: "" },
+    [managerData, managerId]
+  );
 
   const { loading, error, data } = useQuery(GET_LEADS_BY_PROJECT_ID, {
     variables: { projectId },
@@ -146,15 +162,16 @@ const ManageTeam = ({ projectId }) => {
     skip: !managerId || !projectId,
   });
 
-  const handleManagerClick = () => {
+  // Memoize event handlers
+  const handleManagerClick = useCallback(() => {
     setExpandedManager(!expandedManager);
     if (!expandedManager) {
       setExpandedLeads(new Set());
       setExpandedTeams(new Set());
     }
-  };
+  }, [expandedManager]);
 
-  const handleLeadClick = (leadId) => {
+  const handleLeadClick = useCallback((leadId) => {
     const newExpandedLeads = new Set(expandedLeads);
     if (newExpandedLeads.has(leadId)) {
       newExpandedLeads.delete(leadId);
@@ -171,9 +188,9 @@ const ManageTeam = ({ projectId }) => {
       newExpandedLeads.add(leadId);
     }
     setExpandedLeads(newExpandedLeads);
-  };
+  }, [expandedLeads, expandedTeams, data]);
 
-  const handleTeamClick = (teamId) => {
+  const handleTeamClick = useCallback((teamId) => {
     const newExpandedTeams = new Set(expandedTeams);
     if (newExpandedTeams.has(teamId)) {
       newExpandedTeams.delete(teamId);
@@ -181,9 +198,9 @@ const ManageTeam = ({ projectId }) => {
       newExpandedTeams.add(teamId);
     }
     setExpandedTeams(newExpandedTeams);
-  };
+  }, [expandedTeams]);
 
-  const handleTaskClick = async (personId, personType) => {
+  const handleTaskClick = useCallback(async (personId, personType) => {
     try {
       if (personType === 'lead') {
         if (tasksData?.getTasksByManager) {
@@ -229,40 +246,47 @@ const ManageTeam = ({ projectId }) => {
       setSelectedPersonType(personType);
       setTaskModalOpen(true);
     }
-  };
+  }, [tasksData, data, client, projectId]);
 
-  // Determine zoom level and container height based on window width for responsiveness
-  const isSmallScreen = windowSize.width < 640; // Tailwind 'sm' breakpoint approx 640px
-  const isMediumScreen = windowSize.width >= 640 && windowSize.width < 1024; // md breakpoint approx 1024px
+  // Memoize responsive configuration
+  const responsiveConfig = useMemo(() => {
+    const config = {
+      containerHeight: Math.min(height * 0.8, 800),
+      minHeight: isMobile ? 400 : 500,
+      spacing: isMobile ? 200 : isTablet ? 250 : 300,
+      verticalSpacing: isMobile ? 150 : isTablet ? 180 : 200,
+      memberSpacing: isMobile ? 180 : isTablet ? 200 : 220,
+      defaultViewport: defaultViewportConfig[breakpoint] || defaultViewportConfig.desktop,
+      fitViewPadding: isMobile ? 0.1 : isTablet ? 0.12 : 0.15,
+    };
 
-  // React Flow layout dimensions dynamically
-  const reactFlowHeight = isSmallScreen
-    ? windowSize.height * 0.7
-    : isMediumScreen
-      ? windowSize.height * 0.75
-      : 700;
+    return config;
+  }, [width, height, breakpoint, isMobile, isTablet]);
 
-  const defaultZoom = isSmallScreen ? 0.5 : isMediumScreen ? 0.6 : 0.7;
-
-  // Use nodes and edges with memo, using windowSize in dependencies to recalc layout width
+  // Memoize nodes and edges calculation
   const { nodes, edges } = useMemo(() => {
-    if (loading || error || !data?.getLeadsByProjectId?.success)
+    if (loading || error || !data?.getLeadsByProjectId?.success) {
       return { nodes: [], edges: [] };
+    }
 
     const teamLeads = Array.from(
       new Map(data.getLeadsByProjectId.teamLeads.map((lead) => [lead.user.id, lead])).values()
     );
 
-    const spacing = 300;
-    const verticalSpacing = 200;
-    const memberSpacing = 220;
-    // Adjust totalWidth to be relative to screen width for responsiveness
-    const baseWidth = windowSize.width < 1200 ? windowSize.width * 0.9 : 1200;
-    const totalWidth = Math.max(teamLeads.length * spacing * 1.5, baseWidth);
+    const {
+      spacing,
+      verticalSpacing,
+      memberSpacing
+    } = responsiveConfig;
+
+    // Calculate total width based on content and screen size
+    const minWidth = Math.max(teamLeads.length * spacing * 1.2, width * 0.8);
+    const totalWidth = Math.min(minWidth, width * 2); // Cap at 2x screen width
 
     let nodes = [];
     let edges = [];
 
+    // Project node
     nodes.push({
       id: "project",
       data: {
@@ -279,6 +303,7 @@ const ManageTeam = ({ projectId }) => {
       sourcePosition: Position.Bottom,
     });
 
+    // Manager node
     nodes.push({
       id: manager.id,
       data: {
@@ -300,17 +325,18 @@ const ManageTeam = ({ projectId }) => {
       targetPosition: Position.Top,
     });
 
+    // Project to manager edge
     edges.push({
       id: "project-manager",
       source: "project",
       target: manager.id,
       animated: true,
-      style: { stroke: "#7c3aed", strokeWidth: 4 },
+      style: { stroke: "#7c3aed", strokeWidth: isMobile ? 3 : 4 },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         color: "#7c3aed",
-        width: 22,
-        height: 22,
+        width: isMobile ? 18 : 22,
+        height: isMobile ? 18 : 22,
       },
     });
 
@@ -320,6 +346,7 @@ const ManageTeam = ({ projectId }) => {
         const leadY = verticalSpacing * 2;
         const hasTeams = lead.teams.length > 0;
 
+        // Lead node
         nodes.push({
           id: lead.user.id,
           data: {
@@ -344,17 +371,18 @@ const ManageTeam = ({ projectId }) => {
           targetPosition: Position.Top,
         });
 
+        // Manager to lead edge
         edges.push({
           id: `manager-${lead.user.id}`,
           source: manager.id,
           target: lead.user.id,
           animated: true,
-          style: { stroke: "#3b82f6", strokeWidth: 3 },
+          style: { stroke: "#3b82f6", strokeWidth: isMobile ? 2.5 : 3 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: "#3b82f6",
-            width: 18,
-            height: 18,
+            width: isMobile ? 16 : 18,
+            height: isMobile ? 16 : 18,
           },
         });
 
@@ -365,6 +393,7 @@ const ManageTeam = ({ projectId }) => {
             const teamNodeId = `team-${team.id}`;
             const hasMembers = team.members.length > 0;
 
+            // Team node
             nodes.push({
               id: teamNodeId,
               data: {
@@ -385,17 +414,18 @@ const ManageTeam = ({ projectId }) => {
               targetPosition: Position.Top,
             });
 
+            // Lead to team edge
             edges.push({
               id: `lead-${lead.user.id}-team-${team.id}`,
               source: lead.user.id,
               target: teamNodeId,
               animated: true,
-              style: { stroke: "#f59e0b", strokeWidth: 2.5 },
+              style: { stroke: "#f59e0b", strokeWidth: isMobile ? 2 : 2.5 },
               markerEnd: {
                 type: MarkerType.ArrowClosed,
                 color: "#f59e0b",
-                width: 16,
-                height: 16,
+                width: isMobile ? 14 : 16,
+                height: isMobile ? 14 : 16,
               },
             });
 
@@ -404,6 +434,8 @@ const ManageTeam = ({ projectId }) => {
                 const memberX = teamX + (memberIndex - (team.members.length - 1) / 2) * memberSpacing;
                 const memberY = teamY + verticalSpacing;
                 const memberNodeId = `member-${member.user.id}-${team.id}`;
+
+                // Member node
                 nodes.push({
                   id: memberNodeId,
                   data: {
@@ -424,17 +456,18 @@ const ManageTeam = ({ projectId }) => {
                   targetPosition: Position.Top,
                 });
 
+                // Team to member edge
                 edges.push({
                   id: `team-${team.id}-member-${member.user.id}`,
                   source: teamNodeId,
                   target: memberNodeId,
                   animated: true,
-                  style: { stroke: "#10b981", strokeWidth: 2 },
+                  style: { stroke: "#10b981", strokeWidth: isMobile ? 1.5 : 2 },
                   markerEnd: {
                     type: MarkerType.ArrowClosed,
                     color: "#10b981",
-                    width: 14,
-                    height: 14,
+                    width: isMobile ? 12 : 14,
+                    height: isMobile ? 12 : 14,
                   },
                 });
               });
@@ -443,10 +476,45 @@ const ManageTeam = ({ projectId }) => {
         }
       });
     }
-    return { nodes, edges };
-  }, [data, loading, error, manager, expandedManager, expandedLeads, expandedTeams, windowSize]);
 
-  if (loading)
+    return { nodes, edges };
+  }, [
+    data,
+    loading,
+    error,
+    manager,
+    expandedManager,
+    expandedLeads,
+    expandedTeams,
+    responsiveConfig,
+    handleManagerClick,
+    handleLeadClick,
+    handleTeamClick,
+    handleTaskClick,
+    isMobile
+  ]);
+
+  // Memoize ReactFlow props to prevent unnecessary re-renders
+  const reactFlowProps = useMemo(() => ({
+    nodes,
+    edges,
+    nodeTypes,
+    edgeTypes,
+    fitView: true,
+    fitViewOptions: { padding: responsiveConfig.fitViewPadding },
+    nodesDraggable: false,
+    nodesConnectable: false,
+    zoomOnScroll: true,
+    panOnScroll: true,
+    minZoom: 0.1,
+    maxZoom: 2,
+    defaultViewport: responsiveConfig.defaultViewport,
+    onNodeClick: (event, node) => {
+      event.stopPropagation();
+    },
+  }), [nodes, edges, responsiveConfig]);
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -457,7 +525,9 @@ const ManageTeam = ({ projectId }) => {
         </div>
       </div>
     );
-  if (error)
+  }
+
+  if (error) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
@@ -469,7 +539,9 @@ const ManageTeam = ({ projectId }) => {
         </div>
       </div>
     );
-  if (!data?.getLeadsByProjectId?.success)
+  }
+
+  if (!data?.getLeadsByProjectId?.success) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
@@ -480,62 +552,56 @@ const ManageTeam = ({ projectId }) => {
         </div>
       </div>
     );
+  }
 
   return (
     <>
-      <div className="max-w-full mx-auto rounded-3xl bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 shadow-2xl p-6 sm:p-8">
-        <div className="mb-6 sm:mb-8 text-center px-4">
-          <h1 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-3 font-heading">
+      <div className="max-w-full mx-auto rounded-3xl bg-gradient-to-br from-slate-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 shadow-2xl p-3 sm:p-6 lg:p-8">
+        <div className="mb-4 sm:mb-6 lg:mb-8 text-center px-2 sm:px-4">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 font-heading">
             Team Structure
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-base sm:text-xl font-body max-w-3xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base lg:text-xl font-body max-w-3xl mx-auto">
             Interactive organizational diagram - Manager → Leads → Teams → Members
           </p>
-          <div className="mt-4 sm:mt-6 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-200 dark:border-blue-800 max-w-3xl mx-auto">
-            <p className="text-blue-800 dark:text-blue-200 text-sm sm:text-base font-medium font-body">
+          <div className="mt-3 sm:mt-4 lg:mt-6 p-3 sm:p-4 lg:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl lg:rounded-2xl border border-blue-200 dark:border-blue-800 max-w-3xl mx-auto">
+            <p className="text-blue-800 dark:text-blue-200 text-xs sm:text-sm lg:text-base font-medium font-body">
               💡 <strong className="font-heading">Instructions:</strong> Click on the Manager to see Leads, click on Leads to see Teams, click on Teams to see Members. Click the 📋 button on Team Leads and Members to view their tasks.
             </p>
           </div>
         </div>
+        
         <div
-          className="bg-white dark:bg-slate-800 rounded-2xl shadow-inner border-2 border-gray-200 dark:border-gray-700 mx-4 sm:mx-8"
-          style={{ height: reactFlowHeight, minHeight: 400 }}
+          className="bg-white dark:bg-slate-800 rounded-xl lg:rounded-2xl shadow-inner border-2 border-gray-200 dark:border-gray-700 mx-2 sm:mx-4 lg:mx-8"
+          style={{ 
+            height: responsiveConfig.containerHeight, 
+            minHeight: responsiveConfig.minHeight 
+          }}
         >
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            fitView
-            fitViewOptions={{ padding: 0.15 }}
-            nodesDraggable={false}
-            nodesConnectable={false}
-            zoomOnScroll={true}
-            panOnScroll={true}
-            minZoom={0.2}
-            maxZoom={1.5}
-            defaultViewport={{ x: 0, y: 0, zoom: defaultZoom }}
-            onNodeClick={(event, node) => {
-              event.stopPropagation();
-            }}
-          >
+          <ReactFlow {...reactFlowProps}>
             <Background
               variant="dots"
-              gap={25}
-              size={2}
+              gap={isMobile ? 20 : isTablet ? 22 : 25}
+              size={isMobile ? 1.5 : 2}
               color="#94a3b8"
               style={{ opacity: 0.4 }}
             />
             <Controls 
               position="bottom-right"
+              showZoom={!isMobile}
+              showFitView={!isMobile}
+              showInteractive={!isMobile}
               style={{
                 background: 'rgba(255, 255, 255, 0.9)',
                 border: '2px solid #e2e8f0',
-                borderRadius: '12px',
+                borderRadius: isMobile ? '8px' : '12px',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
               }}
             />
           </ReactFlow>
         </div>
       </div>
+      
       <TaskModal
         isOpen={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}

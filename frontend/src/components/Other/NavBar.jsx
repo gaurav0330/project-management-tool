@@ -1,16 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { MdHome, MdNotifications } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
-import {jwtDecode} from "jwt-decode"; // correct import without braces
+import { jwtDecode } from "jwt-decode";
 import { useQuery, gql } from "@apollo/client";
 import logo from "../../assets/logo.png";
 import ThemeToggle from "../ThemeToggle";
 import LogoutButton from "./Logout";
 import { Edit2Icon } from "lucide-react";
 import EditProfile from "../authComponent/EditProfile";
-import { useWindowSize } from "../../hooks/useWindowSize"; // adjust import path as necessary
-
+import { useResponsive } from "../../hooks/useResponsive";
 
 const GET_PROFILE = gql`
   query GetProfile($userId: ID!) {
@@ -47,6 +46,7 @@ const GET_USER = gql`
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const token = localStorage.getItem("token");
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -57,8 +57,10 @@ export default function Navbar() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
-  const { width } = useWindowSize();
-  const isMobile = width < 768;  // Tailwind md breakpoint
+  const { isMobile, isTablet, isDesktop } = useResponsive();
+
+  // Check if we're on a project page
+  const currentlyOnProjectPage = location.pathname.includes('/projectHome/');
 
   // Decode token for userId and role
   useEffect(() => {
@@ -93,7 +95,11 @@ export default function Navbar() {
     skip: !userId,
   });
 
-  const { data: profileQueryData, loading: profileLoading, refetch: refetchProfile } = useQuery(GET_PROFILE, {
+  const {
+    data: profileQueryData,
+    loading: profileLoading,
+    refetch: refetchProfile,
+  } = useQuery(GET_PROFILE, {
     variables: { userId },
     skip: !userId,
     onCompleted: (data) => {
@@ -122,7 +128,9 @@ export default function Navbar() {
   // Close mobile menu on window resize to desktop
   useEffect(() => {
     if (!mobileOpen) return;
-    const handler = () => setMobileOpen(false);
+    const handler = () => {
+      setMobileOpen(false);
+    };
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, [mobileOpen]);
@@ -134,6 +142,24 @@ export default function Navbar() {
 
   const handleProfileUpdated = (updatedProfile) => {
     setProfileData(updatedProfile);
+  };
+
+  // Handle mobile menu toggle - SIMPLIFIED LOGIC
+  const handleMobileMenuToggle = () => {
+    setMobileOpen(prev => !prev);
+  };
+
+  // CRITICAL FIX: Handle project sidebar toggle from project menu
+  const handleProjectSidebarToggle = () => {
+    setMobileOpen(false); // Close the navbar menu
+    
+    // Check if we have access to the project page handler
+    if (window.projectMobileSidebarHandler) {
+      window.projectMobileSidebarHandler.toggle();
+    } else {
+      // Fallback: post message to project page
+      window.postMessage({ type: 'TOGGLE_PROJECT_SIDEBAR' }, '*');
+    }
   };
 
   const user = userQueryData?.getUser || {};
@@ -156,9 +182,6 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {token ? (
                 <>
-                  {/* Notifications */}
-                
-
                   {/* Dashboard */}
                   <button
                     onClick={goDashboard}
@@ -179,7 +202,9 @@ export default function Navbar() {
                       aria-label="User menu"
                     >
                       <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center font-semibold select-none">
-                        {userLoading ? "…" : user.username?.charAt(0).toUpperCase() || "U"}
+                        {userLoading
+                          ? "…"
+                          : user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
                       <div className="text-left hidden lg:block">
                         <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
@@ -235,7 +260,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-2">
               <ThemeToggle />
               <button
-                onClick={() => setMobileOpen((prev) => !prev)}
+                onClick={handleMobileMenuToggle}
                 className="p-2 text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
@@ -246,39 +271,48 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Content */}
+        {/* Regular Mobile Menu Content */}
         {isMobile && mobileOpen && (
           <div className="bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg md:hidden">
             <div className="flex flex-col space-y-2 p-4">
               {token ? (
                 <>
-                  {/* Notifications */}
-                 
-
                   {/* Dashboard */}
                   <button
                     onClick={() => {
                       goDashboard();
                       setMobileOpen(false);
                     }}
-                    className="text-left py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                    className="text-left py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200"
                     aria-label="Go to dashboard"
                   >
-                    Dashboard
+                    📊 Dashboard
                   </button>
 
+                  {/* Show Project Menu Button ONLY if on project page */}
+                  {currentlyOnProjectPage && (
+                    <button
+                      onClick={handleProjectSidebarToggle}
+                      className="text-left py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 text-white border border-brand-primary-500 hover:border-brand-primary-600 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200"
+                    >
+                      📋 Project Menu
+                    </button>
+                  )}
+
                   {/* Profile dropdown (simplified for mobile) */}
-                  <div>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:shadow-md transition-all duration-200">
                     <button
                       onClick={() => setDropdownOpen((prev) => !prev)}
-                      className="flex items-center p-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition w-full"
+                      className="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm transition-all duration-200 w-full"
                       aria-haspopup="true"
                       aria-expanded={dropdownOpen}
                       aria-controls="user-menu-mobile"
                       aria-label="User menu"
                     >
                       <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center font-semibold select-none">
-                        {userLoading ? "…" : user.username?.charAt(0).toUpperCase() || "U"}
+                        {userLoading
+                          ? "…"
+                          : user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
                       <div className="ml-2 text-left">
                         <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
@@ -304,9 +338,12 @@ export default function Navbar() {
                             setDropdownOpen(false);
                           }}
                           role="menuitem"
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:shadow-sm transform hover:translate-x-1 rounded-md transition-all duration-200"
                         >
-                          <Edit2Icon className="w-4 h-4" aria-hidden="true" />
+                          <Edit2Icon
+                            className="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
+                            aria-hidden="true"
+                          />
                           Edit Profile
                         </button>
                       </div>
@@ -323,14 +360,14 @@ export default function Navbar() {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 block text-center"
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 text-brand-primary-500 hover:text-brand-primary-600 transition"
+                    className="py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 text-white border border-brand-primary-500 hover:border-brand-primary-600 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 block text-center"
                   >
                     Sign Up
                   </Link>
