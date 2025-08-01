@@ -764,7 +764,7 @@ const ProjectStatusUpdater = ({ projectId }) => {
 
       <div className="flex flex-col sm:flex-row items-center gap-3 mb-5">
         <select
-          className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 font-medium w-full sm:w-auto flex-grow bg-bg-primary-light dark:bg-bg-primary-dark text-txt-primary-light dark:text-txt-primary-dark"
+          className="px-2 py-2 rounded-xl border border-gray-200 dark:border-gray-700 font-medium w-full sm:w-auto flex-grow bg-bg-primary-light dark:bg-bg-primary-dark text-txt-primary-light dark:text-txt-primary-dark"
           value={newStatus}
           onChange={e => setNewStatus(e.target.value)}
         >
