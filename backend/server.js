@@ -19,6 +19,14 @@ require('dotenv').config();
 const app = express();
 const httpServer = http.createServer(app);
 
+// At the top of your main server file
+if (process.env.NODE_ENV === 'production') {
+  console.log = () => {};
+  console.error = () => {};
+  console.debug = () => {};
+  console.warn = () => {};
+}
+
 const io = new Server(httpServer, {
   cors: {
     // Use FRONTEND_URL in production for CORS, fallback to localhost in development

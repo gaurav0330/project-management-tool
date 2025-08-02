@@ -1,3 +1,11 @@
+
+if (import.meta.env.NODE_ENV === 'production') {
+  console.log = () => {};
+  console.error = () => {};
+  console.debug = () => {};
+  console.warn = () => {};
+}
+
 import React from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
