@@ -1,6 +1,4 @@
-// hooks/useResponsive.js (new file)
-import { useState, useEffect } from "react";
-
+// In useResponsive.js - Add device detection
 export function useResponsive() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,
@@ -16,7 +14,7 @@ export function useResponsive() {
       
       setDimensions({ width, height });
       
-      // Set breakpoints
+      // ✅ Enhanced breakpoint detection
       if (width < 640) setBreakpoint('mobile');
       else if (width < 768) setBreakpoint('sm');
       else if (width < 1024) setBreakpoint('md');
@@ -30,11 +28,19 @@ export function useResponsive() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // ✅ Better mobile detection
+  const isTouchDevice = typeof window !== "undefined" && 
+    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  
   return {
     ...dimensions,
     breakpoint,
+    isTouchDevice,
+    // ✅ Modified logic - prioritize width over device type
     isMobile: dimensions.width < 1024,
     isTablet: dimensions.width >= 768 && dimensions.width < 1024,
-    isDesktop: dimensions.width >= 1024
+    isDesktop: dimensions.width >= 1024, // This will be true for mobile-in-desktop-mode
+    isActualMobile: isTouchDevice && dimensions.width < 1024,
+    isMobileInDesktopMode: isTouchDevice && dimensions.width >= 1024
   };
 }
