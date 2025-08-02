@@ -1,4 +1,5 @@
 // In useResponsive.js - Add device detection
+import { useState, useEffect } from "react";
 export function useResponsive() {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 0,

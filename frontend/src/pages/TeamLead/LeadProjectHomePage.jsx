@@ -53,7 +53,8 @@ export default function TeamLeadDashboard() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const { isMobile, isTablet, isDesktop, width } = useResponsive();
+  // ✅ FIXED: Added width and isMobileInDesktopMode for consistent responsive behavior
+  const { isMobile, isTablet, isDesktop, width, isMobileInDesktopMode } = useResponsive();
   
   const { loading, error, data } = useQuery(GET_PROJECT_BY_ID, {
     variables: { id: projectId },
@@ -80,20 +81,18 @@ export default function TeamLeadDashboard() {
 
   const handleMobileComponentChange = (component) => {
     setActiveComponent(component);
-    setShowMobileSidebar(false); // Close mobile menu after selection
+    setShowMobileSidebar(false);
   };
 
   // CRITICAL FIX: Expose mobile sidebar handlers to navbar via global window object
   useEffect(() => {
-    // Create a global handler that the navbar can access
     window.projectMobileSidebarHandler = {
       toggle: handleMobileMenuToggle,
       isOpen: showMobileSidebar,
       category: category,
-      setShowSidebar: setShowMobileSidebar // Add direct setter
+      setShowSidebar: setShowMobileSidebar,
     };
 
-    // Also listen for messages from navbar
     const handleNavbarMessage = (event) => {
       if (event.data && event.data.type === 'TOGGLE_PROJECT_SIDEBAR') {
         setShowMobileSidebar(prev => !prev);
@@ -108,37 +107,55 @@ export default function TeamLeadDashboard() {
     };
   }, [showMobileSidebar, category]);
 
-  // Calculate layout dimensions
+  // ✅ FIXED: Enhanced layout configuration with proper mobile-in-desktop-mode handling
   const getLayoutConfig = () => {
-    if (isMobile) {
+    // ✅ Force desktop behavior for any viewport width >= 1024px (including mobile-in-desktop-mode)
+    if (width >= 1024) {
+      const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
       return {
-        contentMarginLeft: '0',
-        contentWidth: '100vw',
-        showSidebar: false,
-        showMobileSidebar: showMobileSidebar
-      };
-    }
-    
-    if (isTablet) {
-      return {
-        contentMarginLeft: sidebarCollapsed && !isHovering ? '4rem' : '12rem',
-        contentWidth: sidebarCollapsed && !isHovering ? 'calc(100vw - 4rem)' : 'calc(100vw - 12rem)',
-        showSidebar: true,
-        showMobileSidebar: false
+        contentMarginLeft: shouldShowFullSidebar ? "16rem" : "4rem",
+        contentWidth: shouldShowFullSidebar ? "calc(100vw - 16rem)" : "calc(100vw - 4rem)",
+        showSidebar: true, // ✅ Always true for desktop width
+        showMobileSidebar: false,
+        treatAsDesktop: true, // ✅ Flag to indicate desktop treatment
       };
     }
 
-    // Desktop
-    const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
+    // Mobile behavior for width < 1024px
+    if (width < 1024) {
+      return {
+        contentMarginLeft: "0",
+        contentWidth: "100vw",
+        showSidebar: false,
+        showMobileSidebar: showMobileSidebar,
+        treatAsDesktop: false,
+      };
+    }
+
+    // Fallback (shouldn't reach here, but just in case)
     return {
-      contentMarginLeft: shouldShowFullSidebar ? '16rem' : '4rem',
-      contentWidth: shouldShowFullSidebar ? 'calc(100vw - 16rem)' : 'calc(100vw - 4rem)',
-      showSidebar: true,
-      showMobileSidebar: false
+      contentMarginLeft: "0",
+      contentWidth: "100vw",
+      showSidebar: false,
+      showMobileSidebar: showMobileSidebar,
+      treatAsDesktop: false,
     };
   };
 
   const layoutConfig = getLayoutConfig();
+
+  // ✅ DEBUG: Temporary logging (remove after testing)
+  useEffect(() => {
+    console.log('Debug - TeamLead Responsive Values:', {
+      width,
+      isMobile,
+      isTablet,
+      isDesktop,
+      isMobileInDesktopMode,
+      layoutConfig,
+      'Force Show Sidebar': layoutConfig.showSidebar || layoutConfig.treatAsDesktop
+    });
+  }, [width, isMobile, isTablet, isDesktop, isMobileInDesktopMode, layoutConfig]);
 
   // Get current time for greeting
   const getGreeting = () => {
@@ -370,9 +387,6 @@ export default function TeamLeadDashboard() {
                       </motion.p>
                     </div>
                   </div>
-
-                  {/* Quick Status Indicator */}
-                 
                 </div>
               </div>
             </motion.div>
@@ -465,8 +479,8 @@ export default function TeamLeadDashboard() {
 
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
-      {/* Desktop/Tablet Sidebar */}
-      {layoutConfig.showSidebar && (
+      {/* ✅ ENHANCED: Desktop/Tablet Sidebar with multiple fallback conditions */}
+      {(layoutConfig.showSidebar || layoutConfig.treatAsDesktop || width >= 1024) && (
         <Sidebar 
           setActiveComponent={setActiveComponent} 
           onStateChange={handleSidebarStateChange}
@@ -474,9 +488,9 @@ export default function TeamLeadDashboard() {
         />
       )}
 
-      {/* Mobile Sidebar Overlay */}
+      {/* ✅ ENHANCED: Mobile Sidebar - only show for actual mobile widths */}
       <AnimatePresence>
-        {isMobile && layoutConfig.showMobileSidebar && (
+        {width < 1024 && layoutConfig.showMobileSidebar && (
           <>
             {/* Backdrop */}
             <motion.div
@@ -506,23 +520,23 @@ export default function TeamLeadDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
+      {/* ✅ ENHANCED: Main Content Area with improved responsive logic */}
       <motion.div 
         className="min-h-screen transition-all duration-300 ease-in-out"
         style={{
-          marginLeft: isDesktop ? layoutConfig.contentMarginLeft : '0',
+          marginLeft: width >= 1024 ? layoutConfig.contentMarginLeft : "0",
           width: layoutConfig.contentWidth,
-          marginTop: '64px' // Account for fixed navbar
+          marginTop: "64px",
         }}
       >
-        <div className={`${isMobile ? 'p-4' : 'p-6 lg:p-8'} h-full`}>
+        <div className={`${width < 1024 ? "p-4" : "p-6 lg:p-8"} h-full`}>
           {/* Content Router */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeComponent}
-              initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+              initial={{ opacity: 0, x: width < 1024 ? 0 : 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+              exit={{ opacity: 0, x: width < 1024 ? 0 : -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               {renderActiveComponent()}

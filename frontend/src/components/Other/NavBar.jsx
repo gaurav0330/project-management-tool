@@ -57,7 +57,8 @@ export default function Navbar() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  // ✅ FIXED: Added width for consistent responsive behavior
+  const { isMobile, isTablet, isDesktop, width } = useResponsive();
 
   // Enhanced page detection
   const isOnTeamDetailPage = location.pathname.match(/\/teamlead\/project\/[^\/]+\/[^\/]+$/);
@@ -234,8 +235,8 @@ export default function Navbar() {
             <img src={logo} alt="Logo" className="h-8" />
           </div>
 
-          {/* Desktop menu */}
-          {!isMobile && (
+          {/* ✅ FIXED: Desktop menu - Use width-based logic */}
+          {width >= 1024 && (
             <div className="flex items-center space-x-4">
               {token ? (
                 <>
@@ -312,8 +313,8 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* Mobile menu button */}
-          {isMobile && (
+          {/* ✅ FIXED: Mobile menu button - Use width-based logic */}
+          {width < 1024 && (
             <div className="flex items-center space-x-2">
               <ThemeToggle />
               <button
@@ -328,9 +329,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Regular Mobile Menu Content */}
-        {isMobile && mobileOpen && (
-          <div className="bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg md:hidden">
+        {/* ✅ FIXED: Mobile Menu Content - Use width-based logic */}
+        {width < 1024 && mobileOpen && (
+          <div className="bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg">
             <div className="flex flex-col space-y-2 p-4">
               {token ? (
                 <>

@@ -55,7 +55,7 @@ const LogoutButton = () => {
         </div>
       </div>
     ), {
-      duration: 6000,
+      duration: 3000,
       position: 'top-right',
     });
   };

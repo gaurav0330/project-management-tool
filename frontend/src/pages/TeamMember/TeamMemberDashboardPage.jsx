@@ -51,7 +51,9 @@ const getMemberIdFromToken = () => {
 
 export default function TeamMemberDashboardPage() {
   const { isDark } = useTheme();
-  const { isMobile, isTablet, isDesktop, width } = useResponsive();
+  // ✅ FIXED: Added all necessary responsive values
+  const { isMobile, isTablet, isDesktop, width, isMobileInDesktopMode } =
+    useResponsive();
   const memberId = getMemberIdFromToken();
 
   const { loading, error, data } = useQuery(GET_PROJECTS_BY_MEMBER, {
@@ -112,42 +114,65 @@ export default function TeamMemberDashboardPage() {
     };
   }, [showMobileSidebar]);
 
-  // Calculate layout dimensions
+  // ✅ FIXED: Enhanced layout configuration with proper mobile-in-desktop-mode handling
   const getLayoutConfig = () => {
-    if (isMobile) {
+    // ✅ Force desktop behavior for any viewport width >= 1024px (including mobile-in-desktop-mode)
+    if (width >= 1024) {
+      const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
+      return {
+        contentMarginLeft: shouldShowFullSidebar ? "16rem" : "4rem",
+        contentWidth: shouldShowFullSidebar
+          ? "calc(100vw - 16rem)"
+          : "calc(100vw - 4rem)",
+        showSidebar: true, // ✅ Always true for desktop width
+        showMobileSidebar: false,
+        treatAsDesktop: true, // ✅ Flag to indicate desktop treatment
+      };
+    }
+
+    // Mobile behavior for width < 1024px
+    if (width < 1024) {
       return {
         contentMarginLeft: "0",
         contentWidth: "100vw",
         showSidebar: false,
         showMobileSidebar: showMobileSidebar,
+        treatAsDesktop: false,
       };
     }
 
-    if (isTablet) {
-      return {
-        contentMarginLeft: sidebarCollapsed && !isHovering ? "4rem" : "12rem",
-        contentWidth:
-          sidebarCollapsed && !isHovering
-            ? "calc(100vw - 4rem)"
-            : "calc(100vw - 12rem)",
-        showSidebar: true,
-        showMobileSidebar: false,
-      };
-    }
-
-    // Desktop
-    const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
+    // Fallback (shouldn't reach here, but just in case)
     return {
-      contentMarginLeft: shouldShowFullSidebar ? "16rem" : "4rem",
-      contentWidth: shouldShowFullSidebar
-        ? "calc(100vw - 16rem)"
-        : "calc(100vw - 4rem)",
-      showSidebar: true,
-      showMobileSidebar: false,
+      contentMarginLeft: "0",
+      contentWidth: "100vw",
+      showSidebar: false,
+      showMobileSidebar: showMobileSidebar,
+      treatAsDesktop: false,
     };
   };
 
   const layoutConfig = getLayoutConfig();
+
+  // ✅ DEBUG: Temporary logging (remove after testing)
+  useEffect(() => {
+    console.log("Debug - TeamMember Responsive Values:", {
+      width,
+      isMobile,
+      isTablet,
+      isDesktop,
+      isMobileInDesktopMode,
+      layoutConfig,
+      "Force Show Sidebar":
+        layoutConfig.showSidebar || layoutConfig.treatAsDesktop,
+    });
+  }, [
+    width,
+    isMobile,
+    isTablet,
+    isDesktop,
+    isMobileInDesktopMode,
+    layoutConfig,
+  ]);
 
   const projects = data?.getProjectsByMember || [];
 
@@ -192,7 +217,7 @@ export default function TeamMemberDashboardPage() {
       default:
         return (
           /* Main Dashboard Content */
-          <div className={`${isMobile ? "px-3" : "px-4 sm:px-6"} py-4`}>
+          <div className={`${width < 1024 ? "px-3" : "px-4 sm:px-6"} py-4`}>
             <motion.div className="mb-6 lg:mb-8">
               <div className="flex flex-col gap-3 mb-6">
                 <span className="self-start inline-flex items-center gap-2 px-3 py-1 text-xs font-medium rounded-full bg-brand-primary-100 dark:bg-brand-primary-800 text-brand-primary-700 dark:text-brand-primary-300">
@@ -202,14 +227,14 @@ export default function TeamMemberDashboardPage() {
                   <div>
                     <h1
                       className={`font-heading ${
-                        isMobile ? "text-2xl" : "text-3xl lg:text-4xl"
+                        width < 1024 ? "text-2xl" : "text-3xl lg:text-4xl"
                       } font-bold text-heading-primary-light dark:text-heading-primary-dark`}
                     >
                       Team Member Dashboard
                     </h1>
                     <p
                       className={`font-body text-txt-secondary-light dark:text-txt-secondary-dark ${
-                        isMobile ? "text-sm" : "text-base"
+                        width < 1024 ? "text-sm" : "text-base"
                       }`}
                     >
                       View your assigned projects and manage your tasks.
@@ -219,123 +244,146 @@ export default function TeamMemberDashboardPage() {
               </div>
             </motion.div>
 
-            {/* ✅ Stats Cards */}
+            {/* ✅ Stats Cards with Integrated Search/Filter */}
             <motion.div
-              className={`grid gap-4 lg:gap-6 mb-6 lg:mb-8 ${
-                isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3"
+              className={`grid gap-2 lg:gap-3 mb-4 lg:mb-6 ${
+                width < 1024 ? "grid-cols-1" : "grid-cols-1"
               }`}
             >
-              {stats.map((s, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`rounded-2xl ${
-                    isMobile ? "p-4" : "p-6"
-                  } bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm hover:scale-105 transition-transform duration-300`}
-                >
-                  <div className={`${isMobile ? "text-2xl" : "text-3xl"}`}>
-                    {s.icon}
-                  </div>
-                  <div>
-                    <p
-                      className={`${
-                        isMobile ? "text-xs" : "text-sm"
-                      } text-txt-secondary-light dark:text-txt-secondary-dark`}
-                    >
-                      {s.label}
-                    </p>
-                    <p
-                      className={`${
-                        isMobile ? "text-lg" : "text-xl"
-                      } font-bold text-heading-primary-light dark:text-heading-primary-dark`}
-                    >
-                      {s.value}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* ✅ Search and Filter Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className={`rounded-2xl ${
-                isMobile ? "p-4" : "p-6"
-              } bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 shadow-sm mb-6 lg:mb-8`}
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                {/* Search Bar */}
-                <div className="relative flex-1 max-w-md">
-                  <Search
-                    className={`absolute left-3 top-1/2 -translate-y-1/2 ${
-                      isMobile ? "w-4 h-4" : "w-5 h-5"
-                    } text-txt-secondary-light dark:text-txt-secondary-dark`}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search projects..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={`w-full ${
-                      isMobile ? "pl-8 pr-3 py-2.5 text-sm" : "pl-10 pr-4 py-3"
-                    } bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all`}
-                  />
-                </div>
-
-                {/* Filter and View Controls */}
-                <div className="flex items-center gap-2 lg:gap-3">
-                  {/* Status Filter */}
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className={`${
-                      isMobile ? "px-3 py-2.5 text-sm" : "px-4 py-3"
-                    } bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all flex-1 min-w-0`}
+              {/* Stats Cards Row */}
+              <motion.div
+                className={`grid gap-2 lg:gap-3 ${
+                  width < 1024 ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
+                {/* First 3 stats cards */}
+                {stats.map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={`rounded-xl ${
+                      width < 1024 ? "p-3" : "p-4"
+                    } bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 flex items-center gap-3 shadow-sm hover:scale-105 transition-transform duration-300`}
                   >
-                    <option value="All">All Status</option>
-                    <option value="ACTIVE">Active</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                  </select>
+                    <div className={`${width < 1024 ? "text-xl" : "text-2xl"}`}>
+                      {s.icon}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`${
+                          width < 1024 ? "text-xs" : "text-xs"
+                        } text-txt-secondary-light dark:text-txt-secondary-dark truncate`}
+                      >
+                        {s.label}
+                      </p>
+                      <p
+                        className={`${
+                          width < 1024 ? "text-base" : "text-lg"
+                        } font-bold text-heading-primary-light dark:text-heading-primary-dark`}
+                      >
+                        {s.value}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
 
-                  {/* View Mode Toggle */}
-                  <div className="flex items-center bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-xl p-1 border border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => setViewMode("grid")}
+              {/* ✅ Search & Filter Card - Separate Row Below Stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className={`rounded-xl ${
+                  width < 1024 ? "p-3" : "p-4"
+                } bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 shadow-sm hover:scale-105 transition-transform duration-300`}
+              >
+                {/* Search and Filter Row */}
+                <div
+                  className={`flex ${
+                    width < 1024
+                      ? "flex-col gap-2"
+                      : "flex-row items-center gap-4"
+                  }`}
+                >
+                  {/* Search Input */}
+                  <div className="relative flex-1">
+                    <Search
+                      className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${
+                        width < 1024 ? "w-3.5 h-3.5" : "w-4 h-4"
+                      } text-txt-secondary-light dark:text-txt-secondary-dark`}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Search projects..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className={`w-full ${
+                        width < 1024
+                          ? "pl-7 pr-2.5 py-2 text-sm"
+                          : "pl-8 pr-3 py-2.5 text-sm"
+                      } bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all`}
+                    />
+                  </div>
+
+                  {/* Filter Controls */}
+                  <div className="flex items-center gap-2">
+                    {/* Status Filter */}
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
                       className={`${
-                        isMobile ? "p-1.5" : "p-2"
-                      } rounded-lg transition-all ${
-                        viewMode === "grid"
-                          ? "bg-brand-primary-500 text-white shadow-md"
-                          : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
-                      }`}
+                        width < 1024
+                          ? "px-2.5 py-2 text-xs"
+                          : "px-3 py-2.5 text-sm"
+                      } bg-bg-secondary-light dark:bg-bg-secondary-dark border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary-500/20 focus:border-brand-primary-500 transition-all min-w-0 max-w-[120px]`}
                     >
-                      <Grid3X3
-                        className={`${isMobile ? "w-3.5 h-3.5" : "w-4 h-4"}`}
-                      />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`${
-                        isMobile ? "p-1.5" : "p-2"
-                      } rounded-lg transition-all ${
-                        viewMode === "list"
-                          ? "bg-brand-primary-500 text-white shadow-md"
-                          : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
-                      }`}
-                    >
-                      <List
-                        className={`${isMobile ? "w-3.5 h-3.5" : "w-4 h-4"}`}
-                      />
-                    </button>
+                      <option value="All">All</option>
+                      <option value="ACTIVE">Active</option>
+                      <option value="COMPLETED">Done</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="IN_PROGRESS">Progress</option>
+                    </select>
+
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center bg-bg-secondary-light dark:bg-bg-secondary-dark rounded-lg p-0.5 border border-gray-200 dark:border-gray-700">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`${
+                          width < 1024 ? "p-1.5" : "p-2"
+                        } rounded-md transition-all ${
+                          viewMode === "grid"
+                            ? "bg-brand-primary-500 text-white shadow-md"
+                            : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                        }`}
+                      >
+                        <Grid3X3
+                          className={`${
+                            width < 1024 ? "w-3 h-3" : "w-3.5 h-3.5"
+                          }`}
+                        />
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`${
+                          width < 1024 ? "p-1.5" : "p-2"
+                        } rounded-md transition-all ${
+                          viewMode === "list"
+                            ? "bg-brand-primary-500 text-white shadow-md"
+                            : "text-txt-secondary-light dark:text-txt-secondary-dark hover:text-txt-primary-light dark:hover:text-txt-primary-dark"
+                        }`}
+                      >
+                        <List
+                          className={`${
+                            width < 1024 ? "w-3 h-3" : "w-3.5 h-3.5"
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* ✅ Projects Section */}
@@ -349,7 +397,7 @@ export default function TeamMemberDashboardPage() {
                 <div
                   className={`grid gap-4 lg:gap-6 ${
                     viewMode === "grid"
-                      ? isMobile
+                      ? width < 1024
                         ? "grid-cols-1"
                         : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                       : "grid-cols-1"
@@ -365,26 +413,26 @@ export default function TeamMemberDashboardPage() {
               {!loading && !error && filteredProjects.length === 0 && (
                 <div
                   className={`rounded-2xl ${
-                    isMobile ? "p-8" : "p-16"
+                    width < 1024 ? "p-8" : "p-16"
                   } bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200 dark:border-gray-700 shadow-sm text-center`}
                 >
                   <div
                     className={`${
-                      isMobile ? "text-4xl mb-3" : "text-6xl mb-4"
+                      width < 1024 ? "text-4xl mb-3" : "text-6xl mb-4"
                     }`}
                   >
                     📋
                   </div>
                   <h3
                     className={`${
-                      isMobile ? "text-xl" : "text-2xl"
+                      width < 1024 ? "text-xl" : "text-2xl"
                     } font-semibold text-heading-primary-light dark:text-heading-primary-dark mb-2`}
                   >
                     No projects assigned
                   </h3>
                   <p
                     className={`text-txt-secondary-light dark:text-txt-secondary-dark mb-6 ${
-                      isMobile ? "text-sm" : ""
+                      width < 1024 ? "text-sm" : ""
                     }`}
                   >
                     {searchTerm || statusFilter !== "All"
@@ -405,7 +453,7 @@ export default function TeamMemberDashboardPage() {
                     transition={{ duration: 0.3 }}
                     className={`grid gap-4 lg:gap-6 ${
                       viewMode === "grid"
-                        ? isMobile
+                        ? width < 1024
                           ? "grid-cols-1"
                           : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
                         : "grid-cols-1"
@@ -422,7 +470,9 @@ export default function TeamMemberDashboardPage() {
                           project={project}
                           viewMode={viewMode}
                           className={`h-full w-full max-w-full ${
-                            isMobile ? "hover:scale-[1.01]" : "hover:scale-105"
+                            width < 1024
+                              ? "hover:scale-[1.01]"
+                              : "hover:scale-105"
                           } transition-transform duration-300 overflow-hidden`}
                         />
                       </motion.div>
@@ -442,7 +492,7 @@ export default function TeamMemberDashboardPage() {
               >
                 <p
                   className={`text-txt-secondary-light dark:text-txt-secondary-dark ${
-                    isMobile ? "text-sm" : ""
+                    width < 1024 ? "text-sm" : ""
                   }`}
                 >
                   Showing{" "}
@@ -464,17 +514,19 @@ export default function TeamMemberDashboardPage() {
 
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
-      {/* Desktop/Tablet Sidebar */}
-      {layoutConfig.showSidebar && (
+      {/* ✅ ENHANCED: Desktop/Tablet Sidebar with multiple fallback conditions */}
+      {(layoutConfig.showSidebar ||
+        layoutConfig.treatAsDesktop ||
+        width >= 1024) && (
         <Sidebar
           setActiveComponent={setActiveComponent}
           onStateChange={handleSidebarStateChange}
         />
       )}
 
-      {/* Mobile Sidebar Overlay */}
+      {/* ✅ ENHANCED: Mobile Sidebar - only show for actual mobile widths */}
       <AnimatePresence>
-        {isMobile && layoutConfig.showMobileSidebar && (
+        {width < 1024 && layoutConfig.showMobileSidebar && (
           <>
             {/* Backdrop */}
             <motion.div
@@ -503,13 +555,13 @@ export default function TeamMemberDashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Content Area */}
+      {/* ✅ ENHANCED: Main Content Area with improved responsive logic */}
       <motion.div
         className="min-h-screen transition-all duration-300 ease-in-out"
         style={{
-          marginLeft: isDesktop ? layoutConfig.contentMarginLeft : "0",
+          marginLeft: width >= 1024 ? layoutConfig.contentMarginLeft : "0",
           width: layoutConfig.contentWidth,
-          marginTop: "64px", // Account for fixed navbar
+          marginTop: "64px",
         }}
       >
         <div className="h-full">
@@ -517,9 +569,9 @@ export default function TeamMemberDashboardPage() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeComponent}
-              initial={{ opacity: 0, x: isMobile ? 0 : 20 }}
+              initial={{ opacity: 0, x: width < 1024 ? 0 : 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
+              exit={{ opacity: 0, x: width < 1024 ? 0 : -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               {renderActiveComponent()}
