@@ -92,8 +92,8 @@ function AssignTeamLead() {
         setShowSuccess(true);
         showNotification("success", "Team leads assigned successfully!");
         setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+          navigate(`/projects/${projectId}`);
+        }, 1000);
       } else {
         showNotification("warning", response.data.assignTeamLead.message);
       }
