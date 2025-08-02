@@ -330,37 +330,7 @@ const Sidebar = ({ setActiveComponent, onStateChange, category, NavbarItems }) =
   );
 
   return (
-    <>
-      {/* Mobile toggle button and Sheet from right */}
-      {isMobile ? (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              size="icon"
-              className="fixed top-4 right-4 z-[60] block lg:hidden bg-brand-primary-600 hover:bg-brand-primary-700 text-white shadow-lg border-none rounded-xl backdrop-blur-sm"
-              aria-label={isOpen ? "Close sidebar menu" : "Open sidebar menu"}
-            >
-              {isOpen ? <PanelLeftClose size={24} /> : <Menu size={24} />}
-            </Button>
-          </SheetTrigger>
-
-          {/* Sheet sliding in from right */}
-          <SheetContent side="right" className="p-0 w-64 border-l border-gray-200/20 dark:border-gray-700/20 bg-bg-secondary-light dark:bg-bg-secondary-dark backdrop-blur-md flex flex-col">
-            {/* Sidebar menu */}
-            <MenuBlock />
-
-            {/* Separator */}
-            <Separator />
-
-            {/* Inject Navbar items below sidebar in mobile */}
-            {NavbarItems && (
-              <div className="px-4 py-4 overflow-auto max-h-[calc(100vh-16rem)]">
-                {NavbarItems}
-              </div>
-            )}
-          </SheetContent>
-        </Sheet>
-      ) : (
+    <> 
         <>
           {/* Desktop sidebar on left */}
           <div
@@ -373,7 +343,6 @@ const Sidebar = ({ setActiveComponent, onStateChange, category, NavbarItems }) =
           </div>
           {/* On desktop, Navbar stays separate/independent - you control it outside this Sidebar */}
         </>
-      )}
     </>
   );
 };

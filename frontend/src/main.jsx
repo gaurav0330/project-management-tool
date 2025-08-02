@@ -1,5 +1,5 @@
 
-if (import.meta.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === 'production') {
   console.log = () => {};
   console.error = () => {};
   console.debug = () => {};
