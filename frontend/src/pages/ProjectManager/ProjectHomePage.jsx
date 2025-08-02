@@ -38,11 +38,11 @@ export default function ProjectDashboard() {
   const navigate = useNavigate();
   const { isDark } = useTheme();
   const { isMobile, isTablet, isDesktop, width } = useResponsive();
-  
+
   const { loading, error, data } = useQuery(GET_PROJECT_BY_ID, {
     variables: { id: projectId },
   });
-  
+
   const [activeComponent, setActiveComponent] = useState("overview");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
@@ -59,7 +59,7 @@ export default function ProjectDashboard() {
 
   // Mobile-specific handlers
   const handleMobileMenuToggle = () => {
-    setShowMobileSidebar(prev => !prev);
+    setShowMobileSidebar((prev) => !prev);
   };
 
   const handleMobileComponentChange = (component) => {
@@ -74,21 +74,21 @@ export default function ProjectDashboard() {
       toggle: handleMobileMenuToggle,
       isOpen: showMobileSidebar,
       category: category,
-      setShowSidebar: setShowMobileSidebar // Add direct setter
+      setShowSidebar: setShowMobileSidebar, // Add direct setter
     };
 
     // Also listen for messages from navbar
     const handleNavbarMessage = (event) => {
-      if (event.data && event.data.type === 'TOGGLE_PROJECT_SIDEBAR') {
-        setShowMobileSidebar(prev => !prev);
+      if (event.data && event.data.type === "TOGGLE_PROJECT_SIDEBAR") {
+        setShowMobileSidebar((prev) => !prev);
       }
     };
 
-    window.addEventListener('message', handleNavbarMessage);
+    window.addEventListener("message", handleNavbarMessage);
 
     return () => {
       delete window.projectMobileSidebarHandler;
-      window.removeEventListener('message', handleNavbarMessage);
+      window.removeEventListener("message", handleNavbarMessage);
     };
   }, [showMobileSidebar, category]);
 
@@ -96,40 +96,53 @@ export default function ProjectDashboard() {
   const getLayoutConfig = () => {
     if (isMobile) {
       return {
-        contentMarginLeft: '0',
-        contentWidth: '100vw',
+        contentMarginLeft: "0",
+        contentWidth: "100vw",
         showSidebar: false,
-        showMobileSidebar: showMobileSidebar
+        showMobileSidebar: showMobileSidebar,
       };
     }
-    
+
     if (isTablet) {
       return {
-        contentMarginLeft: sidebarCollapsed && !isHovering ? '4rem' : '12rem',
-        contentWidth: sidebarCollapsed && !isHovering ? 'calc(100vw - 4rem)' : 'calc(100vw - 12rem)',
+        contentMarginLeft: sidebarCollapsed && !isHovering ? "4rem" : "12rem",
+        contentWidth:
+          sidebarCollapsed && !isHovering
+            ? "calc(100vw - 4rem)"
+            : "calc(100vw - 12rem)",
         showSidebar: true,
-        showMobileSidebar: false
+        showMobileSidebar: false,
       };
     }
 
     // Desktop
+    // Desktop section - ensure showSidebar is ALWAYS true
     const shouldShowFullSidebar = !sidebarCollapsed || isHovering;
     return {
-      contentMarginLeft: shouldShowFullSidebar ? '16rem' : '4rem',
-      contentWidth: shouldShowFullSidebar ? 'calc(100vw - 16rem)' : 'calc(100vw - 4rem)',
-      showSidebar: true,
-      showMobileSidebar: false
+      contentMarginLeft: shouldShowFullSidebar ? "16rem" : "4rem",
+      contentWidth: shouldShowFullSidebar
+        ? "calc(100vw - 16rem)"
+        : "calc(100vw - 4rem)",
+      showSidebar: true, // ✅ Change this - was conditionally false
+      showMobileSidebar: false,
     };
   };
 
   const layoutConfig = getLayoutConfig();
 
   // Helper function to render active component (your existing code remains the same)
-  const renderActiveComponent = (activeComponent, projectId, project, loading, error, setActiveComponent) => {
+  const renderActiveComponent = (
+    activeComponent,
+    projectId,
+    project,
+    loading,
+    error,
+    setActiveComponent
+  ) => {
     // ... your existing renderActiveComponent logic (keep as is)
     if (activeComponent === "managelead") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -142,7 +155,7 @@ export default function ProjectDashboard() {
       return null;
     } else if (activeComponent === "approvetask") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -152,7 +165,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "tasks") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -162,7 +175,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "members") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -172,7 +185,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "manageteam") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -182,7 +195,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "integrations") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -192,7 +205,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "assignedTasks") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -202,7 +215,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "chat") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -212,7 +225,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "TimeLine") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -222,7 +235,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "setting") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -232,7 +245,7 @@ export default function ProjectDashboard() {
       );
     } else if (activeComponent === "analytics") {
       return (
-        <motion.div 
+        <motion.div
           className="bg-bg-primary-light dark:bg-bg-primary-dark rounded-2xl border border-gray-200/20 dark:border-gray-700/20 shadow-lg"
           layout
           transition={{ duration: 0.3 }}
@@ -246,13 +259,9 @@ export default function ProjectDashboard() {
     } else {
       // Default Overview Component
       return (
-        <motion.div 
-          className="space-y-6"
-          layout
-          transition={{ duration: 0.3 }}
-        >
+        <motion.div className="space-y-6" layout transition={{ duration: 0.3 }}>
           {error && (
-            <motion.div 
+            <motion.div
               className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -261,7 +270,9 @@ export default function ProjectDashboard() {
             >
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-red-100 dark:bg-red-800/30 rounded-full flex items-center justify-center">
-                  <span className="text-red-600 dark:text-red-400 text-lg">⚠️</span>
+                  <span className="text-red-600 dark:text-red-400 text-lg">
+                    ⚠️
+                  </span>
                 </div>
                 <div>
                   <h3 className="font-heading text-lg font-semibold text-red-800 dark:text-red-200">
@@ -281,7 +292,7 @@ export default function ProjectDashboard() {
           </motion.div>
 
           {/* Quick Actions with Staggered Animation */}
-          <motion.div 
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
             layout
             transition={{ duration: 0.3 }}
@@ -291,29 +302,29 @@ export default function ProjectDashboard() {
                 title: "Manage Team",
                 description: "View and manage team members",
                 icon: "👥",
-                onClick: () => setActiveComponent("manageteam")
+                onClick: () => setActiveComponent("manageteam"),
               },
               {
                 title: "View Analytics",
                 description: "Check project progress and analytics",
                 icon: "📊",
-                onClick: () => setActiveComponent("analytics")
+                onClick: () => setActiveComponent("analytics"),
               },
               {
                 title: "Timeline",
                 description: "Track project timeline and milestones",
                 icon: "📅",
-                onClick: () => setActiveComponent("TimeLine")
-              }
+                onClick: () => setActiveComponent("TimeLine"),
+              },
             ].map((card, index) => (
               <motion.div
                 key={card.title}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.4, 
+                transition={{
+                  duration: 0.4,
                   delay: 0.2 + index * 0.1,
-                  ease: "easeOut"
+                  ease: "easeOut",
                 }}
                 layout
               >
@@ -329,9 +340,9 @@ export default function ProjectDashboard() {
   return (
     <div className="min-h-screen bg-bg-secondary-light dark:bg-bg-secondary-dark transition-colors duration-300">
       {/* Desktop/Tablet Sidebar */}
-      {layoutConfig.showSidebar && (
-        <Sidebar 
-          setActiveComponent={setActiveComponent} 
+      {(layoutConfig.showSidebar || isDesktop) && (
+        <Sidebar
+          setActiveComponent={setActiveComponent}
           onStateChange={handleSidebarStateChange}
           category={category}
         />
@@ -349,7 +360,7 @@ export default function ProjectDashboard() {
               onClick={() => setShowMobileSidebar(false)}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             />
-            
+
             {/* Mobile Sidebar */}
             <motion.div
               initial={{ x: -300, opacity: 0 }}
@@ -358,7 +369,7 @@ export default function ProjectDashboard() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed left-0 top-0 h-full w-80 bg-bg-primary-light dark:bg-bg-primary-dark border-r border-gray-200 dark:border-gray-700 z-50 overflow-y-auto"
             >
-              <MobileSidebar 
+              <MobileSidebar
                 setActiveComponent={handleMobileComponentChange}
                 category={category}
                 activeComponent={activeComponent}
@@ -370,15 +381,15 @@ export default function ProjectDashboard() {
       </AnimatePresence>
 
       {/* Main Content Area */}
-      <motion.div 
+      <motion.div
         className="min-h-screen transition-all duration-300 ease-in-out"
         style={{
-          marginLeft: isDesktop ? layoutConfig.contentMarginLeft : '0',
+          marginLeft: isDesktop ? layoutConfig.contentMarginLeft : "0",
           width: layoutConfig.contentWidth,
-          marginTop: '64px' // Account for fixed navbar
+          marginTop: "64px", // Account for fixed navbar
         }}
       >
-        <div className={`${isMobile ? 'p-4' : 'p-6 lg:p-8'} h-full`}>
+        <div className={`${isMobile ? "p-4" : "p-6 lg:p-8"} h-full`}>
           {/* Content Router */}
           <AnimatePresence mode="wait">
             <motion.div
@@ -388,7 +399,14 @@ export default function ProjectDashboard() {
               exit={{ opacity: 0, x: isMobile ? 0 : -20 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {renderActiveComponent(activeComponent, projectId, project, loading, error, setActiveComponent)}
+              {renderActiveComponent(
+                activeComponent,
+                projectId,
+                project,
+                loading,
+                error,
+                setActiveComponent
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -402,26 +420,26 @@ const QuickActionCard = ({ title, description, icon, onClick }) => {
   return (
     <motion.div
       className="bg-bg-primary-light dark:bg-bg-primary-dark border border-gray-200/20 dark:border-gray-700/20 rounded-2xl p-6 hover:shadow-xl transition-all duration-300 cursor-pointer group"
-      whileHover={{ 
-        scale: 1.02, 
+      whileHover={{
+        scale: 1.02,
         y: -5,
-        transition: { duration: 0.2, ease: "easeOut" }
+        transition: { duration: 0.2, ease: "easeOut" },
       }}
-      whileTap={{ 
+      whileTap={{
         scale: 0.98,
-        transition: { duration: 0.1 }
+        transition: { duration: 0.1 },
       }}
       onClick={onClick}
       layout
       transition={{ duration: 0.3 }}
     >
       <div className="flex items-center gap-4">
-        <motion.div 
+        <motion.div
           className="w-12 h-12 bg-gradient-to-br from-brand-primary-100 to-brand-primary-200 dark:from-brand-primary-900/30 dark:to-brand-primary-800/30 rounded-xl flex items-center justify-center text-2xl"
-          whileHover={{ 
+          whileHover={{
             scale: 1.1,
             rotate: 5,
-            transition: { duration: 0.2, ease: "easeOut" }
+            transition: { duration: 0.2, ease: "easeOut" },
           }}
         >
           {icon}

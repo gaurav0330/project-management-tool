@@ -8,12 +8,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/UI/sheet";
 import { Button } from "@/components/UI/button";
 import { Separator } from "@/components/UI/separator";
 import { cn } from "../../../lib/utils";
-import { useWindowSize } from "../../hooks/useWindowSize"; // Using provided hook
+
 
 const Sidebar = ({ setActiveComponent, onStateChange, category, NavbarItems }) => {
-  const { width } = useWindowSize();
-  const isMobile = width < 1024; // Tailwind 'lg' breakpoint
-
   const [isOpen, setIsOpen] = useState(false);
   const [userRole, setRole] = useState(null);
   const [activeItem, setActiveItem] = useState("");

@@ -33,7 +33,7 @@ export function useResponsive() {
   return {
     ...dimensions,
     breakpoint,
-    isMobile: dimensions.width < 768,
+    isMobile: dimensions.width < 1024,
     isTablet: dimensions.width >= 768 && dimensions.width < 1024,
     isDesktop: dimensions.width >= 1024
   };
