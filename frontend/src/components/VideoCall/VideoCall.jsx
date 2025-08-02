@@ -1,4 +1,4 @@
-// components/VideoCall/VideoCall.jsx - Complete with Screen Sharing Support and Emoji Feature + Mobile Detection
+// components/VideoCall/VideoCall.jsx - Complete with Enhanced Responsive Hook Support
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Video, ArrowLeft, Monitor, Smartphone, Tablet } from "lucide-react";
@@ -11,7 +11,10 @@ import { useResponsive } from "../../hooks/useResponsive";
 const VideoCall = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isMobile, isTablet, isDesktop, width } = useResponsive();
+  
+  // ✅ ENHANCED: Using the updated responsive hook with width-based logic
+  const { isMobile, isTablet, isDesktop, width, isMobileInDesktopMode, isTouchDevice } = useResponsive();
+  
   const [showParticipants, setShowParticipants] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [dismissMobileWarning, setDismissMobileWarning] = useState(false);
@@ -42,9 +45,10 @@ const VideoCall = () => {
     emojiReactions
   } = useVideoCall(searchParams);
 
-  // Responsive configuration
+  // ✅ ENHANCED: Width-based responsive configuration
   const getResponsiveConfig = () => {
-    if (isMobile) {
+    // Mobile behavior for screens < 1024px width
+    if (width < 1024) {
       return {
         containerClass: "h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body overflow-hidden relative",
         loadingSize: "h-12 w-12",
@@ -61,9 +65,12 @@ const VideoCall = () => {
         participantsPosition: "right",
         headerHeight: "3.5rem",
         controlsHeight: "5rem",
-        contentHeight: "calc(100vh - 8.5rem)"
+        contentHeight: "calc(100vh - 8.5rem)",
+        treatAsMobile: true
       };
-    } else if (isTablet) {
+    } 
+    // Tablet behavior for screens 768px - 1280px width
+    else if (width >= 1024 && width < 1280) {
       return {
         containerClass: "h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body overflow-hidden relative",
         loadingSize: "h-14 w-14",
@@ -80,9 +87,12 @@ const VideoCall = () => {
         participantsPosition: "right",
         headerHeight: "3.75rem",
         controlsHeight: "4rem",
-        contentHeight: "calc(100vh - 7.75rem)"
+        contentHeight: "calc(100vh - 7.75rem)",
+        treatAsMobile: false
       };
-    } else {
+    } 
+    // Desktop behavior for screens ≥ 1280px width
+    else {
       return {
         containerClass: "h-screen bg-bg-primary-light dark:bg-bg-primary-dark font-body overflow-hidden relative",
         loadingSize: "h-16 w-16",
@@ -99,18 +109,29 @@ const VideoCall = () => {
         participantsPosition: "right",
         headerHeight: "4rem",
         controlsHeight: "6rem",
-        contentHeight: "calc(100vh - 10rem)"
+        contentHeight: "calc(100vh - 10rem)",
+        treatAsMobile: false
       };
     }
   };
 
   const config = getResponsiveConfig();
 
-  console.log('📱 VideoCall component - hasLocalStream:', !!localStream, 'Device:', { isMobile, isTablet, isDesktop, width });
+  console.log('📱 VideoCall component - Enhanced Responsive:', {
+    hasLocalStream: !!localStream,
+    width,
+    isMobile,
+    isTablet,
+    isDesktop,
+    isMobileInDesktopMode,
+    isTouchDevice,
+    treatAsMobile: config.treatAsMobile
+  });
 
-  // Mobile-specific handlers
+  // ✅ ENHANCED: Mobile-specific handlers with width-based logic
   const handleMobileParticipantsToggle = () => {
-    if (isMobile) {
+    // Use width-based logic instead of device detection
+    if (width < 1024) {
       if (showChat) setShowChat(false);
       setShowParticipants(!showParticipants);
     } else {
@@ -119,7 +140,8 @@ const VideoCall = () => {
   };
 
   const handleMobileChatToggle = () => {
-    if (isMobile) {
+    // Use width-based logic instead of device detection
+    if (width < 1024) {
       if (showParticipants) setShowParticipants(false);
       setShowChat(!showChat);
     } else {
@@ -127,9 +149,12 @@ const VideoCall = () => {
     }
   };
 
-  // Mobile Warning Component
+  // ✅ ENHANCED: Mobile Warning Component with better detection
   const MobileWarning = () => {
-    if (!isMobile || dismissMobileWarning) return null;
+    // Show warning for actual mobile devices OR small screens
+    const shouldShowWarning = (isTouchDevice && width < 768) || (width < 640);
+    
+    if (!shouldShowWarning || dismissMobileWarning) return null;
 
     return (
       <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -163,20 +188,22 @@ const VideoCall = () => {
           {/* Device Recommendations */}
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6">
             <h3 className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-2">
-              Recommended Devices:
+              Recommended:
             </h3>
             <ul className="text-blue-700 dark:text-blue-300 text-xs space-y-1">
-              <li>• Desktop computer or laptop</li>
-              <li>• Tablet (iPad, Android tablet)</li>
-              <li>• Devices with screens 10" or larger</li>
+              <li>• Desktop computer (≥1280px wide)</li>
+              <li>• Tablet in landscape (≥1024px wide)</li>
+              <li>• Large screen devices</li>
             </ul>
           </div>
 
-          {/* Action Buttons */}
+          {/* ✅ REMOVED: Current Screen Info section */}
+
+          {/* ✅ MODIFIED: Action Buttons - Only Go Back button */}
           <div className="space-y-3">
             <button
               onClick={() => navigate(-1)}
-              className="w-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              className="w-full bg-brand-primary-600 hover:bg-brand-primary-700 text-white py-3 px-4 rounded-xl font-medium transition-colors"
             >
               Go Back
             </button>
@@ -184,7 +211,7 @@ const VideoCall = () => {
 
           {/* Additional Tips */}
           <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            <p>💡 Tip: Use landscape mode for better experience</p>
+            <p>💡 Tip: Rotate to landscape mode or use a larger screen</p>
           </div>
         </div>
       </div>
@@ -196,7 +223,7 @@ const VideoCall = () => {
       <div className="flex items-center justify-center h-screen bg-bg-primary-light dark:bg-bg-primary-dark">
         <div className="flex flex-col items-center gap-4">
           <div className={`rounded-full ${config.loadingSize} ${config.loadingBorder} animate-spin border-brand-primary-600 bg-white/60 border-t-transparent`}></div>
-          {!isMobile && (
+          {width >= 1024 && (
             <p className="text-txt-secondary-light dark:text-txt-secondary-dark text-sm animate-pulse">
               Connecting to meeting...
             </p>
@@ -214,7 +241,7 @@ const VideoCall = () => {
           <h2 className={`${config.errorTitleSize} font-heading font-bold`}>
             Invalid Meeting
           </h2>
-          <p className={`text-txt-secondary-light dark:text-txt-secondary-dark ${config.errorTextSize} ${isMobile ? 'leading-relaxed' : ''}`}>
+          <p className={`text-txt-secondary-light dark:text-txt-secondary-dark ${config.errorTextSize} ${config.treatAsMobile ? 'leading-relaxed' : ''}`}>
             No meeting ID found. Please use a valid meeting link.
           </p>
           <button
@@ -231,7 +258,7 @@ const VideoCall = () => {
 
   return (
     <>
-      {/* Mobile Warning Overlay */}
+      {/* Enhanced Mobile Warning Overlay */}
       <MobileWarning />
 
       <div className={config.containerClass}>
@@ -247,9 +274,13 @@ const VideoCall = () => {
             onToggleParticipants={handleMobileParticipantsToggle}
             onToggleChat={handleMobileChatToggle}
             participantsCount={participantCount || 0}
-            isMobile={isMobile}
-            isTablet={isTablet}
-            isDesktop={isDesktop}
+            // ✅ ENHANCED: Pass width-based responsive props
+            isMobile={width < 1024}
+            isTablet={width >= 1024 && width < 1280}
+            isDesktop={width >= 1280}
+            width={width}
+            isMobileInDesktopMode={isMobileInDesktopMode}
+            isTouchDevice={isTouchDevice}
           />
         </div>
 
@@ -258,7 +289,7 @@ const VideoCall = () => {
           className="absolute top-0 left-0 right-0 bottom-0 overflow-hidden"
           style={{
             paddingTop: config.headerHeight,
-            paddingBottom: isMobile ? config.controlsHeight : '2rem'
+            paddingBottom: config.treatAsMobile ? config.controlsHeight : '2rem'
           }}
         >
           {!isCallActive ? (
@@ -267,9 +298,12 @@ const VideoCall = () => {
                 currentUser={currentUser} 
                 onStartCall={startCall}
                 localVideoRef={localVideoRef}
-                isMobile={isMobile}
-                isTablet={isTablet}
-                isDesktop={isDesktop}
+                // ✅ ENHANCED: Width-based responsive props
+                isMobile={width < 1024}
+                isTablet={width >= 1024 && width < 1280}
+                isDesktop={width >= 1280}
+                width={width}
+                isMobileInDesktopMode={isMobileInDesktopMode}
                 config={config}
               />
             </div>
@@ -295,10 +329,13 @@ const VideoCall = () => {
               toggleScreenShare={toggleScreenShare}
               sendEmoji={sendEmoji}
               emojiReactions={emojiReactions}
-              // Responsive props
-              isMobile={isMobile}
-              isTablet={isTablet}
-              isDesktop={isDesktop}
+              // ✅ ENHANCED: Width-based responsive props
+              isMobile={width < 1024}
+              isTablet={width >= 1024 && width < 1280}
+              isDesktop={width >= 1280}
+              width={width}
+              isMobileInDesktopMode={isMobileInDesktopMode}
+              isTouchDevice={isTouchDevice}
               config={config}
               sidebarBehavior={config.sidebarBehavior}
               chatPosition={config.chatPosition}
@@ -307,8 +344,8 @@ const VideoCall = () => {
           )}
         </div>
 
-        {/* Mobile Overlay Backgrounds */}
-        {isMobile && (showParticipants || showChat) && (
+        {/* ✅ ENHANCED: Mobile Overlay Backgrounds with width-based logic */}
+        {width < 1024 && (showParticipants || showChat) && (
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
             onClick={() => {
@@ -318,12 +355,17 @@ const VideoCall = () => {
           />
         )}
 
-        {/* Mobile Device Info Bar */}
-        {isMobile && isCallActive && !dismissMobileWarning && (
+        {/* ✅ ENHANCED: Mobile Device Info Bar with better detection */}
+        {width < 1024 && isCallActive && !dismissMobileWarning && (
           <div className="fixed bottom-0 left-0 right-0 bg-amber-500 text-white p-2 text-center text-xs z-30">
             <div className="flex items-center justify-center gap-2">
               <Smartphone className="w-4 h-4" />
-              <span>Mobile view - Consider switching to a larger screen for better experience</span>
+              <span>
+                {isMobileInDesktopMode 
+                  ? "Mobile in desktop mode - Consider using full desktop browser"
+                  : "Mobile view - Switch to larger screen for better experience"
+                }
+              </span>
               <button
                 onClick={() => setDismissMobileWarning(true)}
                 className="ml-2 text-white/80 hover:text-white"
@@ -333,6 +375,8 @@ const VideoCall = () => {
             </div>
           </div>
         )}
+
+        {/* ✅ REMOVED: Debug responsive state display */}
       </div>
     </>
   );
