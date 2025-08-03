@@ -37,7 +37,7 @@ import TeamDetails from './pages/TeamLead/TeamDetails';
 // import TeamLeadChat from './pages/TeamLead/Chat';
 
 import CreateGroupPage from './pages/Chat/CreateGroup';
-import ChatPage from './pages/Chat/ChatPage';
+import Docs from './pages/Home/Docs';
 
 import Chat from './pages/Chat';
 
@@ -63,7 +63,8 @@ function App() {
     "/teamMember/project",
     "/teammembertasksubmission",
     "/chat",
-    "/videocall" // ✅ ADD THIS - Hide footer for video calls
+    "/videocall" ,// ✅ ADD THIS - Hide footer for video calls
+    "/docs"
   ];
 
   const containerRoutes = [
@@ -95,6 +96,7 @@ function App() {
           <Route path="/*" element={<Dashboard />} />
           <Route path="/signup" element={<SignUpPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/docs" element={<Docs />} />
 
           {/* 🔵 Project Manager Only Routes */}
           <Route 

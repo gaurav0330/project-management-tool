@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MdHome, MdNotifications } from "react-icons/md";
+import { MdHome,MdDescription  } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import { useQuery, gql } from "@apollo/client";
-import logo from "../../assets/logo.png";
+import logoLight from "../../assets/logo-light.png"; // Your light theme logo
+import logoDark from "../../assets/logo-dark.png";   // Your dark theme logo
 import ThemeToggle from "../ThemeToggle";
 import LogoutButton from "./Logout";
 import { Edit2Icon } from "lucide-react";
 import EditProfile from "../authComponent/EditProfile";
 import { useResponsive } from "../../hooks/useResponsive";
+import { useTheme } from "../../contexts/ThemeContext"; // Import your theme context
 
 const GET_PROFILE = gql`
   query GetProfile($userId: ID!) {
@@ -44,9 +46,34 @@ const GET_USER = gql`
   }
 `;
 
+// Theme-aware Logo Component
+const YojanaDeskLogo = ({ size = "md", className = "" }) => {
+  const { isDark, theme } = useTheme();
+  
+  const sizeClasses = {
+    sm: "h-6",
+    md: "h-8", 
+    lg: "h-10"
+  };
+
+  return (
+    <div className={`flex items-center transition-all duration-300 ${className}`}>
+      <img 
+        src={isDark ? logoDark : logoLight}
+        alt="YojanaDesk Logo" 
+        className={`${sizeClasses[size]} transition-all duration-300 select-none`}
+        style={{
+          filter: isDark ? 'none' : 'none', // You can add filters if needed
+        }}
+      />
+    </div>
+  );
+};
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDark, theme } = useTheme(); // Use your theme context
   const token = localStorage.getItem("token");
   const [userId, setUserId] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -57,7 +84,6 @@ export default function Navbar() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [profileData, setProfileData] = useState(null);
 
-  // ✅ FIXED: Added width for consistent responsive behavior
   const { isMobile, isTablet, isDesktop, width } = useResponsive();
 
   // Enhanced page detection
@@ -131,6 +157,9 @@ export default function Navbar() {
     }
   };
 
+  const goDoc = () => {
+    navigate("/docs");
+  }
   // Close mobile menu on window resize to desktop
   useEffect(() => {
     if (!mobileOpen) return;
@@ -150,38 +179,29 @@ export default function Navbar() {
     setProfileData(updatedProfile);
   };
 
-  // Handle mobile menu toggle - SIMPLIFIED LOGIC
   const handleMobileMenuToggle = () => {
     setMobileOpen(prev => !prev);
   };
 
-  // ENHANCED: Handle both project and team sidebar toggles
   const handleProjectSidebarToggle = () => {
-    setMobileOpen(false); // Close the navbar menu
+    setMobileOpen(false);
     
-    // Check if we're on a team detail page
     if (isOnTeamDetailPage) {
-      // Handle team sidebar
       if (window.teamMobileSidebarHandler) {
         window.teamMobileSidebarHandler.toggle();
       } else {
-        // Fallback: post message to team page
         window.postMessage({ type: 'TOGGLE_TEAM_SIDEBAR' }, '*');
       }
     } else {
-      // Handle regular project sidebar
       if (window.projectMobileSidebarHandler) {
         window.projectMobileSidebarHandler.toggle();
       } else {
-        // Fallback: post message to project page
         window.postMessage({ type: 'TOGGLE_PROJECT_SIDEBAR' }, '*');
       }
     }
   };
 
-  // Enhanced menu configuration based on page type and user role
   const getProjectMenuConfig = () => {
-    // If on team detail page, always show team menu
     if (isOnTeamDetailPage) {
       return {
         text: "🎯 Team Menu",
@@ -190,7 +210,6 @@ export default function Navbar() {
       };
     }
     
-    // Regular project pages based on user role
     switch (userRole) {
       case "Project_Manager":
         return {
@@ -224,26 +243,36 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 inset-x-0 z-50 bg-bg-primary-light dark:bg-bg-primary-dark shadow transition-colors">
+      <nav className="fixed top-0 inset-x-0 z-50 bg-bg-primary-light dark:bg-bg-primary-dark shadow transition-colors duration-300">
         <div className="section-container flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Theme-aware Logo */}
           <div
-            className="flex items-center cursor-pointer"
+            className="flex items-center cursor-pointer group"
             onClick={() => navigate("/")}
             aria-label="Navigate to homepage"
           >
-            <img src={logo} alt="Logo" className="h-8" />
+            <YojanaDeskLogo 
+              size="md" 
+              className="transform group-hover:scale-105 transition-transform duration-200"
+            />
           </div>
 
-          {/* ✅ FIXED: Desktop menu - Use width-based logic */}
+          {/* Desktop menu */}
           {width >= 1024 && (
             <div className="flex items-center space-x-4">
               {token ? (
                 <>
+                  <button
+                    onClick={goDoc}
+                    className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white rounded-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 transform"
+                    aria-label="Go to dashboard"
+                  >
+                    <MdDescription size={20} />
+                  </button>
                   {/* Dashboard */}
                   <button
                     onClick={goDashboard}
-                    className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 text-white rounded-md transition"
+                    className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white rounded-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 transform"
                     aria-label="Go to dashboard"
                   >
                     <MdHome size={20} />
@@ -253,22 +282,22 @@ export default function Navbar() {
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setDropdownOpen((prev) => !prev)}
-                      className="flex items-center p-2 space-x-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition"
+                      className="flex items-center p-2 space-x-2 rounded-md hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark transition-all duration-200 hover:shadow-md"
                       aria-haspopup="true"
                       aria-expanded={dropdownOpen}
                       aria-controls="user-menu"
                       aria-label="User menu"
                     >
-                      <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center font-semibold select-none">
+                      <div className="w-8 h-8 bg-brand-primary-100 dark:bg-brand-primary-900 text-brand-primary-600 dark:text-brand-primary-400 rounded-full flex items-center justify-center font-semibold select-none transition-colors duration-300">
                         {userLoading
                           ? "…"
                           : user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
                       <div className="text-left hidden lg:block">
-                        <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
+                        <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark transition-colors duration-300">
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
-                        <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+                        <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark transition-colors duration-300">
                           {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
@@ -278,12 +307,12 @@ export default function Navbar() {
                         id="user-menu"
                         role="menu"
                         aria-label="User menu"
-                        className="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-10 border border-gray-200 dark:border-gray-700"
+                        className="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-lg shadow-xl z-10 border border-gray-200 dark:border-gray-700 transition-all duration-200"
                       >
                         <button
                           onClick={handleEditProfileClick}
                           role="menuitem"
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-brand-primary-500 dark:hover:text-brand-primary-400 rounded-md transition-all duration-200"
                         >
                           <Edit2Icon className="w-4 h-4" aria-hidden="true" />
                           Edit Profile
@@ -300,7 +329,7 @@ export default function Navbar() {
                 <>
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 transition"
+                    className="px-4 py-2 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 transition-all duration-200"
                   >
                     Login
                   </Link>
@@ -313,13 +342,13 @@ export default function Navbar() {
             </div>
           )}
 
-          {/* ✅ FIXED: Mobile menu button - Use width-based logic */}
+          {/* Mobile menu button */}
           {width < 1024 && (
             <div className="flex items-center space-x-2">
               <ThemeToggle />
               <button
                 onClick={handleMobileMenuToggle}
-                className="p-2 text-txt-primary-light dark:text-txt-primary-dark focus:outline-none"
+                className="p-2 text-txt-primary-light dark:text-txt-primary-dark focus:outline-none hover:bg-bg-accent-light dark:hover:bg-bg-accent-dark rounded-md transition-all duration-200"
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 aria-expanded={mobileOpen}
               >
@@ -329,9 +358,9 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* ✅ FIXED: Mobile Menu Content - Use width-based logic */}
+        {/* Mobile Menu Content */}
         {width < 1024 && mobileOpen && (
-          <div className="bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg">
+          <div className="bg-bg-primary-light dark:bg-bg-primary-dark border-t border-gray-200 dark:border-gray-700 shadow-lg transition-colors duration-300">
             <div className="flex flex-col space-y-2 p-4">
               {token ? (
                 <>
@@ -341,13 +370,13 @@ export default function Navbar() {
                       goDashboard();
                       setMobileOpen(false);
                     }}
-                    className="text-left py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200"
+                    className="text-left py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200"
                     aria-label="Go to dashboard"
                   >
                     📊 Dashboard
                   </button>
 
-                  {/* Show Project/Team Menu Button ONLY if on project or team page */}
+                  {/* Project/Team Menu Button */}
                   {currentlyOnProjectPage && (
                     <button
                       onClick={handleProjectSidebarToggle}
@@ -357,7 +386,7 @@ export default function Navbar() {
                     </button>
                   )}
 
-                  {/* Profile dropdown (simplified for mobile) */}
+                  {/* Profile dropdown (mobile) */}
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:shadow-md transition-all duration-200">
                     <button
                       onClick={() => setDropdownOpen((prev) => !prev)}
@@ -367,16 +396,16 @@ export default function Navbar() {
                       aria-controls="user-menu-mobile"
                       aria-label="User menu"
                     >
-                      <div className="w-8 h-8 bg-brand-primary-100 text-brand-primary-600 rounded-full flex items-center justify-center font-semibold select-none">
+                      <div className="w-8 h-8 bg-brand-primary-100 dark:bg-brand-primary-900 text-brand-primary-600 dark:text-brand-primary-400 rounded-full flex items-center justify-center font-semibold select-none transition-colors duration-300">
                         {userLoading
                           ? "…"
                           : user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
                       <div className="ml-2 text-left">
-                        <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark">
+                        <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark transition-colors duration-300">
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
-                        <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark">
+                        <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark transition-colors duration-300">
                           {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
@@ -387,7 +416,7 @@ export default function Navbar() {
                         id="user-menu-mobile"
                         role="menu"
                         aria-label="User menu"
-                        className="mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl z-10 border border-gray-200 dark:border-gray-700"
+                        className="mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl z-10 border border-gray-200 dark:border-gray-700 transition-colors duration-300"
                       >
                         <button
                           onClick={() => {
@@ -418,14 +447,14 @@ export default function Navbar() {
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 block text-center"
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 block text-center"
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 text-white border border-brand-primary-500 hover:border-brand-primary-600 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 block text-center"
+                    className="py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white border border-brand-primary-500 hover:border-brand-primary-600 dark:border-brand-primary-400 dark:hover:border-brand-primary-500 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 block text-center"
                   >
                     Sign Up
                   </Link>

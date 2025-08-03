@@ -1,10 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../components/authContext';
+import { jwtDecode } from "jwt-decode";
 
 const HeroSection = () => {
   const { isDark } = useTheme();
+  const { userRole: authUserRole, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
+  const token = localStorage.getItem("token");
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        setUserRole(decodedToken.role);
+      } catch (error) {
+        console.error("Invalid token:", error);
+      }
+    }
+  }, [token]);
+
+  const handleDashboardRedirect = () => {
+    if (userRole) {
+      switch (userRole) {
+        case 'Project_Manager':
+          navigate('/projectDashboard');
+          break;
+        case 'Team_Lead':
+          navigate('/teamleaddashboard');
+          break;
+        case 'Team_Member':
+          navigate('/teammemberdashboard');
+          break;
+        default:
+          navigate('/');
+          break;
+      }
+    }
+  };
+
+  // Determine if user is authenticated based on userRole from auth context or token
+  const isAuthenticated = Boolean(authUserRole) || Boolean(userRole);
 
   return (
     <section className="relative section-padding py-16 overflow-hidden bg-gradient-to-br from-brand-primary-600 via-brand-primary-700 to-brand-secondary-600 dark:from-bg-secondary-dark dark:via-bg-primary-dark dark:to-bg-accent-dark text-white dark:text-txt-primary-dark transition-colors duration-300">
@@ -50,23 +89,36 @@ const HeroSection = () => {
             Domain-based project management that connects managers, team leads, and developers seamlessly
           </motion.p>
           
-          {/* ✅ Buttons with improved styling similar to stats hover effects */}
+          {/* ✅ Conditional buttons with role-based dashboard redirect */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <Link 
-              to="/signup" 
-              className="font-button bg-white dark:bg-interactive-primary-dark text-brand-primary-600 dark:text-white hover:bg-gray-100 dark:hover:bg-interactive-hover-dark font-medium py-4 px-8 rounded-xl text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
-            >
-              Get Started Free
-            </Link>
-            
-            <button className="font-button border-2 border-white dark:border-interactive-primary-dark text-white dark:text-interactive-primary-dark hover:bg-white hover:text-brand-primary-600 dark:hover:bg-interactive-primary-dark dark:hover:text-white font-medium py-4 px-8 rounded-xl text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1">
-              Watch Demo
-            </button>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <button
+                    onClick={handleDashboardRedirect}
+                    className="font-button bg-white dark:bg-interactive-primary-dark text-brand-primary-600 dark:text-white hover:bg-gray-100 dark:hover:bg-interactive-hover-dark font-medium py-4 px-8 rounded-xl text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+                  >
+                    Go to Dashboard
+                  </button>
+                ) : (
+                  <Link 
+                    to="/signup" 
+                    className="font-button bg-white dark:bg-interactive-primary-dark text-brand-primary-600 dark:text-white hover:bg-gray-100 dark:hover:bg-interactive-hover-dark font-medium py-4 px-8 rounded-xl text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1"
+                  >
+                    Get Started Free
+                  </Link>
+                )}
+                
+                <button className="font-button border-2 border-white dark:border-interactive-primary-dark text-white dark:text-interactive-primary-dark hover:bg-white hover:text-brand-primary-600 dark:hover:bg-interactive-primary-dark dark:hover:text-white font-medium py-4 px-8 rounded-xl text-lg transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1">
+                  Watch Demo
+                </button>
+              </>
+            )}
           </motion.div>
 
           {/* ✅ Trust indicators with stats-like styling */}
