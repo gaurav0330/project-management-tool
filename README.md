@@ -33,7 +33,7 @@ From daily standups to shipping releases, teams need tools that *stay out of the
 |--------|-------------|
 | 🎯 **AI Task Management** | Assigns tasks based on availability & performance |
 | 🐙 **GitHub Integration** | Auto-updates tasks via commits & PRs |
-| 💬 **Live Chat** | Real-time WebSocket-based messaging |
+| 💬 **Live Chat & Video call ** | Real-time WebSocket-based messaging |
 | 📊 **Analytics Dashboard** | Visual timeline, KPIs, and team stats |
 | 🔐 **Role-Based Access** | PMs, Leads, and Members—each with tailored tools |
 | 🔔 **Instant Notifications** | Snackbar alerts for assignments & status |
