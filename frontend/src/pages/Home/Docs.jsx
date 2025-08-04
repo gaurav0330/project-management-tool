@@ -404,7 +404,7 @@ export default function Docs() {
           <div className="relative z-10 flex items-center justify-between px-6 sm:px-8 py-6 sm:py-8 border-b-2 border-bg-accent-light dark:border-bg-accent-dark">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-brand-primary-500 via-brand-secondary-500 to-brand-accent-500 rounded-2xl flex items-center justify-center shadow-xl animate-pulse">
-                <span className="text-white font-bold text-xl">P</span>
+                <span className="text-white font-bold text-xl">Y</span>
               </div>
               <div>
                 <h1 className="text-xl sm:text-2xl font-brand font-bold bg-gradient-to-r from-brand-primary-600/50 via-brand-secondary-600 to-brand-accent-600 bg-clip-text text-transparent">
