@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { MdHome,MdDescription  } from "react-icons/md";
+import { MdHome, MdDescription } from "react-icons/md";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import { useQuery, gql } from "@apollo/client";
 import logoLight from "../../assets/logo-light.png"; // Your light theme logo
-import logoDark from "../../assets/logo-dark.png";   // Your dark theme logo
+import logoDark from "../../assets/logo-dark.png"; // Your dark theme logo
 import ThemeToggle from "../ThemeToggle";
 import LogoutButton from "./Logout";
 import { Edit2Icon } from "lucide-react";
@@ -49,21 +49,23 @@ const GET_USER = gql`
 // Theme-aware Logo Component
 const YojanaDeskLogo = ({ size = "md", className = "" }) => {
   const { isDark, theme } = useTheme();
-  
+
   const sizeClasses = {
     sm: "h-6",
-    md: "h-8", 
-    lg: "h-10"
+    md: "h-8",
+    lg: "h-10",
   };
 
   return (
-    <div className={`flex items-center transition-all duration-300 ${className}`}>
-      <img 
+    <div
+      className={`flex items-center transition-all duration-300 ${className}`}
+    >
+      <img
         src={isDark ? logoDark : logoLight}
-        alt="YojanaDesk Logo" 
+        alt="YojanaDesk Logo"
         className={`${sizeClasses[size]} transition-all duration-300 select-none`}
         style={{
-          filter: isDark ? 'none' : 'none', // You can add filters if needed
+          filter: isDark ? "none" : "none", // You can add filters if needed
         }}
       />
     </div>
@@ -87,11 +89,14 @@ export default function Navbar() {
   const { isMobile, isTablet, isDesktop, width } = useResponsive();
 
   // Enhanced page detection
-  const isOnTeamDetailPage = location.pathname.match(/\/teamlead\/project\/[^\/]+\/[^\/]+$/);
-  const isOnProjectPage = location.pathname.includes('/projectHome/') || 
-                          location.pathname.includes('/teamLead/') ||
-                          location.pathname.includes('/teamMember/project/');
-  
+  const isOnTeamDetailPage = location.pathname.match(
+    /\/teamlead\/project\/[^\/]+\/[^\/]+$/
+  );
+  const isOnProjectPage =
+    location.pathname.includes("/projectHome/") ||
+    location.pathname.includes("/teamLead/") ||
+    location.pathname.includes("/teamMember/project/");
+
   const currentlyOnProjectPage = isOnProjectPage || isOnTeamDetailPage;
 
   // Decode token for userId and role
@@ -159,7 +164,7 @@ export default function Navbar() {
 
   const goDoc = () => {
     navigate("/docs");
-  }
+  };
   // Close mobile menu on window resize to desktop
   useEffect(() => {
     if (!mobileOpen) return;
@@ -180,23 +185,23 @@ export default function Navbar() {
   };
 
   const handleMobileMenuToggle = () => {
-    setMobileOpen(prev => !prev);
+    setMobileOpen((prev) => !prev);
   };
 
   const handleProjectSidebarToggle = () => {
     setMobileOpen(false);
-    
+
     if (isOnTeamDetailPage) {
       if (window.teamMobileSidebarHandler) {
         window.teamMobileSidebarHandler.toggle();
       } else {
-        window.postMessage({ type: 'TOGGLE_TEAM_SIDEBAR' }, '*');
+        window.postMessage({ type: "TOGGLE_TEAM_SIDEBAR" }, "*");
       }
     } else {
       if (window.projectMobileSidebarHandler) {
         window.projectMobileSidebarHandler.toggle();
       } else {
-        window.postMessage({ type: 'TOGGLE_PROJECT_SIDEBAR' }, '*');
+        window.postMessage({ type: "TOGGLE_PROJECT_SIDEBAR" }, "*");
       }
     }
   };
@@ -206,34 +211,39 @@ export default function Navbar() {
       return {
         text: "🎯 Team Menu",
         icon: "🎯",
-        color: "bg-purple-500 hover:bg-purple-600 border-purple-500 hover:border-purple-600"
+        color:
+          "bg-purple-500 hover:bg-purple-600 border-purple-500 hover:border-purple-600",
       };
     }
-    
+
     switch (userRole) {
       case "Project_Manager":
         return {
           text: "📋 Project Menu",
           icon: "📋",
-          color: "bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600"
+          color:
+            "bg-blue-500 hover:bg-blue-600 border-blue-500 hover:border-blue-600",
         };
       case "Team_Lead":
         return {
           text: "🎯 Team Lead Menu",
           icon: "🎯",
-          color: "bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600"
+          color:
+            "bg-orange-500 hover:bg-orange-600 border-orange-500 hover:border-orange-600",
         };
       case "Team_Member":
         return {
           text: "👤 Member Menu",
           icon: "👤",
-          color: "bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600"
+          color:
+            "bg-green-500 hover:bg-green-600 border-green-500 hover:border-green-600",
         };
       default:
         return {
           text: "📋 Project Menu",
           icon: "📋",
-          color: "bg-brand-primary-500 hover:bg-brand-primary-600 border-brand-primary-500 hover:border-brand-primary-600"
+          color:
+            "bg-brand-primary-500 hover:bg-brand-primary-600 border-brand-primary-500 hover:border-brand-primary-600",
         };
     }
   };
@@ -251,8 +261,8 @@ export default function Navbar() {
             onClick={() => navigate("/")}
             aria-label="Navigate to homepage"
           >
-            <YojanaDeskLogo 
-              size="md" 
+            <YojanaDeskLogo
+              size="md"
               className="transform group-hover:scale-105 transition-transform duration-200"
             />
           </div>
@@ -260,15 +270,15 @@ export default function Navbar() {
           {/* Desktop menu */}
           {width >= 1024 && (
             <div className="flex items-center space-x-4">
+              <button
+                onClick={goDoc}
+                className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white rounded-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 transform"
+                aria-label="DOCS"
+              >
+                <MdDescription size={20} />
+              </button>
               {token ? (
                 <>
-                  <button
-                    onClick={goDoc}
-                    className="flex items-center p-2 bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white rounded-md transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 transform"
-                    aria-label="Go to dashboard"
-                  >
-                    <MdDescription size={20} />
-                  </button>
                   {/* Dashboard */}
                   <button
                     onClick={goDashboard}
@@ -298,7 +308,9 @@ export default function Navbar() {
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
                         <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark transition-colors duration-300">
-                          {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
+                          {userLoading
+                            ? "..."
+                            : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
                     </button>
@@ -364,13 +376,22 @@ export default function Navbar() {
             <div className="flex flex-col space-y-2 p-4">
               {token ? (
                 <>
+                  {/* Documentation Button */}
+                  <button
+                    onClick={goDoc}
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 flex items-center justify-center"
+                  >
+                    <MdDescription size={20} />
+                    <span className="ml-2">Documentation</span>
+                  </button>
+
                   {/* Dashboard */}
                   <button
                     onClick={() => {
                       goDashboard();
                       setMobileOpen(false);
                     }}
-                    className="text-left py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200"
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 flex items-center justify-center"
                     aria-label="Go to dashboard"
                   >
                     📊 Dashboard
@@ -380,7 +401,7 @@ export default function Navbar() {
                   {currentlyOnProjectPage && (
                     <button
                       onClick={handleProjectSidebarToggle}
-                      className={`text-left py-2 px-3 rounded-md border hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ${projectMenuConfig.color} text-white`}
+                      className={`py-2 px-3 rounded-md border hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 ${projectMenuConfig.color} text-white flex items-center justify-center`}
                     >
                       {projectMenuConfig.text}
                     </button>
@@ -390,7 +411,7 @@ export default function Navbar() {
                   <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:shadow-md transition-all duration-200">
                     <button
                       onClick={() => setDropdownOpen((prev) => !prev)}
-                      className="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm transition-all duration-200 w-full"
+                      className="flex items-center justify-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm transition-all duration-200 w-full"
                       aria-haspopup="true"
                       aria-expanded={dropdownOpen}
                       aria-controls="user-menu-mobile"
@@ -401,12 +422,14 @@ export default function Navbar() {
                           ? "…"
                           : user.username?.charAt(0).toUpperCase() || "U"}
                       </div>
-                      <div className="ml-2 text-left">
+                      <div className="ml-2 text-center">
                         <p className="text-sm font-medium text-txt-primary-light dark:text-txt-primary-dark transition-colors duration-300">
                           {userLoading ? "Loading..." : user.username || "User"}
                         </p>
                         <p className="text-xs text-txt-secondary-light dark:text-txt-secondary-dark transition-colors duration-300">
-                          {userLoading ? "..." : user.role?.replace("_", " ") || "Member"}
+                          {userLoading
+                            ? "..."
+                            : user.role?.replace("_", " ") || "Member"}
                         </p>
                       </div>
                     </button>
@@ -425,7 +448,7 @@ export default function Navbar() {
                             setDropdownOpen(false);
                           }}
                           role="menuitem"
-                          className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:shadow-sm transform hover:translate-x-1 rounded-md transition-all duration-200"
+                          className="flex items-center justify-center gap-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:shadow-sm transform hover:translate-x-1 rounded-md transition-all duration-200"
                         >
                           <Edit2Icon
                             className="w-4 h-4 transition-transform duration-200 group-hover:scale-110"
@@ -438,23 +461,35 @@ export default function Navbar() {
                   </div>
 
                   {/* Logout */}
-                  <div className="pt-2">
+                  <div className="pt-2 flex justify-center">
                     <LogoutButton />
                   </div>
                 </>
               ) : (
                 <>
+                  {/* Documentation Button - Centered */}
+                  <button
+                    onClick={goDoc}
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 flex items-center justify-center"
+                  >
+                    <MdDescription size={20} />
+                    <span className="ml-2">Documentation</span>
+                  </button>
+
+                  {/* Login Button */}
                   <Link
                     to="/login"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 block text-center"
+                    className="py-2 px-3 rounded-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-txt-primary-light dark:text-txt-primary-dark hover:text-brand-primary-500 dark:hover:text-brand-primary-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-brand-primary-300 dark:hover:border-brand-primary-600 hover:shadow-md transform hover:scale-[1.01] transition-all duration-200 flex items-center justify-center"
                   >
                     Login
                   </Link>
+
+                  {/* Sign Up Button */}
                   <Link
                     to="/signup"
                     onClick={() => setMobileOpen(false)}
-                    className="py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white border border-brand-primary-500 hover:border-brand-primary-600 dark:border-brand-primary-400 dark:hover:border-brand-primary-500 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 block text-center"
+                    className="py-2 px-3 rounded-md bg-brand-primary-500 hover:bg-brand-primary-600 dark:bg-brand-primary-400 dark:hover:bg-brand-primary-500 text-white border border-brand-primary-500 hover:border-brand-primary-600 dark:border-brand-primary-400 dark:hover:border-brand-primary-500 hover:shadow-lg transform hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
                   >
                     Sign Up
                   </Link>
