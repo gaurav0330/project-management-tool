@@ -16,7 +16,7 @@ const sections = [
                   <span className="text-2xl">🚀</span>
                 </div>
                 <h3 className="text-xl md:text-2xl font-heading font-bold bg-gradient-to-r from-brand-primary-600 to-brand-secondary-600 bg-clip-text text-transparent">
-                  Welcome to ProjectFlow
+                  Welcome to YojanaDesk
                 </h3>
               </div>
               <p className="text-base md:text-lg leading-relaxed mb-4 text-txt-primary-light dark:text-txt-primary-dark">
@@ -67,7 +67,7 @@ const sections = [
               Integrated Workflow
             </h3>
             <p className="text-base md:text-lg text-txt-secondary-light dark:text-txt-secondary-dark max-w-2xl mx-auto">
-              ProjectFlow combines multiple functionalities into a single, intuitive interface
+              YojanaDesk combines multiple functionalities into a single, intuitive interface
             </p>
           </div>
 
@@ -457,7 +457,7 @@ export default function Docs() {
               <span className="text-white font-bold text-lg">P</span>
             </div>
             <h1 className="text-lg sm:text-xl font-brand font-bold bg-gradient-to-r from-brand-primary-600 to-brand-secondary-600 bg-clip-text text-transparent">
-              ProjectFlow Docs
+              YojanaDesk Docs
             </h1>
           </div>
           <div className="w-10 sm:w-12"></div>
@@ -479,7 +479,7 @@ export default function Docs() {
                   <span className="w-3 h-3 bg-brand-accent-500 rounded-full animate-pulse" style={{animationDelay: '1s'}}></span>
                 </div>
                 <h1 className="text-5xl sm:text-6xl md:text-7xl font-brand font-bold bg-gradient-to-r from-brand-primary-600 via-brand-secondary-600 to-brand-accent-500 bg-clip-text text-transparent mb-6 sm:mb-8 leading-tight">
-                  ProjectFlow
+                  YojanaDesk
                 </h1>
                 <p className="text-base sm:text-xl text-txt-secondary-light dark:text-txt-secondary-dark max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8">
                   Master project collaboration with AI-driven insights, seamless GitHub integration, and powerful team management tools.
@@ -607,7 +607,7 @@ export default function Docs() {
                             "Go to GitHub > Repository Settings > Webhooks > Add Webhook.",
                             "Paste the secret URL as the Payload URL and the secret key in the Secret field.",
                             "Select content type as application/json and enable the events you want to trigger the webhook.",
-                            "Save the webhook and follow any additional on-screen instructions in ProjectFlow."
+                            "Save the webhook and follow any additional on-screen instructions in YojanaDesk."
                           ].map((step, index) => (
                             <div key={index} className="group flex items-start space-x-4 p-4 md:p-6 bg-bg-primary-light/80 dark:bg-bg-primary-dark/80 rounded-2xl hover:bg-bg-primary-light dark:hover:bg-bg-primary-dark transition-all duration-300 hover:scale-[1.01]">
                               <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-brand-primary-500 to-brand-secondary-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300">
