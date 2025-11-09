@@ -171,6 +171,9 @@ async function startServer() {
 
 startServer();
 
+app.get('/healthz', (req, res) => res.send('OK'));
+
+
 // Optional: Production-only express settings
 if (process.env.NODE_ENV === "production") {
   // Serve frontend static files here if you bundle frontend with backend
