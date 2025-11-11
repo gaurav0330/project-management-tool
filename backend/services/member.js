@@ -207,12 +207,18 @@ const memberService = {
       // ✅ Find Project Manager or Team Lead who assigned the task
       const taskCreator = await User.findById(task.createdBy);
       if (taskCreator) {
-        await sendTaskApprovalRequestEmail({
+
+        // ✅ Send Email Notification
+          setImmediate(() => {
+    sendTaskApprovalRequestEmail({
           email: taskCreator.email,
           managerName: taskCreator.username,
           taskTitle: task.title,
           submittedBy: user.username,
-        });
+        })
+      .catch(err => console.error("Email send failed:", err));
+  });
+
       }
 
       return { success: true, message: "Task sent for approval", task };
