@@ -99,10 +99,17 @@ const projectService = {
          for (const lead of updatedProject.teamLeads) {
           const leadUser = await User.findById(lead.teamLeadId);
           if (leadUser) {
-              await sendTeamLeadAssignmentEmail(leadUser.username, leadUser.email, project.title);
+            setImmediate(() => {
+              sendTeamLeadAssignmentEmail(leadUser.username, leadUser.email, project.title)
+              .catch(err => console.error("Email send failed:", err));
+              
+            }
+              )
           }
         }
 
+     
+      
         // Update chat groups for each new lead
         for (const lead of formattedTeamLeads) {
           await updateGroupsOnUserChange({ projectId: project._id, userId: lead.teamLeadId, action: "add" });
