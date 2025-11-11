@@ -18,7 +18,7 @@ const signup = async (username, email, password, role) => {
     if (existingUser) throw new Error("User already exists");
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     // Save user
     const newUser = new User({ username, email, password: hashedPassword, role });
